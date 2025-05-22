@@ -5,4 +5,10 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
   ],
+  // server: {
+  //   port: 5173,
+  //   proxy: {
+  //     '/api': 'http://localhost:3000', // Vite forwards API calls to Fastify
+  //   },
+  // },
 })
