@@ -1,8 +1,33 @@
 version: '3.8'
 
+networks:
+    pong-network:
+        name: pong-network
+        driver: bridge
+
 services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx:/etc/nginx/templates
+      # - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/dist:/usr/share/nginx/html
+      # - ./nginx/generate-cert.sh:/docker-entrypoint.d/generate-cert.sh
+    depends_on:
+      - app #backend
+      - frontend
+    networks:
+      - pong-network
+
   app:
-    build: .
+    build:
+      context: ./pong_backend
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
@@ -12,6 +37,8 @@ services:
       - DB_NAME=${DB_NAME}
     depends_on:
       - db
+    networks:
+      - pong-network
 
   db:
     image: mysql:8.0
@@ -20,6 +47,28 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
     volumes:
       - db-data:/var/lib/mysql
+    networks:
+      - pong-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - frontend-dist:/app/dist
+    networks:
+      - pong-network
 
 volumes:
   db-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./volumes/db-data
+      o: bind
+  frontend-dist:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./volumes/frontend/dist
+      o: bind
