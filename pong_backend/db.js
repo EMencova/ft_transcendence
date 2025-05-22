@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const fastifyMysql = require('fastify-mysql');
+const fastifyMysql = require('@fastify/mysql');
 
 function setupDb(fastify) {
   fastify.register(fastifyMysql, {
