@@ -1,0 +1,19 @@
+FROM nginx:latest
+
+# Instalar openssl
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
+# Crear carpeta para los certificados
+RUN mkdir -p /etc/nginx/ssl
+
+# Copiar configuración de nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copiar script de generación de certificados
+COPY generate-cert.sh /docker-entrypoint.d/generate-cert.sh
+
+# Asegurarse de que el script sea ejecutable
+RUN chmod +x /docker-entrypoint.d/generate-cert.sh
+
+# # Copiar los archivos del frontend
+# COPY ../frontend/dist /usr/share/nginx/html
