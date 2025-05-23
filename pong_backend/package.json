@@ -1,15 +1,17 @@
 {
   "name": "pong-backend",
   "version": "1.0.0",
+  "description": "Backend server for pong game",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
+    "dotenv": "^16.3.1",
     "fastify": "^5.3.2",
     "fastify-mysql": "^2.2.0"
   }

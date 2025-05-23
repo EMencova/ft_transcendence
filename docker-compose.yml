@@ -2,9 +2,15 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    build:
+      context: ./pong_backend
+    container_name: fastify-app
     ports:
       - "3000:3000"
+    volumes:
+      - ./pong_backend:/app
+    env_file:
+      - .env
     environment:
       - DB_HOST=db
       - DB_USER=${DB_USER}
@@ -12,6 +18,31 @@ services:
       - DB_NAME=${DB_NAME}
     depends_on:
       - db
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: vite-frontend
+    ports:
+      - "5173:5173"   # Default vite dev server port
+    volumes:
+      - ./frontend:/app
+    command: ["npm", "run", "dev"]
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - .
+    ports:
+      - "443:443"
+    depends_on:
+      - app
+      - frontend
+
 
   db:
     image: mysql:8.0
@@ -20,6 +51,10 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
     volumes:
       - db-data:/var/lib/mysql
+    restart: unless-stopped
 
 volumes:
   db-data:
+
+
+
