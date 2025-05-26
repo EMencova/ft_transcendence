@@ -1,22 +1,20 @@
-# Use official Node.js image
-FROM node:18
+# Etapa 1: build (opcional si no transpilas)
+FROM node:20-alpine
 
-# Set working directory inside container
-WORKDIR /app
+# Crear el directorio de trabajo
+WORKDIR ./
 
-# Copy package.json and package-lock.json (if present)
+# Copiar package.json y package-lock.json
 COPY package*.json ./
 
-# Install dependencies (including dotenv)
+# Instalar dependencias
 RUN npm install
 
-# Copy rest of the app files
+# Copiar el resto de los archivos del backend
 COPY . .
 
-# Expose port 3000 (Fastify default)
+# Exponer el puerto de Fastify (por defecto suele ser 3000)
 EXPOSE 3000
 
-# Start the app
+# Comando para iniciar Fastify
 CMD ["node", "server.js"]
-
-

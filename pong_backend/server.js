@@ -1,40 +1,25 @@
 const Fastify = require('fastify');
 const fastify = Fastify();
-const { setupDb, createUser } = require('./db');
+const { setupDb } = require('./db'); 
+const path = require('path');
 
-
-fastify.register(require('@fastify/formbody'));
-fastify.register(require('@fastify/json-body-parser'));
-
-
+// MySQL database
 setupDb(fastify);
 
 fastify.get('/', async (request, reply) => {
   return { hello: 'world' };
 });
 
-fastify.post('/register', async (req, reply) => {
-  const { username, password } = req.body;
-
-const result = await createUser(fastify.db, username, password);
-
-  if (result.success) {
-    return { message: 'User created!' };
-  } else {
-    reply.status(500);
-    return { error: result.error };
-  }
-});
-
-const start = async () => {
-  try {
-    await fastify.listen({ port: 3000, host: '0.0.0.0' });
-    console.log('Server listening on port 3000');
-  } catch (err) {
-    fastify.log.error(err);
+fastify.listen({ port: 3000 }, (err, address) => {
+  if (err) {
+    console.error(err);
     process.exit(1);
   }
-};
+  console.log(`Server listening at ${address}`);
+});
 
-start();
+fastify.register(require('@fastify/static'), {
+  root: path.join(__dirname, '../frontend'),
+  prefix: '/', // So http://localhost:3000 loads index.html
+});
 

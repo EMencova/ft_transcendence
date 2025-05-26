@@ -1,16 +1,30 @@
-# Dockerfile inside ./frontend
-
-FROM node:18-alpine
+# Etapa 1: build con Node y Vite
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Copiamos dependencias e instalamos
 COPY package*.json ./
 RUN npm install
 
+# Copiamos el resto del código
 COPY . .
 
-EXPOSE 5173
+# Build del frontend
+RUN npm run build
 
-CMD ["npm", "run", "dev"]
+# CMD ["npm", "run", "dev", "--", "--host"]
 
 
+# # Etapa 2: servir con NGINX
+# FROM nginx:alpine
+
+# # Copiamos la build generada al directorio que sirve NGINX
+# COPY --from=builder /app/dist /usr/share/nginx/html
+
+# # Copiamos configuración custom (opcional si usas history routing)
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# EXPOSE 80
+
+# CMD ["nginx", "-g", "daemon off;"]
