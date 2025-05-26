@@ -13,7 +13,7 @@ COPY . .
 # Build del frontend
 RUN npm run build
 
-CMD ["npm", "run", "dev", "--", "--host"]
+# CMD ["npm", "run", "dev", "--", "--host"]
 
 
 # # Etapa 2: servir con NGINX
