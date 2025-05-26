@@ -8,19 +8,19 @@ networks:
 services:
   nginx:
     build:
-      context: ./nginx
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./nginx/Dockerfile
     ports:
       - "443:443"
       - "80:80"
-    volumes:
-      - ./nginx:/etc/nginx/templates
+    # volumes:
+      # - ./nginx:/etc/nginx/templates
+      # - ./frontend/dist:/usr/share/nginx/html
       # - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./frontend/dist:/usr/share/nginx/html
       # - ./nginx/generate-cert.sh:/docker-entrypoint.d/generate-cert.sh
     depends_on:
       - app #backend
-      - frontend
+      # - frontend
     networks:
       - pong-network
 
@@ -50,14 +50,15 @@ services:
     networks:
       - pong-network
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    volumes:
-      - frontend-dist:/app/dist
-    networks:
-      - pong-network
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - frontend-dist:/app/dist
+  #   entrypoint: [ "sh", "-c", "npm run build" ]
+  #   networks:
+  #     - pong-network
 
 volumes:
   db-data:
