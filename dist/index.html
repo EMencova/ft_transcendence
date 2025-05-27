@@ -1,0 +1,200 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ft_transcendence Pong Game</title>
+  <link rel="stylesheet" href="/public.2687eea0.css">
+  <style>nav {
+  color: #fff;
+  background-color: #222;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  display: flex;
+}
+
+.nav-links button {
+  color: #fff;
+  cursor: pointer;
+  background-color: #ff6b00;
+  border: none;
+  border-radius: 4px;
+  margin-left: 1rem;
+  padding: .5rem 1rem;
+}
+
+.nav-links button:hover {
+  background-color: #e65c00;
+}
+</style>
+</head>
+
+<body>
+  <nav>
+    <div><strong>🏓 ft_transcendence</strong></div>
+    <div class="nav-links">
+      <span id="currentUser">Not signed in</span>
+      <button id="loginBtn">Login</button>
+      <button id="signupBtn">Signup</button>
+      <button id="logoutBtn" style="display: none">Logout</button>
+    </div>
+  </nav>
+
+  <header>
+    <h1>Welcome to Pong</h1>
+    <p>A polished multiplayer Pong clone with TS, Canvas, and AI logic</p>
+  </header>
+
+  <main>
+    <section id="features">
+      <h2>🎮 Game Modes</h2>
+      <div class="features">
+        <div class="feature"><h3>1 Player</h3><p>Challenge an adaptive AI</p></div>
+        <div class="feature"><h3>2 Players</h3><p>Compete with a friend</p></div>
+        <div class="feature"><h3>4 Players</h3><p>Use all four paddles</p></div>
+      </div>
+    </section>
+
+    <section id="gameplay">
+      <h2>🕹️ Try It Out</h2>
+      <div id="startMenu">
+        <h3>Start Game</h3>
+        <label for="modeSelect">Game Mode:</label>
+        <select id="modeSelect">
+          <option value="Pong1">1 Player (vs AI)</option>
+          <option value="Pong2">2 Players</option>
+          <option value="Pong4">4 Players</option>
+        </select>
+
+        <div id="difficultyWrapper">
+          <label for="difficultySelect">AI Difficulty:</label>
+          <select id="difficultySelect">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+
+        <button id="startBtn">Start Game</button>
+      </div>
+
+      <canvas id="gameCanvas" width="800" height="600">Game Canvas</canvas>
+      <div style="text-align: center">
+        <button id="pauseBtn" style="display: none">Pause</button>
+        <button id="resetBtn" style="display: none">Reset</button>
+      </div>
+    </section>
+
+    <div id="dashboard" style="display: none"></div>
+
+  </main>
+
+  <footer>
+    <p>© 2025 ft_transcendence – built with ❤️ at 42 Prague</p>
+  </footer>
+
+  <!-- Modal -->
+<div id="authModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" id="closeModal">×</span>
+    <h2 id="modalTitle">Login</h2>
+    <form id="authForm">
+      <label>Username:</label>
+      <input type="text" name="username" required="">
+      <label>Password:</label>
+      <input type="password" name="password" required="">
+      <button type="submit">Submit</button>
+    </form>
+    <p id="switchText">Don't have an account? <a href="#" id="toggleAuth">Sign up here</a></p>
+  </div>
+</div>
+
+
+
+
+  <script type="module" src="/public.0f289648.js"></script>
+  <script>const modeSelect = document.getElementById('modeSelect');
+const difficultyWrapper = document.getElementById('difficultyWrapper');
+const loginBtn = document.getElementById('loginBtn');
+const signupBtn = document.getElementById('signupBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const currentUser = document.getElementById('currentUser');
+modeSelect.addEventListener('change', ()=>{
+    difficultyWrapper.style.display = modeSelect.value === 'Pong1' ? 'block' : 'none';
+});
+// Example: check login state on page load
+fetch('/api/me').then((res)=>res.json()).then((data)=>{
+    if (data.loggedIn) {
+        currentUser.textContent = `Logged in as user #${data.userId}`;
+        loginBtn.style.display = 'none';
+        signupBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+    }
+});
+logoutBtn.addEventListener('click', ()=>{
+    fetch('/api/logout', {
+        method: 'POST'
+    }).then(()=>location.reload());
+}); // loginBtn.addEventListener('click', () => alert('TODO: Show login form'));
+ // signupBtn.addEventListener('click', () => alert('TODO: Show signup form'));
+
+</script>
+
+  <script>const authModal = document.getElementById('authModal');
+const modalTitle = document.getElementById('modalTitle');
+const authForm = document.getElementById('authForm');
+const toggleAuth = document.getElementById('toggleAuth');
+const switchText = document.getElementById('switchText');
+const closeModal = document.getElementById('closeModal');
+let isLogin = true;
+document.getElementById('loginBtn').onclick = ()=>{
+    isLogin = true;
+    modalTitle.textContent = "Login";
+    switchText.innerHTML = `Don't have an account? <a href="#" id="toggleAuth">Sign up here</a>`;
+    authModal.style.display = "block";
+};
+document.getElementById('signupBtn').onclick = ()=>{
+    isLogin = false;
+    modalTitle.textContent = "Sign Up";
+    switchText.innerHTML = `Already have an account? <a href="#" id="toggleAuth">Log in here</a>`;
+    authModal.style.display = "block";
+};
+closeModal.onclick = ()=>authModal.style.display = "none";
+window.onclick = (e)=>{
+    if (e.target === authModal) authModal.style.display = "none";
+};
+// Switch between login/signup
+switchText.onclick = (e)=>{
+    e.preventDefault();
+    isLogin = !isLogin;
+    modalTitle.textContent = isLogin ? "Login" : "Sign Up";
+    switchText.innerHTML = isLogin ? `Don't have an account? <a href="#" id="toggleAuth">Sign up here</a>` : `Already have an account? <a href="#" id="toggleAuth">Log in here</a>`;
+};
+// Submit form
+authForm.onsubmit = async (e)=>{
+    e.preventDefault();
+    const formData = new FormData(authForm);
+    const payload = {
+        username: formData.get("username"),
+        password: formData.get("password")
+    };
+    const endpoint = isLogin ? "/api/login" : "/api/signup";
+    const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if (res.ok) {
+        alert(result.message || (isLogin ? "Login successful" : "Signup successful"));
+        location.reload();
+    } else alert(result.message || "Something went wrong");
+};
+
+</script>
+<script type="module" src="/public.eb28362c.js"></script>
+
+
+
+</body></html>
