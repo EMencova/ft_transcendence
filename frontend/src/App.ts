@@ -2,6 +2,7 @@ import { Features } from './Features.ts'
 import { Footer } from './Footer.ts'
 import { Gameplay } from './Gameplay.ts'
 import { createNav } from './Nav'
+import { initializeAuth } from './logic/auth.ts'
 
 
 export function App(): HTMLElement {
@@ -14,6 +15,9 @@ export function App(): HTMLElement {
     const nav = createNav()
     container.appendChild(nav)
 
+    requestAnimationFrame(() => {
+      initializeAuth()
+    })
     const main = document.createElement('main')
     main.className = 'flex-grow' // To push footer to the bottom
     main.appendChild(Features())
