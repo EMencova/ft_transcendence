@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
     pong-network:
         name: pong-network
