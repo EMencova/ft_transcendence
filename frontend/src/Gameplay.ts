@@ -38,7 +38,7 @@ export function Gameplay(): HTMLElement {
     </div>
   `
 
-  // ✅ Inicializar UI del juego
+  // ✅ Init UI game
   requestAnimationFrame(() => {
     initializeGameUI()
   })
