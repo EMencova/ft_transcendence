@@ -1,46 +1,29 @@
+import { Features } from './Features.ts'
 import { Footer } from './Footer.ts'
-import { Header } from './Header.ts'
-import { LoginRegister } from './LoginRegister.ts'
-import { Pong } from './Pong.ts'
+import { Gameplay } from './Gameplay.ts'
+import { createNav } from './Nav'
 
-// WITHOUT LOGIN/REGISTER
-// export function App(): HTMLElement {
-//   const container = document.createElement('div')
-//   container.className = 'flex flex-col h-screen w-full'
-
-//   container.appendChild(Header())
-//   container.appendChild(Pong())
-//   container.appendChild(Footer());
-
-//   return container
-// }
-
-let isLoggedIn = false
 
 export function App(): HTMLElement {
   const container = document.createElement('div')
-  container.className = 'h-screen w-full'
+  container.className = 'flex flex-col min-h-screen w-full'
 
   function render() {
-    container.innerHTML = '' // Limpiar el contenido
+    container.innerHTML = '' // Clear the container
 
-    if (!isLoggedIn) {
-      container.appendChild(LoginRegister(() => {
-        isLoggedIn = true
-        render()
-      }))
-    } else {
-      const main = document.createElement('div')
-      main.className = 'flex flex-col h-screen w-full'
+    const nav = createNav()
+    container.appendChild(nav)
 
-      main.appendChild(Header())
-      main.appendChild(Pong())
-      main.appendChild(Footer())
+    const main = document.createElement('main')
+    main.className = 'flex-grow' // To push footer to the bottom
+    main.appendChild(Features())
+    main.appendChild(Gameplay())
 
-      container.appendChild(main)
-    }
+    const footer = Footer()
+
+    container.appendChild(main)
+    container.appendChild(footer)
   }
-
   render()
   return container
 }
