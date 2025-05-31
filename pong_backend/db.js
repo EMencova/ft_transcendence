@@ -1,13 +1,24 @@
-require('dotenv').config();
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-const fastifyMysql = require('@fastify/mysql');
+const dbPath = path.resolve(__dirname, 'database.sqlite');
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('Error opening database:', err);
+  } else {
+    console.log('Connected to SQLite database.');
 
-function setupDb(fastify) {
-  fastify.register(fastifyMysql, {
-    promise: true,
-    connectionString: `mysql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:3306/${process.env.DB_NAME}`,
-  });
-}
+    db.run(`
+      CREATE TABLE IF NOT EXISTS players (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        score INTEGER DEFAULT 0
+      )
+    `);
+  }
+});
 
-module.exports = { setupDb };
+module.exports = db;
+
+
 
