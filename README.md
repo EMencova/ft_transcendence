@@ -29,11 +29,14 @@ make
 
 3. In the SQLITE prompt see table players
 
-
-   .tables
-   
 	```
-WORKING ON THIS
+	 sqlite3 database.sqlite
+	```
+   
+   
+	
+WORKING ON THIS 
+
 ### 3. Verify User Permissions
 
 To check that the permissions were granted correctly, run:
