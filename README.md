@@ -15,14 +15,17 @@ make
 After building, you need to grant permissions to the database user specified in your `.env` file.
 
 1. Access the sqlite container:
+   
+	 cd pong_backend/data
 
-	1, cd pong_backend/data
-	2, sqlite3 database.sqlite
+	 sqlite3 database.sqlite
 
 
 	```
 
 3. In the SQLITE prompt see table players
+
+
    .tables
    
 	```
