@@ -10,9 +10,7 @@ Follow these steps to set up and run the project:
 make
 ```
 
-### 2. Configure Database User (First Time Only)
-
-After building, you need to grant permissions to the database user specified in your `.env` file.
+### 2. Access the SQLITE container
 
 1. Access the sqlite container:
 
