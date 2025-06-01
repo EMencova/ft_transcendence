@@ -16,14 +16,14 @@ After building, you need to grant permissions to the database user specified in 
 
 1. Access the sqlite container:
 
-	```sh
-	 docker exec -it trans_app_1 sh
-
-	```
-
    	```
 
  	 cd pong_backend/data
+	```
+
+	```sh
+	 docker exec -it trans_app_1 sh
+
 	```
 	```
 	 sqlite3 database.sqlite
