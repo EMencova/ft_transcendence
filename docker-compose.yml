@@ -24,7 +24,6 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      # remove all DB_* vars here
     volumes:
       - ./pong_backend:/app
       - ./pong_backend/data:/app/data
