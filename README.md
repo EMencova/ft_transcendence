@@ -14,20 +14,19 @@ make
 
 After building, you need to grant permissions to the database user specified in your `.env` file.
 
-1. Access the MySQL container:
+1. Access the sqlite container:
 
-	```bash
-	docker exec -it ft_transcendence-db-1 mysql -u root -p
+	1, cd pong_backend/data
+	2, sqlite3 database.sqlite
+
+
 	```
 
-2. In the MySQL prompt, run the following commands (replace `tu_password` and `ponguser` with the password and user from your `.env`):
-
-	```sql
-	CREATE USER 'ponguser'@'%' IDENTIFIED BY 'tu_password';
-	GRANT ALL PRIVILEGES ON *.* TO 'ponguser'@'%';
-	FLUSH PRIVILEGES;
+3. In the SQLITE prompt see table players
+   .tables
+   
 	```
-
+WORKING ON THIS
 ### 3. Verify User Permissions
 
 To check that the permissions were granted correctly, run:
