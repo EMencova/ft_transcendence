@@ -1,5 +1,3 @@
-version: "3.8"
-
 networks:
   pong-network:
     name: pong-network
@@ -24,17 +22,31 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # remove all DB_* vars here
     volumes:
       - ./pong_backend:/app
-      - ./pong_backend/database.sqlite:/app/database.sqlite
+      - ./pong_backend/data:/app/data
     networks:
       - pong-network
 
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - frontend-dist:/app/dist
+  #   entrypoint: [ "sh", "-c", "npm run build" ]
+  #   networks:
+  #     - pong-network
+
 volumes:
-  frontend-dist:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./volumes/frontend/dist
-      o: bind
+  sqlite-data:
+
+
+
+
+
+
 
