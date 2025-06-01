@@ -15,12 +15,18 @@ make
 After building, you need to grant permissions to the database user specified in your `.env` file.
 
 1. Access the sqlite container:
-   
-	 cd pong_backend/data
 
+	```sh
+	 docker exec -it trans_app_1 sh
+
+	```
+
+   	```
+
+ 	 cd pong_backend/data
+	```
+	```
 	 sqlite3 database.sqlite
-
-
 	```
 
 3. In the SQLITE prompt see table players
