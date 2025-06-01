@@ -30,7 +30,11 @@ make
 3. In the SQLITE prompt see table players
 
 	```
-	 sqlite3 database.sqlite
+	 .tables
+	```
+
+ 	```
+	 SELECT * FROM players;
 	```
    
    
