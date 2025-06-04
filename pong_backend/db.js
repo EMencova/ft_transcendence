@@ -23,7 +23,7 @@ function setupDb(fastify) {
           email TEXT NOT NULL UNIQUE,
           password TEXT NOT NULL,
           wins INTEGER DEFAULT 0,
-          losses INTEGER DEFAULT 0
+          losses INTEGER DEFAULT 0,
           avatar TEXT DEFAULT 'avatar.png'
         )
       `);
