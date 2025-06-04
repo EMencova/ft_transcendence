@@ -23,11 +23,74 @@ function updateNav() {
 	const signupBtn = document.getElementById("signupBtn")!
 	const logoutBtn = document.getElementById("logoutBtn")!
 
+	// if (currentUser) {
+	// 	userDisplay.textContent = `👋 Welcome, ${currentUser}`
+	// 	loginBtn.style.display = "none"
+	// 	signupBtn.style.display = "none"
+	// 	logoutBtn.style.display = "inline-block"
+	// } else {
+	// 	userDisplay.textContent = "Not signed in"
+	// 	loginBtn.style.display = "inline-block"
+	// 	signupBtn.style.display = "inline-block"
+	// 	logoutBtn.style.display = "none"
+	// }
+
+	userDisplay.innerHTML = "" 
+
 	if (currentUser) {
-		userDisplay.textContent = `👋 Welcome, ${currentUser}`
+		//userDisplay.textContent = `👋 Welcome, ${currentUser}`
+		// loginBtn.style.display = "none"
+		// signupBtn.style.display = "none"
+		// logoutBtn.style.display = "inline-block"
 		loginBtn.style.display = "none"
 		signupBtn.style.display = "none"
-		logoutBtn.style.display = "inline-block"
+		logoutBtn.style.display = "none" // Ahora va dentro del menú
+
+		// Crea el saludo
+		const welcomeSpan = document.createElement("span")
+		welcomeSpan.textContent = `👋 Welcome, ${currentUser}`
+		welcomeSpan.className = "mr-4" // Espacio a la derecha
+
+		const avatarImg = document.createElement("img")
+		avatarImg.src = (window as any).currentAvatar || "/avatar.png"
+		avatarImg.alt = "Avatar"
+		avatarImg.className = "w-10 h-10 rounded-full cursor-pointer border"
+
+		const menu = document.createElement("div")
+		menu.className = "absolute right-0 mt-2 bg-white border rounded shadow hidden text-black z-50"
+		menu.innerHTML = `
+			<a href="#" class="block px-4 py-2 hover:bg-gray-100">Profile</a>
+			<button id="dropdownLogout" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Logout</button>
+		`
+
+		const container = document.createElement("div")
+		container.className = "relative inline-block"
+		container.appendChild(avatarImg)
+		container.appendChild(menu)
+
+		userDisplay.appendChild(welcomeSpan)
+		userDisplay.appendChild(container)
+		userDisplay.className = "flex items-center justify-center"
+
+		avatarImg.addEventListener("click", () => {
+			menu.classList.toggle("hidden")
+		})
+
+		document.addEventListener("click", (e) => {
+			if (!container.contains(e.target as Node)) {
+				menu.classList.add("hidden")
+			}
+		})
+
+		// Logout dentro del menú
+		const logoutBtnInMenu = menu.querySelector("#dropdownLogout")
+		if (logoutBtnInMenu) {
+			logoutBtnInMenu.addEventListener("click", () => {
+				currentUser = null
+					; (window as any).currentAvatar = null
+				updateNav()
+			})
+		}
 	} else {
 		userDisplay.textContent = "Not signed in"
 		loginBtn.style.display = "inline-block"
@@ -71,6 +134,13 @@ function showAuthForm(mode: "login" | "signup") {
 		emailInput.placeholder = "Email"
 		emailInput.type = "email"
 		form.appendChild(emailInput)
+		// avatar
+		const avatarInput = document.createElement("input")
+		avatarInput.id = "authAvatar"
+		avatarInput.className = "w-full p-2 border rounded"
+		avatarInput.type = "file"
+		avatarInput.accept = "image/*"
+		form.appendChild(avatarInput)
 	}
 
 	form.appendChild(createPasswordInput("authPassword", "Password"))
@@ -111,7 +181,7 @@ function showAuthForm(mode: "login" | "signup") {
 	// Events
 	cancelBtn.addEventListener("click", () => modal.remove())
 
-	form.addEventListener("submit", (e) => {
+	form.addEventListener("submit", async (e) => {
 		e.preventDefault()
 
 		const username = (document.getElementById("authUsername") as HTMLInputElement).value.trim()
@@ -137,10 +207,40 @@ function showAuthForm(mode: "login" | "signup") {
 			return
 		}
 
-		// Success simulation
-		currentUser = username
-		updateNav()
-		modal.remove()
+		// Avatar handling
+		let avatarUrl = ""
+		if (isSignup) {
+			const avatarInput = document.getElementById("authAvatar") as HTMLInputElement
+			const avatarFile = avatarInput?.files?.[0]
+			if (avatarFile) {
+				avatarUrl = URL.createObjectURL(avatarFile)
+			} else {
+				avatarUrl = "/avatar.png"
+			}
+			; (window as any).currentAvatar = avatarUrl
+		}
+
+		const endpoint = isSignup ? "/api/register" : "/api/login"
+		try {
+			const res = await fetch(endpoint, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ username, password, ...(isSignup ? { email } : {}) }),
+			})
+
+			const data = await res.json()
+			if (!res.ok) {
+				showError(data.error || "Authentication failed")
+				return
+			}
+
+			currentUser = data.username
+			updateNav()
+			modal.remove()
+		} catch (err) {
+			console.error("Auth request failed:", err)
+			showError("Failed to connect to server")
+		}
 	})
 
 	function showError(msg: string) {
