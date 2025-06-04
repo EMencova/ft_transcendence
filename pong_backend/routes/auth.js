@@ -25,7 +25,7 @@ async function authRoutes(fastify, options) {
   }
 
   fastify.post('/register', async (request, reply) => {
-    const { username, email, password } = request.body;
+    const { username, email, password, avatar} = request.body;
 
     if (!username || !email || !password) {
       return reply.status(400).send({ error: 'Missing fields' });
@@ -35,10 +35,10 @@ async function authRoutes(fastify, options) {
       // Hash password before saving
       const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-      const query = `INSERT INTO players (username, email, password, wins, losses)
-                     VALUES (?, ?, ?, 0, 0)`;
+      const query = `INSERT INTO players (username, email, password, wins, losses, avatar)
+                     VALUES (?, ?, ?, 0, 0, ?)`;
 
-      await runQuery(query, [username, email, hashedPassword]);
+      await runQuery(query, [username, email, hashedPassword, avatar || 'avatar.png']);
 
       reply.send({ success: true, username });
     } catch (err) {
