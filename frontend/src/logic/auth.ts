@@ -59,8 +59,19 @@ function updateNav() {
 		const menu = document.createElement("div")
 		menu.className = "absolute right-0 mt-2 bg-white border rounded shadow hidden text-black z-50"
 		menu.innerHTML = `
-			<a href="#" class="block px-4 py-2 hover:bg-gray-100">Profile</a>
-			<button id="dropdownLogout" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Logout</button>
+			<a href="#" class="px-4 py-2 hover:bg-gray-100 flex items-center">
+			<span class="mr-2">👤</span> Profile
+			</a>
+			<a href="#" class="px-4 py-2 hover:bg-gray-100 flex items-center">
+				<span class="mr-2">🏆</span> Tournament
+			</a>
+			<a href="#" class="px-4 py-2 hover:bg-gray-100 flex items-center">
+				<span class="mr-2">📊</span> LeaderBoard
+			</a>
+			<hr class="my-1 border-gray-200">
+			<button id="dropdownLogout" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center">
+				<span class="mr-2">🚪</span> Logout
+			</button>
 		`
 
 		const container = document.createElement("div")
@@ -225,7 +236,7 @@ function showAuthForm(mode: "login" | "signup") {
 			const res = await fetch(endpoint, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ username, password, ...(isSignup ? { email } : {}) }),
+				body: JSON.stringify({ username, password, ...(isSignup ? { email, avatar: avatarUrl } : {}) }),
 			})
 
 			const data = await res.json()
