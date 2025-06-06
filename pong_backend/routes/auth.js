@@ -71,7 +71,7 @@ async function authRoutes(fastify, options) {
         return reply.status(401).send({ error: 'Invalid credentials' });
       }
 
-      reply.send({ success: true, userId: row.id, username: row.username });
+      reply.send({ success: true, userId: row.id, username: row.username, avatar: row.avatar });
     } catch (err) {
       console.error('Login error:', err.message);
       reply.status(500).send({ error: 'Login failed' });
