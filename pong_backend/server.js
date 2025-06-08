@@ -1,25 +1,35 @@
 const Fastify = require('fastify');
-const fastify = Fastify();
-const { setupDb } = require('./db'); 
 const path = require('path');
+const { setupDb } = require('./db');
 
-// MySQL database
+const fastify = Fastify({
+  logger: true,
+});
+
 setupDb(fastify);
 
-fastify.get('/', async (request, reply) => {
-  return { hello: 'world' };
+// Import routes
+const authRoutes = require('./routes/auth');
+const playersRoutes = require('./routes/players');
+
+// Serve avatars from public/avatars directory
+const avatarDir = path.join(__dirname, 'public/avatars');
+fastify.register(require('@fastify/static'), {
+  root: avatarDir,
+  prefix: '/avatars/',
 });
 
-fastify.listen({ port: 3000 }, (err, address) => {
+fastify.register(authRoutes, { prefix: '/api' }); // Register auth routes with /api prefix
+fastify.register(playersRoutes);
+
+
+fastify.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
   if (err) {
-    console.error(err);
+    fastify.log.error(err);
     process.exit(1);
   }
-  console.log(`Server listening at ${address}`);
+  fastify.log.info(`Server listening on ${fastify.server.address().port}`);
 });
 
-fastify.register(require('@fastify/static'), {
-  root: path.join(__dirname, '../frontend'),
-  prefix: '/', // So http://localhost:3000 loads index.html
-});
+
 

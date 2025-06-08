@@ -1,20 +1,30 @@
 import { Footer } from './Footer.ts'
-import { Header } from './Header.ts'
-import { Pong } from './Pong.ts'
-
+import { initializeAuth } from './logic/auth.ts'
+import { createNav } from './Nav'
+import { GameView } from './views/GameView.ts'
 
 export function App(): HTMLElement {
   const container = document.createElement('div')
-  container.className = 'flex flex-col h-screen w-full'
+  container.className = 'flex flex-col min-h-screen w-full'
 
-  const main = document.createElement('main')
-  main.className = 'flex-grow p-4 text-xl mt-80'
-  main.innerHTML = `<p>Game PONG here</p>`
+  function render() {
+    container.innerHTML = '' // Clear the container
 
-  container.appendChild(Header())
-  // container.appendChild(main)
-  container.appendChild(Pong())
-  container.appendChild(Footer());
+    const nav = createNav()
+    container.appendChild(nav)
 
+    requestAnimationFrame(() => {
+      initializeAuth()
+    })
+
+    const main = GameView()
+    container.appendChild(main)
+
+    const footer = Footer()
+
+    container.appendChild(main)
+    container.appendChild(footer)
+  }
+  render()
   return container
 }

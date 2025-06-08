@@ -43,7 +43,7 @@ h1 {
   /* max-width: 1280px; */
   width: 80%;
   margin: 0 auto;
-  padding: 2rem;
+  /* padding: 2rem; */
   text-align: center;
 }
 
@@ -68,7 +68,7 @@ h1 {
   color: #888;
 }
 
-button {
+/* button {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0;
@@ -78,7 +78,7 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-}
+} */
 
 button:hover {
   border-color: #646cff;
