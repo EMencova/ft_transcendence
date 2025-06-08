@@ -1,12 +1,13 @@
 import { Features } from '../Features'
 import { Gameplay } from '../Gameplay'
 
-export function GameView(): HTMLElement {
+export function GameView(push = true): HTMLElement {
 	const main = document.getElementById('mainContent')
 	if (main) {
 		main.innerHTML = ''
 		main.appendChild(Features())
 		main.appendChild(Gameplay())
+		if (push) history.pushState({ page: "home" }, "", "/")
 		return main
 	}
 	// If mainContent does not exist, create it
