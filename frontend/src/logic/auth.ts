@@ -208,26 +208,30 @@ function showAuthForm(mode: "login" | "signup") {
 			return
 		}
 
-		// Avatar handling
-		let avatarUrl = ""
-		if (isSignup) {
-			const avatarInput = document.getElementById("authAvatar") as HTMLInputElement
-			const avatarFile = avatarInput?.files?.[0]
-			if (avatarFile) {
-				avatarUrl = URL.createObjectURL(avatarFile)
-			} else {
-				avatarUrl = "/avatar.png"
-			}
-			; (window as any).currentAvatar = avatarUrl
-		}
-
 		const endpoint = isSignup ? "/api/register" : "/api/login"
+		let res: Response
+
 		try {
-			const res = await fetch(endpoint, {
+			if (isSignup) {
+				const avatarInput = document.getElementById("authAvatar") as HTMLInputElement
+				const formData = new FormData()
+				formData.append("username", username)
+				formData.append("email", email)
+				formData.append("password", password)
+				if (avatarInput?.files?.[0]) {
+					formData.append("avatar", avatarInput.files[0])
+				}
+				res = await fetch(endpoint, {
+					method: "POST",
+					body: formData,
+				})
+			} else {
+				res = await fetch(endpoint, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ username, password, ...(isSignup ? { email, avatar: avatarUrl } : {}) }),
+					body: JSON.stringify({ username, password }),
 			})
+			}
 
 			const data = await res.json()
 			if (!res.ok) {
@@ -236,7 +240,7 @@ function showAuthForm(mode: "login" | "signup") {
 			}
 
 			currentUser = data.username
-			let avatar = data.avatar || avatarUrl;
+			let avatar = data.avatar || "/avatar.png";
 			(window as any).currentAvatar = avatar
 			updateNav()
 			modal.remove()
@@ -245,7 +249,6 @@ function showAuthForm(mode: "login" | "signup") {
 			showError("Failed to connect to server")
 		}
 	})
-
 	function showError(msg: string) {
 		errorText.textContent = msg
 		errorText.classList.remove("hidden")
