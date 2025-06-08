@@ -14,7 +14,27 @@ export function createNav(): HTMLElement {
 
 	const currentUser = document.createElement("span")
 	currentUser.id = "currentUser"
-	currentUser.textContent = "Not signed in"
+	currentUser.textContent = ""
+
+	// Add Game, Tournament and LeaderBoard links
+	const gameLink = document.createElement("a")
+	gameLink.id = "gameLink"
+	gameLink.href = "/"
+	gameLink.textContent = "🎮 Game"
+	gameLink.className = linkClass
+
+	const tournamentLink = document.createElement("a")
+	tournamentLink.id = "tournamentLink"
+	tournamentLink.href = "/tournament"
+	tournamentLink.textContent = "🏆 Tournament"
+	tournamentLink.className = linkClass
+
+	const leaderboardLink = document.createElement("a")
+	leaderboardLink.id = "leaderboardLink"
+	leaderboardLink.href = "/leaderboard"
+	leaderboardLink.textContent = "📊 LeaderBoard"
+	leaderboardLink.className = linkClass
+
 
 	const loginBtn = document.createElement("button")
 	loginBtn.id = "loginBtn"
@@ -32,6 +52,9 @@ export function createNav(): HTMLElement {
 	logoutBtn.style.display = "none"
 	logoutBtn.className = buttonClass
 
+	navLinks.appendChild(gameLink)
+	navLinks.appendChild(tournamentLink)
+	navLinks.appendChild(leaderboardLink)
 	navLinks.appendChild(currentUser)
 	navLinks.appendChild(loginBtn)
 	navLinks.appendChild(signupBtn)
@@ -43,3 +66,5 @@ export function createNav(): HTMLElement {
 
 const buttonClass =
 	"ml-4 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded cursor-pointer"
+
+const linkClass = "text-white hover:text-orange-500"
