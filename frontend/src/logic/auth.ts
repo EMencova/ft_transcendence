@@ -1,5 +1,6 @@
 import { createPasswordInput } from "../PasswordInput"
-let currentUser: string | null = null
+import { setupNavLinks } from "./router"
+export let currentUser: string | null = null
 
 export function initializeAuth() {
 	const loginBtn = document.getElementById("loginBtn")!
@@ -15,6 +16,7 @@ export function initializeAuth() {
 	})
 
 	updateNav()
+	setupNavLinks()
 }
 
 function updateNav() {
@@ -22,34 +24,23 @@ function updateNav() {
 	const loginBtn = document.getElementById("loginBtn")!
 	const signupBtn = document.getElementById("signupBtn")!
 	const logoutBtn = document.getElementById("logoutBtn")!
+	const tournamentLink = document.getElementById("tournamentLink")!
+	const leaderboardLink = document.getElementById("leaderboardLink")!
+	const gameLink = document.getElementById("gameLink")!
 
-	// if (currentUser) {
-	// 	userDisplay.textContent = `👋 Welcome, ${currentUser}`
-	// 	loginBtn.style.display = "none"
-	// 	signupBtn.style.display = "none"
-	// 	logoutBtn.style.display = "inline-block"
-	// } else {
-	// 	userDisplay.textContent = "Not signed in"
-	// 	loginBtn.style.display = "inline-block"
-	// 	signupBtn.style.display = "inline-block"
-	// 	logoutBtn.style.display = "none"
-	// }
-
-	userDisplay.innerHTML = "" 
+	userDisplay.innerHTML = ""
 
 	if (currentUser) {
-		//userDisplay.textContent = `👋 Welcome, ${currentUser}`
-		// loginBtn.style.display = "none"
-		// signupBtn.style.display = "none"
-		// logoutBtn.style.display = "inline-block"
+		gameLink.style.display = "inline-block"
+		tournamentLink.classList.remove("pointer-events-none", "opacity-50")
+		leaderboardLink.classList.remove("pointer-events-none", "opacity-50")
 		loginBtn.style.display = "none"
 		signupBtn.style.display = "none"
-		logoutBtn.style.display = "none" // Ahora va dentro del menú
+		logoutBtn.style.display = "none"
 
-		// Crea el saludo
 		const welcomeSpan = document.createElement("span")
 		welcomeSpan.textContent = `👋 Welcome, ${currentUser}`
-		welcomeSpan.className = "mr-4" // Espacio a la derecha
+		welcomeSpan.className = "mr-4"
 
 		const avatarImg = document.createElement("img")
 		avatarImg.src = (window as any).currentAvatar || "/avatar.png"
@@ -61,12 +52,6 @@ function updateNav() {
 		menu.innerHTML = `
 			<a href="#" class="px-4 py-2 hover:bg-gray-100 flex items-center">
 			<span class="mr-2">👤</span> Profile
-			</a>
-			<a href="#" class="px-4 py-2 hover:bg-gray-100 flex items-center">
-				<span class="mr-2">🏆</span> Tournament
-			</a>
-			<a href="#" class="px-4 py-2 hover:bg-gray-100 flex items-center">
-				<span class="mr-2">📊</span> LeaderBoard
 			</a>
 			<hr class="my-1 border-gray-200">
 			<button id="dropdownLogout" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center">
@@ -93,7 +78,7 @@ function updateNav() {
 			}
 		})
 
-		// Logout dentro del menú
+		// Logout inside the dropdown menu
 		const logoutBtnInMenu = menu.querySelector("#dropdownLogout")
 		if (logoutBtnInMenu) {
 			logoutBtnInMenu.addEventListener("click", () => {
@@ -102,14 +87,19 @@ function updateNav() {
 				updateNav()
 			})
 		}
+
 	} else {
-		userDisplay.textContent = "Not signed in"
+		userDisplay.textContent = ""
 		loginBtn.style.display = "inline-block"
 		signupBtn.style.display = "inline-block"
 		logoutBtn.style.display = "none"
+		gameLink.style.display = "none"
+
+		// Disable tournament and leaderboard links
+		tournamentLink.classList.add("pointer-events-none", "opacity-50")
+		leaderboardLink.classList.add("pointer-events-none", "opacity-50")
 	}
 }
-
 
 function showAuthForm(mode: "login" | "signup") {
 	const modal = document.createElement("div")
@@ -246,6 +236,8 @@ function showAuthForm(mode: "login" | "signup") {
 			}
 
 			currentUser = data.username
+			let avatar = data.avatar || avatarUrl;
+			(window as any).currentAvatar = avatar
 			updateNav()
 			modal.remove()
 		} catch (err) {
