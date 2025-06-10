@@ -1,6 +1,8 @@
+const { sanitizeInput } = require('../sanitize'); // adjust path if needed
+
 const path = require('path');
 const fs = require('fs');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt'); 
 const SALT_ROUNDS = 10;
 const pump = require('util').promisify(require('stream').pipeline);
 

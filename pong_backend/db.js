@@ -27,6 +27,29 @@ function setupDb(fastify) {
           avatar TEXT DEFAULT 'avatar.png'
         )
       `);
+
+       // Score Pong
+      db.run(`CREATE TABLE IF NOT EXISTS score_pong (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          player_name TEXT NOT NULL,
+          wins INTEGER DEFAULT 0,
+          losses INTEGER DEFAULT 0
+       );`);
+
+      // Score Other
+      db.run(`CREATE TABLE IF NOT EXISTS score_other (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          player_name TEXT NOT NULL,
+          wins INTEGER DEFAULT 0,
+          losses INTEGER DEFAULT 0
+       );`);
+
+      // Tournament
+      db.run(`CREATE TABLE IF NOT EXISTS tournament (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );`);
     }
   });
 
