@@ -4,7 +4,7 @@ export function TournamentView(push = true) {
 	const main = document.getElementById("mainContent")
 	if (main) {
 		if (!currentUser) {
-			main.innerHTML = `<p class="text-red-500">Debes iniciar sesión para ver los torneos.</p>`
+			main.innerHTML = `<p class="text-red-500">You must be logged in to view tournaments.</p>`
 			return
 		}
 		main.innerHTML = `
