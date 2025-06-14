@@ -1,4 +1,6 @@
 import { createPasswordInput } from "../PasswordInput"
+import { GameView } from '../views/GameView'
+import { ProfileView } from '../views/Profile'
 import { setupNavLinks } from "./router"
 export let currentUser: string | null = null
 
@@ -13,6 +15,7 @@ export function initializeAuth() {
 	logoutBtn.addEventListener("click", () => {
 		currentUser = null
 		updateNav()
+		GameView(true)
 	})
 
 	updateNav()
@@ -50,7 +53,7 @@ function updateNav() {
 		const menu = document.createElement("div")
 		menu.className = "absolute right-0 mt-2 bg-white border rounded shadow hidden text-black z-50"
 		menu.innerHTML = `
-			<a href="#" class="px-4 py-2 hover:bg-gray-100 flex items-center">
+			<a href="/profile" id="profileLink" class="px-4 py-2 hover:bg-gray-100 flex items-center">
 			<span class="mr-2">👤</span> Profile
 			</a>
 			<hr class="my-1 border-gray-200">
@@ -85,6 +88,16 @@ function updateNav() {
 				currentUser = null
 					; (window as any).currentAvatar = null
 				updateNav()
+				GameView(true)
+			})
+		}
+
+		const profileLink = menu.querySelector("#profileLink")
+		if (profileLink) {
+			profileLink.addEventListener("click", (e) => {
+				e.preventDefault()
+				ProfileView()
+				menu.classList.add("hidden")
 			})
 		}
 
@@ -227,10 +240,10 @@ function showAuthForm(mode: "login" | "signup") {
 				})
 			} else {
 				res = await fetch(endpoint, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ username, password }),
-			})
+				})
 			}
 
 			const data = await res.json()
