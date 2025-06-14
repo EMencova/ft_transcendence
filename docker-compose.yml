@@ -1,7 +1,7 @@
 networks:
-    pong-network:
-        name: pong-network
-        driver: bridge
+  pong-network:
+    name: pong-network
+    driver: bridge
 
 services:
   nginx:
@@ -12,7 +12,7 @@ services:
       - "443:443"
       - "80:80"
     depends_on:
-      - app 
+      - app
     networks:
       - pong-network
 
@@ -23,6 +23,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - NODE_ENV=production
       - NODE_ENV=production
     volumes:
       - ./pong_backend:/app

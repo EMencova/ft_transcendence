@@ -2,13 +2,12 @@ import { createPasswordInput } from "../PasswordInput"
 import { GameView } from '../views/GameView'
 import { ProfileView } from '../views/Profile'
 import { setupNavLinks } from "./router"
-export let currentUser: string | null = localStorage.getItem("currentUser");
+export let currentUser: string | null = localStorage.getItem("currentUser")
 
 export function initializeAuth() {
 	const loginBtn = document.getElementById("loginBtn")!
 	const signupBtn = document.getElementById("signupBtn")!
 	const logoutBtn = document.getElementById("logoutBtn")!
-	//const userDisplay = document.getElementById("currentUser")!
 
 	loginBtn.addEventListener("click", () => showAuthForm("login"))
 	signupBtn.addEventListener("click", () => showAuthForm("signup"))
@@ -125,7 +124,6 @@ function showAuthForm(mode: "login" | "signup") {
 
 	const isSignup = mode === "signup"
 
-	// Title and Form
 	const title = document.createElement("h2")
 	title.className = "text-xl font-bold mb-4"
 	title.textContent = isSignup ? "Signup" : "Login"
@@ -134,13 +132,11 @@ function showAuthForm(mode: "login" | "signup") {
 	form.id = "authForm"
 	form.className = "space-y-4"
 
-	// Inputs
 	const usernameInput = document.createElement("input")
 	usernameInput.id = "authUsername"
 	usernameInput.className = "w-full p-2 border rounded"
 	usernameInput.placeholder = "Username"
 	usernameInput.type = "text"
-
 	form.appendChild(usernameInput)
 
 	if (isSignup) {
@@ -162,7 +158,12 @@ function showAuthForm(mode: "login" | "signup") {
 	form.appendChild(createPasswordInput("authPassword", "Password"))
 
 	if (isSignup) {
-		form.appendChild(createPasswordInput("authConfirm", "Repeat Password"))
+		const confirmInput = document.createElement("input")
+		confirmInput.id = "authConfirm"
+		confirmInput.className = "w-full p-2 border rounded"
+		confirmInput.placeholder = "Repeat Password"
+		confirmInput.type = "password"
+		form.appendChild(confirmInput)
 	}
 
 	const errorText = document.createElement("p")
@@ -180,7 +181,6 @@ function showAuthForm(mode: "login" | "signup") {
 
 	const cancelBtn = document.createElement("button")
 	cancelBtn.type = "button"
-	cancelBtn.id = "authCancel"
 	cancelBtn.className = "bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded"
 	cancelBtn.textContent = "Cancel"
 
@@ -188,13 +188,11 @@ function showAuthForm(mode: "login" | "signup") {
 	buttonsDiv.appendChild(cancelBtn)
 	form.appendChild(buttonsDiv)
 
-	// Mount elements
 	formBox.appendChild(title)
 	formBox.appendChild(form)
 	modal.appendChild(formBox)
 	document.body.appendChild(modal)
 
-	// Events
 	cancelBtn.addEventListener("click", () => modal.remove())
 
 	form.addEventListener("submit", async (e) => {
@@ -209,7 +207,6 @@ function showAuthForm(mode: "login" | "signup") {
 			? (document.getElementById("authConfirm") as HTMLInputElement).value.trim()
 			: ""
 
-		// Validations
 		if (!username || !password || (isSignup && (!email || !confirm))) {
 			showError("Please fill in all fields")
 			return
@@ -270,7 +267,6 @@ function showAuthForm(mode: "login" | "signup") {
 		errorText.classList.remove("hidden")
 	}
 }
-
 
 function validateEmail(email: string): boolean {
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)

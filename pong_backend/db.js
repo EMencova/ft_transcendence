@@ -73,3 +73,9 @@ function setupDb(fastify) {
 
 module.exports = { setupDb };
 
+
+
+
+
+
+
