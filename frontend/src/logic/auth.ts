@@ -2,7 +2,7 @@ import { createPasswordInput } from "../PasswordInput"
 import { GameView } from '../views/GameView'
 import { ProfileView } from '../views/Profile'
 import { setupNavLinks } from "./router"
-export let currentUser: string | null = null
+export let currentUser: string | null = localStorage.getItem("currentUser");
 
 export function initializeAuth() {
 	const loginBtn = document.getElementById("loginBtn")!
@@ -14,6 +14,7 @@ export function initializeAuth() {
 	signupBtn.addEventListener("click", () => showAuthForm("signup"))
 	logoutBtn.addEventListener("click", () => {
 		currentUser = null
+		localStorage.removeItem("currentUser")
 		updateNav()
 		GameView(true)
 	})
@@ -253,6 +254,7 @@ function showAuthForm(mode: "login" | "signup") {
 			}
 
 			currentUser = data.username
+			localStorage.setItem("currentUser", data.username)
 			let avatar = data.avatar || "/avatar.png";
 			(window as any).currentAvatar = avatar
 			updateNav()
