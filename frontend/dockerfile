@@ -1,6 +1,9 @@
 # Etapa 1: build con Node y Vite
 FROM node:20-alpine AS builder
 
+# Establecemos la zona horaria
+# RUN mkdir -p /app
+
 WORKDIR /app
 
 # Copiamos dependencias e instalamos
