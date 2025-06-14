@@ -19,7 +19,7 @@ services:
   app:
     build:
       context: ./pong_backend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     ports:
       - "3000:3000"
     environment:
