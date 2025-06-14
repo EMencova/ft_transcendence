@@ -88,6 +88,7 @@ function updateNav() {
 			logoutBtnInMenu.addEventListener("click", () => {
 				currentUser = null
 					; (window as any).currentAvatar = null
+				localStorage.removeItem("currentUser")
 				updateNav()
 				GameView(true)
 			})
