@@ -41,7 +41,7 @@ function createProfileMainContent(): HTMLElement {
     avatarContainer.className = "relative"
 
     const avatar = document.createElement("img")
-    avatar.src = (window as any).currentAvatar || "https://via.placeholder.com/100"
+    avatar.src = (window as any).currentAvatar || "/avatar.png"
     avatar.alt = "Profile avatar"
     avatar.className = "w-24 h-24 rounded-full object-cover"
 
@@ -127,10 +127,12 @@ function createProfileMainContent(): HTMLElement {
 
     // Username field
     const usernameField = createFormField("Username", "text", CurrentUser ?? "", "username")
+    usernameField.className = "text-gray-700"
     settingsForm.appendChild(usernameField)
 
     // Email field
     const emailField = createFormField("Email", "email", "user@example.com", "email")
+    emailField.className = "text-gray-700"
     settingsForm.appendChild(emailField)
 
     // Two-Factor Authentication
@@ -139,6 +141,7 @@ function createProfileMainContent(): HTMLElement {
 
     const twoFALabel = document.createElement("div")
     twoFALabel.innerHTML = "<strong>Two-Factor Authentication</strong><p class='text-sm text-gray-500'>Enable additional security for your account</p>"
+    twoFALabel.className = "text-black"
 
     const twoFAToggle = document.createElement("label")
     twoFAToggle.className = "relative inline-flex items-center cursor-pointer"
@@ -157,7 +160,7 @@ function createProfileMainContent(): HTMLElement {
 
     const passwordTitle = document.createElement("h3")
     passwordTitle.textContent = "Change Password"
-    passwordTitle.className = "text-lg font-medium mb-4"
+    passwordTitle.className = "text-lg font-medium mb-4 text-black"
     passwordSection.appendChild(passwordTitle)
 
     const currentPasswordField = createFormField("Current Password", "password", "", "current-password")
@@ -206,8 +209,8 @@ function createProfileMainContent(): HTMLElement {
     gameHistory.style.display = "none"
     gameHistory.innerHTML = `
         <div class="bg-white rounded-lg shadow">
-            <div class="p-4 border-b border-gray-200">
-                <h3 class="font-medium">Recent Games</h3>
+            <div class="p-4 border-b border-gray-200 ">
+                <h3 class="font-medium text-black">Recent Games</h3>
             </div>
             <div class="p-4">
                 <div class="text-gray-500 text-center py-8">
@@ -225,7 +228,7 @@ function createProfileMainContent(): HTMLElement {
     friends.innerHTML = `
         <div class="bg-white rounded-lg shadow">
             <div class="p-4 border-b border-gray-200">
-                <h3 class="font-medium">Friends</h3>
+                <h3 class="font-medium text-black">Friends</h3>
             </div>
             <div class="p-4">
                 <div class="text-gray-500 text-center py-8">
