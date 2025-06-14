@@ -7,7 +7,7 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: ./nginx/Dockerfile
+      dockerfile: ./nginx/dockerfile
     ports:
       - "443:443"
       - "80:80"
@@ -19,33 +19,15 @@ services:
   app:
     build:
       context: ./pong_backend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - NODE_ENV=production
     volumes:
       - ./pong_backend:/app
       - ./pong_backend/data:/app/data
+      - ./frontend:/frontend
     networks:
       - pong-network
-
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   volumes:
-  #     - frontend-dist:/app/dist
-  #   entrypoint: [ "sh", "-c", "npm run build" ]
-  #   networks:
-  #     - pong-network
-
-volumes:
-  sqlite-data:
-
-
-
-
-
-
-

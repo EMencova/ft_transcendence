@@ -1,11 +1,12 @@
-FROM node:20-alpine
+FROM node:20
 
 WORKDIR /app
 
 # Install SQLite support
-RUN apk add --no-cache python3 make g++ sqlite-dev
+RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev
 
 COPY package*.json ./
+
 RUN npm install
 
 COPY . .
