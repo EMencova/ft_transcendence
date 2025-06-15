@@ -7,6 +7,7 @@ export function Gameplay(): HTMLElement {
   section.className = "px-4 mb-12"
 
   section.innerHTML = `
+
     <h2 class="text-2xl font-semibold mb-6">🕹️ Try It Out</h2>
     <div id="startMenu" class="max-w-md mx-auto bg-[#141414] p-6 rounded-lg shadow-md">
       <h3 class="text-xl font-bold mb-4 text-center">Start Game</h3>

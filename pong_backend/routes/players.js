@@ -1,9 +1,5 @@
-
-
-const { sanitizeInput } = require('../sanitize');
-
 async function playersRoutes(fastify, options) {
-    
+  // Example route - you can add players-specific routes here
   fastify.get('/players', async (request, reply) => {
     const db = fastify.sqliteDb;
 
@@ -13,14 +9,7 @@ async function playersRoutes(fastify, options) {
           console.log('DB fetch error:', err.message);
           return reject(reply.status(500).send({ error: 'Database error' }));
         }
-
-
-        const safeRows = rows.map(player => ({
-          ...player,
-          username: sanitizeInput(player.username)
-        }));
-
-        resolve(reply.send({ players: safeRows }));
+        resolve(reply.send({ players: rows }));
       });
     });
   });
@@ -29,7 +18,7 @@ async function playersRoutes(fastify, options) {
 }
 
 module.exports = playersRoutes;
-
+  
 
   
 
