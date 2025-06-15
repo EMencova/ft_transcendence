@@ -33,8 +33,8 @@ export function Gameplay(): HTMLElement {
     <canvas id="gameCanvas" width="800" height="600" class="hidden mx-auto my-8 border-2 border-white rounded-lg bg-black"></canvas>
 
     <div class="flex justify-center text-center space-x-4">
-      <button id="pauseBtn" class="hidden bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">Pause</button>
-      <button id="resetBtn" class="hidden bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">Reset</button>
+      <button id="pauseBtn" class="w-24 hidden bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">Pause</button>
+      <button id="resetBtn" class="w-24 hidden bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">Reset</button>
     </div>
   `
 
