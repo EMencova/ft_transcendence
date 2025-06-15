@@ -16,13 +16,20 @@ export function createNav(): HTMLElement {
 	currentUser.id = "currentUser"
 	currentUser.textContent = ""
 
-	// Add Game, Tournament and LeaderBoard links
 	const gameLink = document.createElement("a")
 	gameLink.id = "gameLink"
 	gameLink.href = "/"
 	gameLink.textContent = "🎮 Game"
 	gameLink.className = linkClass
 
+	// Add OtherGames link
+	const otherGamesLink = document.createElement("a")
+	otherGamesLink.id = "otherGamesLink"
+	otherGamesLink.href = "/other-games"
+	otherGamesLink.textContent = "🕹️ Other Games"
+	otherGamesLink.className = linkClass
+
+	// Add Game, Tournament and LeaderBoard links
 	const tournamentLink = document.createElement("a")
 	tournamentLink.id = "tournamentLink"
 	tournamentLink.href = "/tournament"
@@ -53,6 +60,7 @@ export function createNav(): HTMLElement {
 	logoutBtn.className = buttonClass
 
 	navLinks.appendChild(gameLink)
+	navLinks.appendChild(otherGamesLink)
 	navLinks.appendChild(tournamentLink)
 	navLinks.appendChild(leaderboardLink)
 	navLinks.appendChild(currentUser)
