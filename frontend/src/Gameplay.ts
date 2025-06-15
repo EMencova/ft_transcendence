@@ -8,6 +8,20 @@ export function Gameplay(): HTMLElement {
 
   section.innerHTML = `
 
+  <div class="flex items-center justify-between mb-4">
+  <!-- Profile Picture Placeholder -->
+  <div class="flex items-center space-x-2">
+    <span class="text-white text-lg">👤 Player</span>
+  </div>
+
+  <!-- Language Flags -->
+  <div id="langFlags" class="flex gap-2">
+    <img src="https://flagcdn.com/24x18/gb.png" alt="English" data-lang="en" class="lang-flag cursor-pointer border-2 border-white rounded-sm active">
+    <img src="https://flagcdn.com/24x18/es.png" alt="Español" data-lang="es" class="lang-flag cursor-pointer rounded-sm">
+    <img src="https://flagcdn.com/24x18/cz.png" alt="Česky" data-lang="cz" class="lang-flag cursor-pointer rounded-sm">
+  </div>
+</div>
+
     <h2 class="text-2xl font-semibold mb-6">🕹️ Try It Out</h2>
     <div id="startMenu" class="max-w-md mx-auto bg-[#141414] p-6 rounded-lg shadow-md">
       <h3 class="text-xl font-bold mb-4 text-center">Start Game</h3>
