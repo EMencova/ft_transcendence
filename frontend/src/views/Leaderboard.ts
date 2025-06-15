@@ -9,7 +9,7 @@ export function LeaderboardView(push = true) {
 		}
 
 		main.innerHTML = `
-			<h2 class="text-2xl font-bold mb-4">📊 Leaderboard</h2>
+			<h2 class="text-2xl font-bold mb-4 mt-6">📊 Leaderboard</h2>
 			<div id="leaderboardTable">Loading leaderboard...</div>
 		`
 
