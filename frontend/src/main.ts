@@ -1,14 +1,22 @@
-// import { setupCounter } from './counter.ts'
 import { App } from './App.ts'
+import { loadTranslations, setLanguage, setupLanguageSwitcher } from '../public/js/translation.ts'
 import './style.css'
-// import typescriptLogo from './typescript.svg'
-// import viteLogo from '/vite.svg'
-
 
 const root = document.querySelector<HTMLDivElement>('#app')
-if (root) {
+
+window.addEventListener('DOMContentLoaded', async () => {
+  if (!root) return
+
+  // First append your App (which contains the buttons)
   root.appendChild(App())
-}
+
+  // Now load translations and setup event listeners
+  await loadTranslations()
+  setupLanguageSwitcher()
+  setLanguage('en')
+})
+
+
 
 // document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 //   <div>

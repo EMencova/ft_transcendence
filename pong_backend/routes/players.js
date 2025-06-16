@@ -1,5 +1,13 @@
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 async function playersRoutes(fastify, options) {
-  // Example route - you can add players-specific routes here
   fastify.get('/players', async (request, reply) => {
     const db = fastify.sqliteDb;
 
@@ -9,15 +17,21 @@ async function playersRoutes(fastify, options) {
           console.log('DB fetch error:', err.message);
           return reject(reply.status(500).send({ error: 'Database error' }));
         }
-        resolve(reply.send({ players: rows }));
+
+        // Sanitize usernames before sending
+        const sanitizedPlayers = rows.map(player => ({
+          ...player,
+          username: escapeHtml(player.username)
+        }));
+
+        resolve(reply.send({ players: sanitizedPlayers }));
       });
     });
   });
-
-  // Add other players-related endpoints here, but NOT /register or /login
 }
 
 module.exports = playersRoutes;
+
   
 
   

@@ -51,12 +51,13 @@ function updateNav() {
 		menu.className = "absolute right-0 mt-2 bg-white border rounded shadow hidden text-black z-50"
 		menu.innerHTML = `
 			<a href="#" class="px-4 py-2 hover:bg-gray-100 flex items-center">
-			<span class="mr-2">👤</span> Profile
-			</a>
-			<hr class="my-1 border-gray-200">
-			<button id="dropdownLogout" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center">
-				<span class="mr-2">🚪</span> Logout
-			</button>
+  		<span class="mr-2">👤</span> <span data-translate="profile_button">Profile</span>
+		</a>
+		<hr class="my-1 border-gray-200">
+		<button id="dropdownLogout" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center">
+  		<span class="mr-2">🚪</span> <span data-translate="logout_button">Logout</span>
+		</button>
+
 		`
 
 		const container = document.createElement("div")

@@ -8,8 +8,9 @@ export function LeaderboardView(push = true) {
 			return
 		}
 		main.innerHTML = `
-			<h2 class="text-2xl font-bold mb-4">📊 LeaderBoard</h2>
-			<p>The player leaderboard table will go here.</p>
+			<h2 class="text-2xl font-bold mb-4" data-translate="leaderboard_title">📊 LeaderBoard</h2>
+<p data-translate="leaderboard_desc">The player leaderboard table will go here.</p>
+
 		`
 		if (push) history.pushState({ page: "leaderboard" }, "", "/leaderboard")
 	}
