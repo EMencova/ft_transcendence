@@ -11,6 +11,7 @@ setupDb(fastify);
 // Import routes
 const authRoutes = require('./routes/auth');
 const playersRoutes = require('./routes/players');
+const leaderboardRoutes = require('./routes/leaderboard');
 
 // Serve avatars from public/avatars directory
 const avatarDir = path.join(__dirname, 'public/avatars');
@@ -21,7 +22,7 @@ fastify.register(require('@fastify/static'), {
 
 fastify.register(authRoutes, { prefix: '/api' }); // Register auth routes with /api prefix
 fastify.register(playersRoutes);
-
+fastify.register(leaderboardRoutes);
 
 fastify.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
   if (err) {

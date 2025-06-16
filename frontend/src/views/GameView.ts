@@ -1,8 +1,6 @@
 import { Features } from '../Features'
 import { Gameplay } from '../Gameplay'
 
-
-
 export function GameView(push = true): HTMLElement {
 	const main = document.getElementById('mainContent')
 	if (main) {
