@@ -1,6 +1,5 @@
 type User = { id: number; username: string }
 
-
 document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
   e.preventDefault()
   const username = (document.getElementById('loginUsername') as HTMLInputElement).value
@@ -39,13 +38,16 @@ document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
   }
 })
 
+function logout() {
+  fetch('/api/auth/logout', { method: 'POST' }).then(() => location.reload())
+}
 
 function showDashboard(user: User) {
   const authSection = document.getElementById('authSection')!
   authSection.style.display = 'none'
 
   const dash = document.getElementById('dashboard')!
-  dash.innerHTML = ''
+  dash.innerHTML = ''  // clear old content
 
   const heading = document.createElement('h2')
   heading.textContent = `👋 Welcome ${user.username}`
@@ -69,21 +71,20 @@ function showDashboard(user: User) {
   loadMatchHistory()
 }
 
-
 async function loadMatchHistory() {
   const res = await fetch('/api/matches')
+  if (!res.ok) {
+    console.error('Failed to load matches:', await res.text())
+    return
+  }
   const matches = await res.json()
 
   const list = document.getElementById('matchHistory')!
-  list.innerHTML = ''
+  list.innerHTML = ''  // clear old items
 
   for (const m of matches) {
     const li = document.createElement('li')
     li.textContent = `${m.mode} | Score: ${m.score} vs ${m.opponent_score} | ${m.result}`
     list.appendChild(li)
   }
-}
-
-function logout() {
-  fetch('/api/auth/logout', { method: 'POST' }).then(() => location.reload())
 }

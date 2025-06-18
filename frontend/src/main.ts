@@ -1,5 +1,6 @@
 import { App } from './App.ts'
 import { loadTranslations, setLanguage, setupLanguageSwitcher } from '../public/js/translation.ts'
+import { initializeGameUI } from './logic/initGameUI'
 import './style.css'
 
 const root = document.querySelector<HTMLDivElement>('#app')
@@ -7,14 +8,16 @@ const root = document.querySelector<HTMLDivElement>('#app')
 window.addEventListener('DOMContentLoaded', async () => {
   if (!root) return
 
-  // First append your App (which contains the buttons)
   root.appendChild(App())
 
-  // Now load translations and setup event listeners
+  initializeGameUI()
+
   await loadTranslations()
   setupLanguageSwitcher()
   setLanguage('en')
 })
+
+
 
 
 
