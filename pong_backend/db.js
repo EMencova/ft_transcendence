@@ -85,12 +85,25 @@ function setupDb(fastify) {
         FOREIGN KEY (friend_id) REFERENCES players(id)
       )
     `);
+
+    // Tetris game history table (score and timestamp only)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS tetris_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        player_id INTEGER NOT NULL,
+        game_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        score INTEGER NOT NULL,
+        FOREIGN KEY (player_id) REFERENCES players(id)
+      )
+    `);
   });
 
   fastify.decorate('sqliteDb', db);
 }
 
 module.exports = { setupDb };
+
+
 
 
 

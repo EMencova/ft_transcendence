@@ -16,6 +16,8 @@ const playersRoutes = require('./routes/players');
 fastify.register(require('./routes/friendsRoutes'));
 fastify.register(require('./leaderboard'));
 fastify.register(require('./tournamentsRoutes'));
+const tetrisRoutes = require('./routes/tetrisRoutes');
+fastify.register(tetrisRoutes);
 
 const leaderboardRoutes = require('./routes/leaderboard');
 
