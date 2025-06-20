@@ -4,33 +4,12 @@ const bcrypt = require('bcrypt');
 const SALT_ROUNDS = 10;
 const pump = require('util').promisify(require('stream').pipeline);
 
-// Manual escape function
-function escapeHtml(str) {
-  if (typeof str !== 'string') return '';
-  return str.replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-}
-
-// Manual validators
-function validateUsername(username) {
-  return typeof username === 'string' && /^[a-zA-Z0-9_]{3,20}$/.test(username);
-}
-
-function validateEmail(email) {
-  return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validatePassword(password) {
-  return typeof password === 'string' && password.length >= 6;
-}
-
 async function authRoutes(fastify, options) {
   const db = fastify.sqliteDb;
 
- 
+  fastify.register(require('@fastify/multipart'));
+  
+  // Helper: wrap db.run with Promise
   function runQuery(query, params) {
     return new Promise((resolve, reject) => {
       db.run(query, params, function(err) {
@@ -154,6 +133,8 @@ async function authRoutes(fastify, options) {
 }
 
 module.exports = authRoutes;
+
+
 
   
   

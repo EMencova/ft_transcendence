@@ -11,6 +11,12 @@ setupDb(fastify);
 // Import routes
 const authRoutes = require('./routes/auth');
 const playersRoutes = require('./routes/players');
+
+
+fastify.register(require('./routes/friendsRoutes'));
+fastify.register(require('./leaderboard'));
+fastify.register(require('./tournamentsRoutes'));
+
 const leaderboardRoutes = require('./routes/leaderboard');
 
 // Serve avatars from public/avatars directory

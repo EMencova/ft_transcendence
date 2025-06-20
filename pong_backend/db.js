@@ -52,6 +52,17 @@ function setupDb(fastify) {
       date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
 
+    // Tournament registrations table
+    db.run(`CREATE TABLE IF NOT EXISTS tournament_registrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tournament_id INTEGER NOT NULL,
+      player_id INTEGER NOT NULL,
+      registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tournament_id) REFERENCES tournament(id),
+      FOREIGN KEY (player_id) REFERENCES players(id),
+      UNIQUE (tournament_id, player_id)
+    );`);
+
     // Leaderboard table
     db.run(`
       CREATE TABLE IF NOT EXISTS leaderboard (
@@ -63,12 +74,24 @@ function setupDb(fastify) {
         FOREIGN KEY (player_id) REFERENCES players(id)
       )
     `);
-});
+
+    // Friends table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS friends (
+        player_id INTEGER NOT NULL,
+        friend_id INTEGER NOT NULL,
+        PRIMARY KEY (player_id, friend_id),
+        FOREIGN KEY (player_id) REFERENCES players(id),
+        FOREIGN KEY (friend_id) REFERENCES players(id)
+      )
+    `);
+  });
 
   fastify.decorate('sqliteDb', db);
 }
 
 module.exports = { setupDb };
+
 
 
 
