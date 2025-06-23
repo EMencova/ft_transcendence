@@ -1,5 +1,6 @@
 import { createPasswordInput } from "../PasswordInput"
 import { GameView } from '../views/GameView'
+import { OtherGamesView } from '../views/OtherGames'
 import { ProfileView } from '../views/Profile'
 import { setupNavLinks } from "./router"
 export let currentUser: string | null = localStorage.getItem("currentUser")
@@ -257,6 +258,9 @@ function showAuthForm(mode: "login" | "signup") {
 			(window as any).currentAvatar = avatar
 			updateNav()
 			modal.remove()
+			if (window.location.pathname === "/other-games") {
+				OtherGamesView(false)
+			}
 		} catch (err) {
 			console.error("Auth request failed:", err)
 			showError("Failed to connect to server")
