@@ -4,19 +4,8 @@ networks:
     driver: bridge
 
 services:
-  nginx:
-    build:
-      context: .
-      dockerfile: ./nginx/dockerfile
-    ports:
-      - "443:443"
-      - "80:80"
-    depends_on:
-      - app
-    networks:
-      - pong-network
-
   app:
+    container_name: app
     build:
       context: ./pong_backend
       dockerfile: dockerfile
@@ -28,6 +17,19 @@ services:
       - ./pong_backend:/app
       - node_modules_volume:/app/node_modules
       - ./frontend:/frontend
+    networks:
+      - pong-network
+
+  nginx:
+    container_name: nginx
+    build:
+      context: .
+      dockerfile: ./nginx/dockerfile
+    ports:
+      - "443:443"
+      - "80:80"
+    depends_on:
+      - app
     networks:
       - pong-network
 

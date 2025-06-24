@@ -45,11 +45,14 @@ function setupDb(fastify) {
       losses INTEGER DEFAULT 0
     );`);
 
-    // Tournament table
+    // Tournament table //added
     db.run(`CREATE TABLE IF NOT EXISTS tournament (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      start_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+      winner_id INTEGER,
+      status TEXT DEFAULT 'pending'
     );`);
 
     // Tournament registrations table
@@ -96,19 +99,66 @@ function setupDb(fastify) {
         FOREIGN KEY (player_id) REFERENCES players(id)
       )
     `);
+
+
+    // tournament players table //added
+    db.run(`
+      CREATE TABLE IF NOT EXISTS tournament_players (
+        tournament_id INTEGER NOT NULL,
+        player_id INTEGER NOT NULL,
+        seed INTEGER,
+        eliminated BOOLEAN DEFAULT 0,
+        PRIMARY KEY (tournament_id, player_id),
+        FOREIGN KEY (tournament_id) REFERENCES tournament(id),
+        FOREIGN KEY (player_id) REFERENCES players(id)
+      )
+    `);
+
+    // Tournament matches table //added
+    db.run(`
+      CREATE TABLE IF NOT EXISTS tournament_matches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tournament_id INTEGER NOT NULL,
+        round INTEGER NOT NULL,
+        match_number INTEGER NOT NULL,
+        player1_id INTEGER,
+        player2_id INTEGER,
+        winner_id INTEGER,
+        status TEXT DEFAULT 'scheduled', -- scheduled, in_progress, completed
+        FOREIGN KEY (tournament_id) REFERENCES tournament(id),
+        FOREIGN KEY (player1_id) REFERENCES players(id),
+        FOREIGN KEY (player2_id) REFERENCES players(id),
+        FOREIGN KEY (winner_id) REFERENCES players(id)
+      )
+    `);
+    
+    db.run(`
+      INSERT OR IGNORE INTO players (username, email, password, avatar, wins, losses) 
+        VALUES 
+        ('Eliska', 'eliska@eliska.com', 'eliska', '/avatar1.png', 5, 2),
+        ('Verca', 'verca@verca.com', 'verca', '/avatar2.png', 3, 4),
+        ('Azaman', 'azaman@azaman.com', 'azaman', '/avatar3.png', 7, 1)
+    `);
+
   });
+
+  db.run(`ALTER TABLE tournament ADD COLUMN status TEXT DEFAULT 'pending'`, (err) => {
+    if (err && !err.message.includes("duplicate column name")) {
+      console.error("Failed to alter table:", err.message);
+    }
+  }); 
+
+  db.run(`
+    INSERT OR IGNORE INTO tournament (name, date, status) 
+    VALUES 
+    ('Summer Tournament', datetime('now'), 'pending'),
+    ('Winter Championship', datetime('now', '+2 months'), 'scheduled')
+  `);
 
   fastify.decorate('sqliteDb', db);
 }
 
 module.exports = { setupDb };
-
-
-
-
-
-
-
 
 
 
