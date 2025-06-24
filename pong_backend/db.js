@@ -131,10 +131,10 @@ function setupDb(fastify) {
         FOREIGN KEY (winner_id) REFERENCES players(id)
       )
     `);
-    
+
     db.run(`
-      INSERT OR IGNORE INTO players (username, email, password, avatar, wins, losses) 
-        VALUES 
+      INSERT OR IGNORE INTO players (username, email, password, avatar, wins, losses)
+        VALUES
         ('Eliska', 'eliska@eliska.com', 'eliska', '/avatar1.png', 5, 2),
         ('Verca', 'verca@verca.com', 'verca', '/avatar2.png', 3, 4),
         ('Azaman', 'azaman@azaman.com', 'azaman', '/avatar3.png', 7, 1)
@@ -146,14 +146,28 @@ function setupDb(fastify) {
     if (err && !err.message.includes("duplicate column name")) {
       console.error("Failed to alter table:", err.message);
     }
-  }); 
+  });
 
   db.run(`
-    INSERT OR IGNORE INTO tournament (name, date, status) 
-    VALUES 
+    INSERT OR IGNORE INTO tournament (name, date, status)
+    VALUES
     ('Summer Tournament', datetime('now'), 'pending'),
     ('Winter Championship', datetime('now', '+2 months'), 'scheduled')
   `);
+
+  db.run(
+    `
+	ALTER TABLE tournament ADD COLUMN winner_id INTEGER;
+  `,
+    (err) => {
+      if (err) {
+        // Column might already exist, which is fine
+        console.log("Column winner_id might already exist:", err.message);
+      } else {
+        console.log("Added winner_id column to tournament table");
+      }
+    }
+  );
 
   fastify.decorate('sqliteDb', db);
 }
