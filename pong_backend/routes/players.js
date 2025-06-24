@@ -1,23 +1,37 @@
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 async function playersRoutes(fastify, options) {
-    // Example route - you can add players-specific routes here
-    fastify.get('/players', async (request, reply) => {
-      const db = fastify.sqliteDb;
-  
-      return new Promise((resolve, reject) => {
-        db.all('SELECT id, username, wins, losses FROM players', [], (err, rows) => {
-          if (err) {
-            console.log('DB fetch error:', err.message);
-            return reject(reply.status(500).send({ error: 'Database error' }));
-          }
-          resolve(reply.send({ players: rows }));
-        });
+  fastify.get('/players', async (request, reply) => {
+    const db = fastify.sqliteDb;
+
+    return new Promise((resolve, reject) => {
+      db.all('SELECT id, username, wins, losses FROM players', [], (err, rows) => {
+        if (err) {
+          console.log('DB fetch error:', err.message);
+          return reject(reply.status(500).send({ error: 'Database error' }));
+        }
+
+        // Sanitize usernames before sending
+        const sanitizedPlayers = rows.map(player => ({
+          ...player,
+          username: escapeHtml(player.username)
+        }));
+
+        resolve(reply.send({ players: sanitizedPlayers }));
       });
     });
-  
-    // Add other players-related endpoints here, but NOT /register or /login
-  }
-  
-  module.exports = playersRoutes;
+  });
+}
+
+module.exports = playersRoutes;
+
   
 
   

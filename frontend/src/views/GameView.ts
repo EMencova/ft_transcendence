@@ -10,7 +10,7 @@ export function GameView(push = true): HTMLElement {
 		if (push) history.pushState({ page: "home" }, "", "/")
 		return main
 	}
-	// If mainContent does not exist, create it
+	
 	else {
 		const main = document.createElement('main')
 		main.id = 'mainContent'

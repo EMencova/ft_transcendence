@@ -9,8 +9,8 @@ export function LeaderboardView(push = true) {
 		}
 
 		main.innerHTML = `
-			<h2 class="text-2xl font-bold mb-4 mt-6">📊 Leaderboard</h2>
-			<div id="leaderboardTable">Loading leaderboard...</div>
+			<h2 class="text-2xl font-bold mb-4 mt-6" data-translate="leaderboard_title">📊 LeaderBoard</h2>
+<p data-translate="leaderboard_desc">The player leaderboard table will go here.</p>
 		`
 
 		// Fetch leaderboard data from server

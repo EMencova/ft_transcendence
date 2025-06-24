@@ -1,14 +1,25 @@
-// import { setupCounter } from './counter.ts'
 import { App } from './App.ts'
+import { loadTranslations, setLanguage, setupLanguageSwitcher } from '../public/js/translation.ts'
+import { initializeGameUI } from './logic/initGameUI'
 import './style.css'
-// import typescriptLogo from './typescript.svg'
-// import viteLogo from '/vite.svg'
-
 
 const root = document.querySelector<HTMLDivElement>('#app')
-if (root) {
+
+window.addEventListener('DOMContentLoaded', async () => {
+  if (!root) return
+
   root.appendChild(App())
-}
+
+  initializeGameUI()
+
+  await loadTranslations()
+  setupLanguageSwitcher()
+  setLanguage('en')
+})
+
+
+
+
 
 // document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 //   <div>
