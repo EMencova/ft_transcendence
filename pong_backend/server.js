@@ -14,12 +14,11 @@ const playersRoutes = require('./routes/players');
 
 
 fastify.register(require('./routes/friendsRoutes'));
-fastify.register(require('./leaderboard'));
-fastify.register(require('./tournamentsRoutes'));
+fastify.register(require('./routes/leaderboard'));
+fastify.register(require('./routes/tournament_registr'));
 const tetrisRoutes = require('./routes/tetrisRoutes');
 fastify.register(tetrisRoutes);
 
-const leaderboardRoutes = require('./routes/leaderboard');
 
 // Serve avatars from public/avatars directory
 const avatarDir = path.join(__dirname, 'public/avatars');
@@ -30,7 +29,6 @@ fastify.register(require('@fastify/static'), {
 
 fastify.register(authRoutes, { prefix: '/api' }); // Register auth routes with /api prefix
 fastify.register(playersRoutes);
-fastify.register(leaderboardRoutes);
 
 fastify.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
   if (err) {
