@@ -10,7 +10,7 @@ export function LeaderboardView(push = true) {
 
 		main.innerHTML = `
 			<h2 class="text-2xl font-bold mb-4 mt-6" data-translate="leaderboard_title">📊 LeaderBoard</h2>
-<p data-translate="leaderboard_desc">The player leaderboard table will go here.</p>
+			<div data-translate="leaderboard_desc" id="leaderboardTable"></div>
 		`
 
 		// Fetch leaderboard data from server
