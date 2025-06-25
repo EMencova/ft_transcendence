@@ -59,6 +59,26 @@ export function createNav(): HTMLElement {
 	logoutBtn.style.display = "none"
 	logoutBtn.className = buttonClass
 
+	// Language Flags
+	const langFlags = document.createElement("div")
+	langFlags.id = "langFlags"
+	langFlags.className = "flex gap-2 mr-2"
+	langFlags.innerHTML = `
+	<img src="https://flagcdn.com/24x18/gb.png" alt="English" data-lang="en" class="lang-flag cursor-pointer border-2 border-white rounded-sm active">
+	<img src="https://flagcdn.com/24x18/es.png" alt="Español" data-lang="es" class="lang-flag cursor-pointer rounded-sm">
+	<img src="https://flagcdn.com/24x18/cz.png" alt="Česky" data-lang="cz" class="lang-flag cursor-pointer rounded-sm">
+	`
+
+	langFlags.addEventListener("click", (e) => {
+		const target = e.target as HTMLElement
+		if (target.classList.contains("lang-flag")) {
+			langFlags.querySelectorAll(".lang-flag").forEach(flag => {
+				flag.classList.remove("border-2", "border-white", "active")
+			})
+			target.classList.add("border-2", "border-white", "active")
+		}
+	})
+
 	navLinks.appendChild(gameLink)
 	navLinks.appendChild(otherGamesLink)
 	navLinks.appendChild(tournamentLink)
@@ -67,12 +87,13 @@ export function createNav(): HTMLElement {
 	navLinks.appendChild(loginBtn)
 	navLinks.appendChild(signupBtn)
 	navLinks.appendChild(logoutBtn)
+	navLinks.appendChild(langFlags) 
 
 	nav.appendChild(navLinks)
 	return nav
 }
 
 const buttonClass =
-	"ml-4 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded cursor-pointer"
+	"ml-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded cursor-pointer"
 
 const linkClass = "text-white hover:text-orange-500"
