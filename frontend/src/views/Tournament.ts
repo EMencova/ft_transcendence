@@ -8,8 +8,8 @@ export function TournamentView(push = true) {
 			return
 		}
 		main.innerHTML = `
-			<h2 class="text-2xl font-bold mb-4" data-translate="tournament_title">🏆 Tournament</h2>
-<p data-translate="tournament_desc">The tournament logic and list will go here.</p>
+			<h2 class="text-2xl font-bold mb-4 mt-6" data-translate="tournament_title">🏆 Tournament</h2>
+			<p data-translate="tournament_desc">The tournament logic and list will go here.</p>
 		`
 		if (push) history.pushState({ page: "tournament" }, "", "/tournament")
 	}

@@ -1,11 +1,13 @@
 import { GameView } from '../views/GameView'
 import { LeaderboardView } from '../views/Leaderboard'
+import { OtherGamesView } from '../views/OtherGames'
 import { ProfileView } from '../views/Profile'
 import { TournamentView } from '../views/Tournament'
 
 export function setupNavLinks() {
 	const tournamentLink = document.getElementById("tournamentLink")
 	const leaderboardLink = document.getElementById("leaderboardLink")
+	const otherGamesLink = document.getElementById("otherGamesLink")
 	const gameLink = document.getElementById("gameLink")
 
 	if (tournamentLink) {
@@ -21,6 +23,13 @@ export function setupNavLinks() {
 		})
 	}
 
+	if (otherGamesLink) {
+		otherGamesLink.addEventListener("click", (e) => {
+			e.preventDefault()
+			OtherGamesView()
+		})
+	}
+
 	if (gameLink) {
 		gameLink.addEventListener("click", (e) => {
 			e.preventDefault()
@@ -33,6 +42,7 @@ export function setupNavLinks() {
 		const path = window.location.pathname
 		if (path === "/tournament") TournamentView(false)
 		else if (path === "/leaderboard") LeaderboardView(false)
+		else if (path === "/other-games") OtherGamesView(false)
 		else if (path === "/profile") ProfileView(false)
 		else GameView(false)
 	})
