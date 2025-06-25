@@ -486,7 +486,7 @@ async function loadTournamentDetails(tournamentId: number) {
     if (!bracketContainer) return;
 
     bracketContainer.innerHTML =
-      "Welcome to the Tournament Bracket!<br>Loading matches...";
+      "Welcome to the Tournament Stage!";
 
     // Group matches by round
     const rounds: Record<number, any[]> = {};
