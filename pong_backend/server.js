@@ -13,9 +13,10 @@ const authRoutes = require('./routes/auth');
 const playersRoutes = require('./routes/players');
 
 
+
 fastify.register(require('./routes/friendsRoutes'));
 // fastify.register(require('./routes/leaderboard'));
-// fastify.register(require('./routes/tournamentsRoutes'));
+fastify.register(require('./routes/tournamentsRoutes'));
 const tetrisRoutes = require('./routes/tetrisRoutes');
 fastify.register(tetrisRoutes);
 
@@ -31,7 +32,7 @@ fastify.register(require('@fastify/static'), {
 
 fastify.register(authRoutes, { prefix: '/api' }); // Register auth routes with /api prefix
 fastify.register(playersRoutes);
-fastify.register(leaderboardRoutes);
+fastify.register(leaderboardRoutes, { prefix: '/api' });
 fastify.register(tournamentsRoutes, { prefix: '/api' });
 
 fastify.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
