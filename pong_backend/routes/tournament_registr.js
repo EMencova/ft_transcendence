@@ -406,6 +406,56 @@ async function tournamentsRoutes(fastify, options) {
     });
   });
 
+  // Continue a match that's already in progress (enhanced version)
+  fastify.post("/tournaments/matches/:id/continue", async (request, reply) => {
+    const matchId = parseInt(request.params.id);
+
+    if (isNaN(matchId)) {
+      return reply.status(400).send({ error: "Invalid match ID" });
+    }
+
+    return new Promise((resolve, reject) => {
+      db.get(
+        "SELECT * FROM tournament_matches WHERE id = ?",
+        [matchId],
+        (err, match) => {
+          if (err) {
+            console.error("Error fetching match:", err);
+            return reject(reply.status(500).send({ error: "Database error" }));
+          }
+
+          if (!match) {
+            return reject(reply.status(404).send({ error: "Match not found" }));
+          }
+
+          // Check if match is actually in progress
+          if (match.status !== "in_progress") {
+            return reject(
+              reply.status(400).send({
+                error: `Match is not in progress. Current status: ${match.status}`,
+              })
+            );
+          }
+
+          // Return match data with any saved game state
+          const gameState = {
+            timeRemaining: match.time_remaining || 120,
+            score1: match.score1 || 0,
+            score2: match.score2 || 0,
+          };
+
+          resolve(
+            reply.send({
+              message: "Match can be continued",
+              match: match,
+              gameState: gameState,
+            })
+          );
+        }
+      );
+    });
+  });
+
   // Helper function to generate initial tournament matches
   function generateInitialMatches(db, tournamentId, playerIds) {
     return new Promise((resolve, reject) => {
@@ -540,7 +590,6 @@ async function tournamentsRoutes(fastify, options) {
     });
   });
 
-  // Add this route inside your tournamentsRoutes function
   fastify.post(
     "/tournaments/matches/:id/update-time",
     async (request, reply) => {
@@ -587,8 +636,97 @@ async function tournamentsRoutes(fastify, options) {
     }
   );
 
+  // Update match score (without ending the match)
+  fastify.post("/tournaments/matches/:id/score", async (request, reply) => {
+    const matchId = parseInt(request.params.id);
+    const { score1, score2 } = request.body;
 
-  
+    if (isNaN(matchId)) {
+      return reply.status(400).send({ error: "Invalid match ID" });
+    }
+
+    if (typeof score1 !== "number" || typeof score2 !== "number") {
+      return reply.status(400).send({ error: "Invalid score values" });
+    }
+
+    return new Promise((resolve, reject) => {
+      // First check if match exists and is in progress
+      db.get(
+        "SELECT * FROM tournament_matches WHERE id = ?",
+        [matchId],
+        (err, match) => {
+          if (err) {
+            console.error("Error fetching match:", err);
+            return reject(reply.status(500).send({ error: "Database error" }));
+          }
+
+          if (!match) {
+            return reject(reply.status(404).send({ error: "Match not found" }));
+          }
+
+          if (match.status !== "in_progress") {
+            return reject(
+              reply.status(400).send({
+                error: `Cannot update score. Match status: ${match.status}`,
+              })
+            );
+          }
+
+          // Update the scores
+          db.run(
+            "UPDATE tournament_matches SET score1 = ?, score2 = ? WHERE id = ?",
+            [score1, score2, matchId],
+            function (err) {
+              if (err) {
+                console.error("Error updating match scores:", err);
+                return reject(
+                  reply.status(500).send({ error: "Database error" })
+                );
+              }
+
+              if (this.changes === 0) {
+                return reject(
+                  reply.status(404).send({ error: "Match not found" })
+                );
+              }
+
+              resolve(
+                reply.send({
+                  message: "Scores updated successfully",
+                  matchId: matchId,
+                  score1: score1,
+                  score2: score2,
+                })
+              );
+            }
+          );
+        }
+      );
+    });
+  });
+
+  // Add score columns if they don't exist
+  db.run(
+    `
+	ALTER TABLE tournament_matches ADD COLUMN score1 INTEGER DEFAULT 0;
+  `,
+    (err) => {
+      if (err && !err.message.includes("duplicate column name")) {
+        console.error("Failed to add score1 column:", err.message);
+      }
+    }
+  );
+
+  db.run(
+    `
+	ALTER TABLE tournament_matches ADD COLUMN score2 INTEGER DEFAULT 0;
+  `,
+    (err) => {
+      if (err && !err.message.includes("duplicate column name")) {
+        console.error("Failed to add score2 column:", err.message);
+      }
+    }
+  );
 }
 
 module.exports = tournamentsRoutes;

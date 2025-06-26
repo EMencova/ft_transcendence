@@ -660,12 +660,32 @@ function createMatchCard(match: any, players: any[]) {
 		className: "w-full py-1 bg-blue-500 text-white rounded hover:bg-blue-600",
 		textContent: "Continue Match",
 	});
-	continueBtn.addEventListener("click", () => continueTournamentPongMatch(match, player));
+	continueBtn.addEventListener("click", () => continueTournamentPongMatch(match, players ));
 	resultForm.appendChild(continueBtn);
 	matchCard.appendChild(resultForm);
 	  }
   return matchCard;
 }
+
+async function continueTournamentPongMatch(match: any, players:any[] ){
+	try {
+		const matchid = match.id;
+		if (!matchid) {
+			alert("continueTournamentPongMatch: ID of this Match not found");
+			return;
+		}
+		const response = await fetch(`/api/tournaments/matches/${matchid}/continue`, {
+			method: "POST",
+		});
+		if (!response.ok) throw new Error("continueTournamentPongMatch: Failed to continue match");
+		createPongGameDiv(match, players);
+	} catch (error) {
+		console.error("Error continuing match:", error);
+		alert("Error continuing match");
+  }
+};
+
+
 
 async function startTournamentPongMatch(match: any, players: any[]) {
   try {
@@ -690,10 +710,28 @@ async function createPongGameDiv(match: any, players: any[]) {
   const main = document.getElementById("mainContent");
   if (!main) return;
 
+  // Check if a game container already exists and remove it
+  const existingContainer = document.querySelector(
+    `[data-match-id="${match.id}"]`
+  );
+  if (existingContainer) {
+    console.log("Removing existing game container");
+    existingContainer.remove();
+  }
+
+  // Also check for any other game containers and remove them
+  const anyGameContainer = document.querySelector("[data-match-id]");
+  if (anyGameContainer) {
+    console.log("Removing any existing game container");
+    anyGameContainer.remove();
+  }
+
+  
   try {
     const response = await fetch(`/api/tournaments/matches/${match.id}`);
     if (!response.ok) throw new Error("Failed to fetch match details");
-    match = await response.json();
+    const latestMatch = await response.json();
+    match = latestMatch;
   } catch (error) {
     console.error("Error fetching match details:", error);
     alert("Error loading match details");
@@ -738,8 +776,6 @@ async function createPongGameDiv(match: any, players: any[]) {
   const matchHeader = document.createElement("div");
   matchHeader.className = "flex items-center justify-between mb-6 w-full";
 
-  // ... (rest of the match header code remains the same)
-
   // === GAME CONTROLS ===
   const controls = document.createElement("div");
   controls.className = "flex justify-center gap-4 mt-4";
@@ -748,7 +784,8 @@ async function createPongGameDiv(match: any, players: any[]) {
   startButton.id = "startBtn";
   startButton.className =
     "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600";
-  startButton.textContent = "Start Game";
+  startButton.textContent =
+    match.status === "scheduled" ? "Start Game" : "Continue";
 
   const pauseButton = document.createElement("button");
   pauseButton.id = "pauseBtn";

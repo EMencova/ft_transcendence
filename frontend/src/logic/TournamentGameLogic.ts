@@ -105,6 +105,19 @@ export function startPongGame(
   const player1_id = match.player1_id;
   const player2_id = match.player2_id;
 
+  const isGameCurrentlyRunning = !gamePaused && !gameOver;
+  if (isGameCurrentlyRunning) {
+    console.log("Game is already running, pausing it first");
+    gamePaused = true;
+
+    // Update UI to show paused state
+    const pauseBtn = document.getElementById("pauseBtn") as HTMLButtonElement;
+    if (pauseBtn) {
+      pauseBtn.textContent = "Resume";
+      pauseBtn.style.display = "block";
+    	}
+	}
+
   state = {
     gameType: "Pong2",
     player1: {
@@ -186,8 +199,10 @@ export function startPongGame(
     }
     if (state.ball.x < 0) {
       state.score2++;
+	  recordMatchScore(match.id, state.score1, state.score2);
       resetBall();
     } else if (state.ball.x > canvas.width) {
+		recordMatchScore(match.id, state.score1, state.score2);
       state.score1++;
       resetBall();
     }
@@ -241,7 +256,26 @@ export function startPongGame(
   }
 
   // Start the game loop
-  gamePaused = false;
+  if (match.status === "in_progress") {
+    // If continuing a match, start paused so user can choose when to resume
+    gamePaused = true;
+    console.log("Continuing match - started in paused state");
+
+    // Update button text
+    const startBtn = document.getElementById("startBtn") as HTMLButtonElement;
+    const pauseBtn = document.getElementById("pauseBtn") as HTMLButtonElement;
+    if (startBtn) startBtn.textContent = "Resume";
+    if (pauseBtn) {
+      pauseBtn.textContent = "Resume";
+      pauseBtn.style.display = "block";
+    }
+  } else {
+    // New match - start immediately
+    gamePaused = false;
+    console.log("Starting new match");
+  }
+
+
   gameOver = false;
   PongGameTimer(state, match, player1_id, player2_id);
   loop();
@@ -250,6 +284,35 @@ export function startPongGame(
 export function stopGame() {
   cancelAnimationFrame(animationId);
 }
+
+// Add this function to your Tournament.ts file
+export async function recordMatchScore(matchId: number, score1: number, score2: number) {
+	try {
+	  console.log(`Updating score for match ${matchId}: ${score1}-${score2}`);
+
+	  const response = await fetch(`/api/tournaments/matches/${matchId}/score`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+		  score1: score1,
+		  score2: score2
+		}),
+	  });
+
+	  if (!response.ok) {
+		const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+		console.error("API Error updating score:", errorData);
+		throw new Error(`Failed to update score: ${errorData.error || response.statusText}`);
+	  }
+
+	  const result = await response.json();
+	  console.log("Score updated successfully:", result);
+
+	} catch (error) {
+	  console.error("Error updating match score:", error);
+	  // Don't throw the error - we don't want to stop the game if score saving fails
+	}
+  }
 
 export function initializePongGameUI(match: any) {
   const canvas = document.getElementById(
