@@ -15,22 +15,25 @@ let gamePaused = true;
 let gameOver = false;
 let animationId: number;
 
-
-
 function PongGameTimer(
 	state: GameState2,
 	match: any,
 	player1_id: string,
 	player2_id: string
 ) {
-  let timer = 120; // Default to 2 minutes
+  console.log(match);
+  const timeRemaining = match.time_remaining || 120; // Default to 2 minutes if not provided
+  console.log("Time remaining:", timeRemaining);
+
+  let timer = timeRemaining;
   const timerElement = document.getElementById("timer");
   if (!timerElement) {
     console.error("Timer element not found");
     return;
   }
 
-  const updateTimerDisplay = () => {
+  const updateTimerDisplay = (displayTimer: number) => {
+    displayTimer = displayTimer || timer;
     const minutes = Math.floor(timer / 60);
     const seconds = timer % 60;
     timerElement.textContent = `Time left: ${minutes}:${
@@ -39,15 +42,15 @@ function PongGameTimer(
   };
 
   // Initialize the timer display at the start
-    updateTimerDisplay();
+    updateTimerDisplay(timeRemaining);
 
   const interval = setInterval(async () => {
     if (!gamePaused) {
       timer--;
-      updateTimerDisplay();
+      updateTimerDisplay(timer);
 
       // Update server with current time every 5 seconds
-      if (timer % 5 === 0) {
+      if (timer % 5 === 2) {
         try {
           await fetch(`/api/tournaments/matches/${match.id}/update-time`, {
             method: "POST",
@@ -60,33 +63,25 @@ function PongGameTimer(
       }
 
       if (timer <= 0) {
-        gameOver = true;
-        gamePaused = true;
-        clearInterval(interval);
-
-        // Determine winner
-        let winner = "";
-        let winnerid = "";
         if (state.score1 > state.score2) {
-          winner = "Player 1";
-          winnerid = player1_id;
+            gameOver = true;
+            gamePaused = true;
+            clearInterval(interval);
+            alert("Player 1 wins!");
+            recordMatchResult(match.id, player1_id);
+            window.dispatchEvent(new CustomEvent("resetGame"));
         } else if (state.score2 > state.score1) {
-          winner = "Player 2";
-          winnerid = player2_id;
+            gameOver = true;
+            gamePaused = true;
+            clearInterval(interval);
+            alert("Player 2 wins!");
+            recordMatchResult(match.id, player2_id);
+            window.dispatchEvent(new CustomEvent("resetGame"));
         } else {
-          // Draw - restart game for 30 seconds
-          gameOver = false;
-          gamePaused = false;
-          timer = 30;
-          state.score1 = 0;
-          state.score2 = 0;
-          updateTimerDisplay();
-          return;
+            alert("It's a draw! Restarting game for 30 seconds...");
+            timer = 30;
+            updateTimerDisplay(timer);
         }
-
-        alert(`${winner} wins!`);
-        recordMatchResult(match.id, winnerid);
-        window.dispatchEvent(new CustomEvent("resetGame"));
       }
     }
   }, 1000);

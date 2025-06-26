@@ -1,20 +1,3 @@
-// import { currentUser } from '../logic/auth'
-
-// export function TournamentView(push = true) {
-// 	const main = document.getElementById("mainContent")
-// 	if (main) {
-// 		if (!currentUser) {
-// 			main.innerHTML = `<p class="text-red-500">You must be logged in to view tournaments.</p>`
-// 			return
-// 		}
-// 		main.innerHTML = `
-// 			<h2 class="text-2xl font-bold mb-4" data-translate="tournament_title">🏆 Tournament</h2>
-// <p data-translate="tournament_desc">The tournament logic and list will go here.</p>
-// 		`
-// 		if (push) history.pushState({ page: "tournament" }, "", "/tournament")
-// 	}
-// }
-
 //added
 
 import { currentUser } from "../logic/auth";
@@ -745,11 +728,12 @@ async function createPongGameDiv(match: any, players: any[]) {
 
   // Timer element
   const timerDiv = document.createElement("div");
-  consr timeRemaining = match.time_remaining;
+  const timeRemaining = match.time_remaining;
+  console.log("Time remaining:", timeRemaining);
+  console.log(match);
+
   timerDiv.id = "timer";
   timerDiv.className = "text-center text-xl font-bold mb-4";
-//   timerDiv.textContent = "Time left: 2:00";
-  timerDiv.textContent = match.time_remaining ? "Time left: time_remaining" : "Time. left: 2:00" ;
   container.appendChild(timerDiv);
 
   // Create Canvas element
