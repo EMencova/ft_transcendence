@@ -1,21 +1,21 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const fs = require('fs');
+const sqlite3 = require("sqlite3").verbose();
+const path = require("path");
+const fs = require("fs");
 
 function setupDb(fastify) {
-  const dbDir = path.resolve(__dirname, 'data');
+  const dbDir = path.resolve(__dirname, "data");
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
-  const dbPath = path.join(dbDir, 'database.sqlite');
+  const dbPath = path.join(dbDir, "database.sqlite");
   const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
-      console.error('Error opening database:', err.message);
+      console.error("Error opening database:", err.message);
       return;
     }
 
-    console.log('Connected to SQLite database.');
+    console.log("Connected to SQLite database.");
 
     // Players table
     db.run(`
@@ -100,7 +100,6 @@ function setupDb(fastify) {
       )
     `);
 
-
     // tournament players table //added
     db.run(`
       CREATE TABLE IF NOT EXISTS tournament_players (
@@ -139,14 +138,16 @@ function setupDb(fastify) {
         ('Verca', 'verca@verca.com', 'verca', '/avatar2.png', 3, 4),
         ('Azaman', 'azaman@azaman.com', 'azaman', '/avatar3.png', 7, 1)
     `);
-
   });
 
-  db.run(`ALTER TABLE tournament ADD COLUMN status TEXT DEFAULT 'pending'`, (err) => {
-    if (err && !err.message.includes("duplicate column name")) {
-      console.error("Failed to alter table:", err.message);
+  db.run(
+    `ALTER TABLE tournament ADD COLUMN status TEXT DEFAULT 'pending'`,
+    (err) => {
+      if (err && !err.message.includes("duplicate column name")) {
+        console.error("Failed to alter table:", err.message);
+      }
     }
-  });
+  );
 
   db.run(`
     INSERT OR IGNORE INTO tournament (name, date, status)
@@ -157,22 +158,30 @@ function setupDb(fastify) {
 
   db.run(
     `
-	ALTER TABLE tournament ADD COLUMN winner_id INTEGER;
+	ALTER TABLE tournament_matches ADD COLUMN time_remaining INTEGER DEFAULT 120;
   `,
     (err) => {
       if (err) {
-        // Column might already exist, which is fine
-        console.log("Column winner_id might already exist:", err.message);
+        // Check if it's specifically a "column already exists" error
+        if (
+          err.message.includes("duplicate column name") ||
+          err.message.includes("already exists")
+        ) {
+          console.log(
+            "Column 'time_remaining' already exists in tournament_matches table"
+          );
+        } else {
+          console.error("Error adding time_remaining column:", err.message);
+        }
       } else {
-        console.log("Added winner_id column to tournament table");
+        console.log(
+          "Successfully added time_remaining column to tournament_matches table"
+        );
       }
     }
   );
 
-  fastify.decorate('sqliteDb', db);
+  fastify.decorate("sqliteDb", db);
 }
 
 module.exports = { setupDb };
-
-
-

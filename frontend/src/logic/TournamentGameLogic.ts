@@ -23,63 +23,77 @@ function PongGameTimer(
 	player1_id: string,
 	player2_id: string
 ) {
-	let timer = 60; // 1 minute in seconds
-	const timerElement = document.getElementById("timer");
-	if (!timerElement) {
-		console.error("Timer element not found");
-		return;
-	}
+  let timer = 120; // Default to 2 minutes
+  const timerElement = document.getElementById("timer");
+  if (!timerElement) {
+    console.error("Timer element not found");
+    return;
+  }
 
-	const updateTimerDisplay = () => {
-		const minutes = Math.floor(timer / 60);
-		const seconds = timer % 60;
-		timerElement.textContent = `Time left: ${minutes}:${
-			seconds < 10 ? "0" : ""
-		}${seconds}`;
-	};
+  const updateTimerDisplay = () => {
+    const minutes = Math.floor(timer / 60);
+    const seconds = timer % 60;
+    timerElement.textContent = `Time left: ${minutes}:${
+      seconds < 10 ? "0" : ""
+    }${seconds}`;
+  };
 
-	updateTimerDisplay();
+  // Initialize the timer display at the start
+    updateTimerDisplay();
 
-	const interval = setInterval(() => {
-		if (!gamePaused) {
-			timer--;
-			updateTimerDisplay();
+  const interval = setInterval(async () => {
+    if (!gamePaused) {
+      timer--;
+      updateTimerDisplay();
 
-			if (timer <= 0) {
-				gameOver = true;
-				gamePaused = true;
-				clearInterval(interval);
+      // Update server with current time every 5 seconds
+      if (timer % 5 === 0) {
+        try {
+          await fetch(`/api/tournaments/matches/${match.id}/update-time`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ timeRemaining: timer }),
+          });
+        } catch (err) {
+          console.error("Error updating time:", err);
+        }
+      }
 
-				// Determine winner
-				let winner = "";
-				let winnerid = "";
-				if (state.score1 > state.score2) {
-					winner = "Player 1";
-					winnerid = player1_id;
-				} else if (state.score2 > state.score1) {
-					winner = "Player 2";
-					winnerid = player2_id;
-				} else {
-					// Draw - restart game for 30 seconds
-					gameOver = false;
-					gamePaused = false;
-					timer = 30;
-					state.score1 = 0;
-					state.score2 = 0;
-					updateTimerDisplay();
-					return;
-				}
+      if (timer <= 0) {
+        gameOver = true;
+        gamePaused = true;
+        clearInterval(interval);
 
-				alert(`${winner} wins!`);
-				recordMatchResult(match.id, winnerid);
-				window.dispatchEvent(new CustomEvent("resetGame"));
-			}
-		}
-	}, 1000);
+        // Determine winner
+        let winner = "";
+        let winnerid = "";
+        if (state.score1 > state.score2) {
+          winner = "Player 1";
+          winnerid = player1_id;
+        } else if (state.score2 > state.score1) {
+          winner = "Player 2";
+          winnerid = player2_id;
+        } else {
+          // Draw - restart game for 30 seconds
+          gameOver = false;
+          gamePaused = false;
+          timer = 30;
+          state.score1 = 0;
+          state.score2 = 0;
+          updateTimerDisplay();
+          return;
+        }
 
-	window.addEventListener("resetGame", () => {
-		clearInterval(interval);
-	});
+        alert(`${winner} wins!`);
+        recordMatchResult(match.id, winnerid);
+        window.dispatchEvent(new CustomEvent("resetGame"));
+      }
+    }
+  }, 1000);
+
+  window.addEventListener("resetGame", () => {
+    clearInterval(interval);
+  });
 }
 
 export function startPongGame(
@@ -115,8 +129,8 @@ export function startPongGame(
       velocityY: 4,
       speed: 5,
     },
-    score1: 0,
-    score2: 0,
+    score1: match.score1 || 0,
+    score2: match.score2 || 0,
   };
 
   document.addEventListener("keydown", (e) => (keysPressed[e.key] = true));

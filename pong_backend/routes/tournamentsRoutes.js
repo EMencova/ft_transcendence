@@ -112,17 +112,44 @@ async function tournamentsRoutes(fastify, options) {
   // Start a match
   fastify.post("/:id/matches/:matchId/start", async (request, reply) => {
     try {
-      await runQuery(
-        `UPDATE tournament_matches
-                 SET status = 'in_progress'
-                 WHERE id = ?`,
+      const match = await getQuery(
+        "SELECT * FROM tournament_matches WHERE id = ?",
         [request.params.matchId]
       );
-      reply.send({ success: true });
+
+      // Initialize with full time (120 seconds) if not already set
+      const timeRemaining = match.time_remaining || 120;
+
+      await runQuery(
+        `UPDATE tournament_matches
+		 SET status = 'in_progress', time_remaining = ?
+		 WHERE id = ?`,
+        [timeRemaining, request.params.matchId]
+      );
+
+      reply.send({ success: true, timeRemaining });
     } catch (err) {
       reply.code(500).send({ error: err.message });
     }
   });
+
+  // New endpoint to update time remaining
+fastify.post("/:id/matches/:matchId/update-time", async (request, reply) => {
+	const { timeRemaining } = request.body;
+
+	try {
+	  await runQuery(
+		`UPDATE tournament_matches
+		 SET time_remaining = ?
+		 WHERE id = ?`,
+		[timeRemaining, request.params.matchId]
+	  );
+
+	  reply.send({ success: true });
+	} catch (err) {
+	  reply.code(500).send({ error: err.message });
+	}
+});
 
   // Record match result
   fastify.post("/:id/matches/:matchId/result", async (request, reply) => {
