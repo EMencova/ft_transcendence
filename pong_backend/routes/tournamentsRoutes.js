@@ -133,24 +133,6 @@ async function tournamentsRoutes(fastify, options) {
     }
   });
 
-  // New endpoint to update time remaining
-fastify.post("/:id/matches/:matchId/update-time", async (request, reply) => {
-	const { timeRemaining } = request.body;
-
-	try {
-	  await runQuery(
-		`UPDATE tournament_matches
-		 SET time_remaining = ?
-		 WHERE id = ?`,
-		[timeRemaining, request.params.matchId]
-	  );
-
-	  reply.send({ success: true });
-	} catch (err) {
-	  reply.code(500).send({ error: err.message });
-	}
-});
-
   // Record match result
   fastify.post("/:id/matches/:matchId/result", async (request, reply) => {
     const { winnerId } = request.body;

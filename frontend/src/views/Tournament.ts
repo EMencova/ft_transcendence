@@ -726,7 +726,7 @@ async function createPongGameDiv(match: any, players: any[]) {
     anyGameContainer.remove();
   }
 
-  
+
   try {
     const response = await fetch(`/api/tournaments/matches/${match.id}`);
     if (!response.ok) throw new Error("Failed to fetch match details");
@@ -745,9 +745,11 @@ async function createPongGameDiv(match: any, players: any[]) {
 
   // Timer element
   const timerDiv = document.createElement("div");
+  consr timeRemaining = match.time_remaining;
   timerDiv.id = "timer";
   timerDiv.className = "text-center text-xl font-bold mb-4";
-  timerDiv.textContent = "Time left: 2:00";
+//   timerDiv.textContent = "Time left: 2:00";
+  timerDiv.textContent = match.time_remaining ? "Time left: time_remaining" : "Time. left: 2:00" ;
   container.appendChild(timerDiv);
 
   // Create Canvas element
