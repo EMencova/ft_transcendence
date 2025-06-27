@@ -690,25 +690,16 @@ async function startTournamentPongMatch(match: any, players: any[]) {
 }
 
 async function createPongGameDiv(match: any, players: any[]) {
-  const main = document.getElementById("mainContent");
-  if (!main) return;
+  // Instead of using mainContent, find the tournament bracket container
+  const bracketContainer = document.getElementById("tournament-bracket");
+  if (!bracketContainer) return;
 
   // Check if a game container already exists and remove it
-  const existingContainer = document.querySelector(
-    `[data-match-id="${match.id}"]`
-  );
-  if (existingContainer) {
+  const existingGameContainer = document.getElementById("pong-game-container");
+  if (existingGameContainer) {
     console.log("Removing existing game container");
-    existingContainer.remove();
+    existingGameContainer.remove();
   }
-
-  // Also check for any other game containers and remove them
-  const anyGameContainer = document.querySelector("[data-match-id]");
-  if (anyGameContainer) {
-    console.log("Removing any existing game container");
-    anyGameContainer.remove();
-  }
-
 
   try {
     const response = await fetch(`/api/tournaments/matches/${match.id}`);
@@ -721,17 +712,51 @@ async function createPongGameDiv(match: any, players: any[]) {
     return;
   }
 
+  // Create a new game container section
+  const gameSection = document.createElement("div");
+  gameSection.id = "pong-game-container";
+  gameSection.className = "mt-12 border-t-2 border-gray-700 pt-8";
+  
+  // Add header
+  const gameHeader = document.createElement("h2");
+  gameHeader.className = "text-2xl font-bold mb-6 text-center";
+  gameHeader.textContent = "🎮 Active Match";
+  gameSection.appendChild(gameHeader);
+
+  // Create actual game container
   const container = document.createElement("div");
-  container.className = "container mx-auto p-8";
+  container.className = "mx-auto max-w-4xl p-4 bg-gray-900 rounded-lg";
   container.dataset.matchId = match.id.toString();
-  container.innerHTML = `<h2 class="text-xl font-bold mb-4">Game Box</h2>`;
+
+  // Match info
+  const player1 = players.find((p) => p.id === match.player1_id);
+  const player2 = players.find((p) => p.id === match.player2_id);
+  
+  const matchInfo = document.createElement("div");
+  matchInfo.className = "flex justify-between items-center mb-4";
+  matchInfo.innerHTML = `
+    <div class="flex items-center">
+      <img src="${player1?.avatar || '/avatar.png'}" class="w-10 h-10 rounded-full mr-2">
+      <span class="font-bold">${player1?.username || 'Player 1'}</span>
+      <div class="mr-2 text-orange-500 font-bold text-right">
+        <div>W</div>
+        <div>S</div>
+      </div>
+    </div>
+    <div class="text-xl font-bold">VS</div>
+    <div class="flex items-center">
+      <div class="ml-2 text-orange-500 font-bold">
+        <div>🔺</div>
+        <div>🔻</div>
+      </div>
+      <span class="font-bold">${player2?.username || 'Player 2'}</span>
+      <img src="${player2?.avatar || '/avatar.png'}" class="w-10 h-10 rounded-full ml-2">
+    </div>
+  `;
+  container.appendChild(matchInfo);
 
   // Timer element
   const timerDiv = document.createElement("div");
-  const timeRemaining = match.time_remaining;
-  console.log("Time remaining:", timeRemaining);
-  console.log(match);
-
   timerDiv.id = "timer";
   timerDiv.className = "text-center text-xl font-bold mb-4";
   container.appendChild(timerDiv);
@@ -744,71 +769,183 @@ async function createPongGameDiv(match: any, players: any[]) {
   canvas.height = 500;
   container.appendChild(canvas);
 
-  // Get canvas context
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    console.error("Could not get canvas context");
-    return;
-  }
-
-  const player1 = players.find((p) => p.id === match.player1_id);
-  const player2 = players.find((p) => p.id === match.player2_id);
-  if (!player1 || !player2) {
-    alert("Invalid players for this match");
-    return;
-  }
-
-  // === FLEX HEADER ROW ===
-  const matchHeader = document.createElement("div");
-  matchHeader.className = "flex items-center justify-between mb-6 w-full";
-
-  // === GAME CONTROLS ===
+  // Game controls
   const controls = document.createElement("div");
   controls.className = "flex justify-center gap-4 mt-4";
 
   const startButton = document.createElement("button");
   startButton.id = "startBtn";
-  startButton.className =
-    "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600";
-  startButton.textContent =
-    match.status === "scheduled" ? "Start Game" : "Continue";
+  startButton.className = "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600";
+  startButton.textContent = match.status === "in_progress" ? "Resume Game" : "Start Game";
 
   const pauseButton = document.createElement("button");
   pauseButton.id = "pauseBtn";
   pauseButton.className =
-    "bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600";
+    pauseButton.textContent === "Pause" ?
+    "bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600" :
+    "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600";
   pauseButton.textContent = "Pause";
   pauseButton.style.display = "none";
 
   const stopButton = document.createElement("button");
   stopButton.id = "stopBtn";
-  stopButton.className =
-    "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600";
-  stopButton.textContent = "Stop Game";
+  stopButton.className = "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600";
+  stopButton.textContent = "End Game";
   stopButton.style.display = "none";
 
   controls.appendChild(startButton);
   controls.appendChild(pauseButton);
   controls.appendChild(stopButton);
-
-  // === APPEND ALL ===
-  container.appendChild(matchHeader);
   container.appendChild(controls);
-  main.appendChild(container);
+
+  // Add game container to the game section
+  gameSection.appendChild(container);
+  
+  // Add the game section below the bracket view
+  bracketContainer.parentElement?.appendChild(gameSection);
 
   // Initialize game UI
   initializePongGameUI(match);
 
+  // Start game if in progress
   if (match.status === "in_progress") {
-    const canvas = document.getElementById(
-      `pong-game-${match.id}`
-    ) as HTMLCanvasElement;
     const ctx = canvas.getContext("2d");
     if (ctx) {
       startPongGame(canvas, ctx, match);
     }
   }
+  
+  // Scroll to the game section
+  gameSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+// async function createPongGameDiv(match: any, players: any[]) {
+//   const main = document.getElementById("mainContent");
+//   if (!main) return;
+
+//   // Check if a game container already exists and remove it
+//   const existingContainer = document.querySelector(
+//     `[data-match-id="${match.id}"]`
+//   );
+//   if (existingContainer) {
+//     console.log("Removing existing game container");
+//     existingContainer.remove();
+//   }
+
+//   const existingGameContainer = document.getElementById("pong-game-container");
+//     if (existingGameContainer) {
+//       console.log("Removing existing game container");
+//       existingGameContainer.remove();
+//     }
+
+//   //### Also check for any other game containers and remove them
+//   const anyGameContainer = document.querySelector("[data-match-id]");
+//   if (anyGameContainer) {
+//     console.log("Removing any existing game container");
+//     anyGameContainer.remove();
+//   }
+
+
+//   try {
+//     const response = await fetch(`/api/tournaments/matches/${match.id}`);
+//     if (!response.ok) throw new Error("Failed to fetch match details");
+//     const latestMatch = await response.json();
+//     match = latestMatch;
+//   } catch (error) {
+//     console.error("Error fetching match details:", error);
+//     alert("Error loading match details");
+//     return;
+//   }
+
+//   const container = document.createElement("div");
+//   container.className = "container mx-auto p-8";
+//   container.dataset.matchId = match.id.toString();
+//   container.innerHTML = `<h2 class="text-xl font-bold mb-4">Game Box</h2>`;
+
+//   // Timer element
+//   const timerDiv = document.createElement("div");
+//   const timeRemaining = match.time_remaining;
+//   console.log("Time remaining:", timeRemaining);
+//   console.log(match);
+
+//   timerDiv.id = "timer";
+//   timerDiv.className = "text-center text-xl font-bold mb-4";
+//   container.appendChild(timerDiv);
+
+//   // Create Canvas element
+//   const canvas = document.createElement("canvas");
+//   canvas.id = `pong-game-${match.id}`;
+//   canvas.className = "pong-game-canvas bg-gray-800 rounded mx-auto";
+//   canvas.width = 800;
+//   canvas.height = 500;
+//   container.appendChild(canvas);
+
+//   // Get canvas context
+//   const ctx = canvas.getContext("2d");
+//   if (!ctx) {
+//     console.error("Could not get canvas context");
+//     return;
+//   }
+
+//   const player1 = players.find((p) => p.id === match.player1_id);
+//   const player2 = players.find((p) => p.id === match.player2_id);
+//   if (!player1 || !player2) {
+//     alert("Invalid players for this match");
+//     return;
+//   }
+
+//   // === FLEX HEADER ROW ===
+//   const matchHeader = document.createElement("div");
+//   matchHeader.className = "flex items-center justify-between mb-6 w-full";
+
+//   // === GAME CONTROLS ===
+//   const controls = document.createElement("div");
+//   controls.className = "flex justify-center gap-4 mt-4";
+
+//   const startButton = document.createElement("button");
+//   startButton.id = "startBtn";
+//   startButton.className =
+//     "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600";
+//   // Set start button text based on match status
+//   startButton.textContent = "Start Match"
+//     // match.status === "in_progress" ? "Continue" : "Start";
+
+//   const pauseButton = document.createElement("button");
+//   pauseButton.id = "pauseBtn";
+//   pauseButton.className =
+//     "bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600";
+//   pauseButton.textContent = "Pause";
+//   pauseButton.style.display = "none";
+
+//   const stopButton = document.createElement("button");
+//   stopButton.id = "stopBtn";
+//   stopButton.className =
+//     "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600";
+//   stopButton.textContent = "Stop Game";
+//   stopButton.style.display = "none";
+
+//   controls.appendChild(startButton);
+//   controls.appendChild(pauseButton);
+//   controls.appendChild(stopButton);
+
+//   // === APPEND ALL ===
+//   container.appendChild(matchHeader);
+//   container.appendChild(controls);
+//   main.appendChild(container);
+
+//   // Initialize game UI
+//   initializePongGameUI(match);
+
+//   if (match.status === "in_progress") {
+//     const canvas = document.getElementById(
+//       `pong-game-${match.id}`
+//     ) as HTMLCanvasElement;
+//     const ctx = canvas.getContext("2d");
+//     if (ctx) {
+//       startPongGame(canvas, ctx, match);
+//     }
+//   }
+// }
 
 
 export async function recordMatchResult(matchId: number, winnerId: string) {

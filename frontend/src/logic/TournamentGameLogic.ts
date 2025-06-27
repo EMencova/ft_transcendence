@@ -15,6 +15,11 @@ let gamePaused = true;
 let gameOver = false;
 let animationId: number;
 
+
+window.addEventListener("pauseStateChanged", (e: any) => {
+  gamePaused = e.detail.paused;
+});
+
 function PongGameTimer(
 	state: GameState2,
 	match: any,
@@ -100,18 +105,32 @@ export function startPongGame(
   const player1_id = match.player1_id;
   const player2_id = match.player2_id;
 
-  const isGameCurrentlyRunning = !gamePaused && !gameOver;
-  if (isGameCurrentlyRunning) {
-    console.log("Game is already running, pausing it first");
-    gamePaused = true;
+  const startbtn = document.getElementById("startBtn") as HTMLButtonElement;
+  if (startbtn)
+    startbtn.style.display = "none";
 
-    // Update UI to show paused state
+  const stopBtn = document.getElementById("stopBtn") as HTMLButtonElement;
+  if (stopBtn) {
+    stopBtn.style.display = "block";
+    stopBtn.textContent = "Stop Match";
+  }
+    // Always start paused if continuing a match
+  if (match.status === "in_progress") {
+    gamePaused = true;
+    console.log("Continuing match - started in paused state");
+
+    // Update UI button text
     const pauseBtn = document.getElementById("pauseBtn") as HTMLButtonElement;
     if (pauseBtn) {
-      pauseBtn.textContent = "Resume";
-      pauseBtn.style.display = "block";
-    	}
-	}
+      //###
+      pauseBtn.textContent = "Pause";
+    }
+  } else {
+    // New match - start immediately
+    gamePaused = true;
+    console.log("Starting new match");
+  }
+
 
   state = {
     gameType: "Pong2",
@@ -263,6 +282,9 @@ export function startPongGame(
     if (pauseBtn) {
       pauseBtn.textContent = "Resume";
       pauseBtn.style.display = "block";
+      window.dispatchEvent(new CustomEvent('pauseStateChanged', {
+        detail: { paused: gamePaused }
+      }));
     }
   } else {
     // New match - start immediately
@@ -309,7 +331,7 @@ export async function recordMatchScore(matchId: number, score1: number, score2: 
 	}
   }
 
-export function initializePongGameUI(match: any) {
+  export function initializePongGameUI(match: any) {
   const canvas = document.getElementById(
     `pong-game-${match.id}`
   ) as HTMLCanvasElement;
@@ -319,12 +341,13 @@ export function initializePongGameUI(match: any) {
   const pauseBtn = document.getElementById("pauseBtn") as HTMLButtonElement;
   const stopBtn = document.getElementById("stopBtn") as HTMLButtonElement;
 
-  let gameRunning = false;
-  let gamePaused = false;
-
   if (canvas && context) {
     context.fillStyle = "orange";
     context.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Initialize button states
+    pauseBtn.style.display = "none";
+    stopBtn.style.display = "none";
 
     startBtn.addEventListener("click", () => {
       canvas.classList.remove("hidden");
@@ -333,7 +356,6 @@ export function initializePongGameUI(match: any) {
       pauseBtn.style.display = "block";
       stopBtn.style.display = "block";
 
-      gameRunning = true;
       startPongGame(canvas, context, match);
     });
 
@@ -346,32 +368,35 @@ export function initializePongGameUI(match: any) {
     });
 
     window.addEventListener("togglePause", () => {
-      if (gameRunning) {
-        gamePaused = !gamePaused;
-        pauseBtn.textContent = gamePaused ? "Resume" : "Pause";
-        window.dispatchEvent(
-          new CustomEvent("pauseStateChanged", {
-            detail: { paused: gamePaused },
-          })
-        );
-      }
+      gamePaused = !gamePaused;
+      pauseBtn.textContent = gamePaused ? "Resume" : "Pause";
+      window.dispatchEvent(
+        new CustomEvent("pauseStateChanged", {
+          detail: { paused: gamePaused },
+        })
+      );
     });
 
     window.addEventListener("resetGame", () => {
-      if (gameRunning) {
-        stopGame();
-        startMenu?.classList.remove("hidden");
-        pauseBtn.style.display = "none";
-        stopBtn.style.display = "none";
-        pauseBtn.textContent = "Pause";
-        canvas.classList.remove("block");
-        canvas.classList.add("hidden");
-
-        gameRunning = false;
-        gamePaused = false;
-        context.clearRect(0, 0, canvas.width, canvas.height);
-      }
+      stopGame();
+      startMenu?.classList.remove("hidden");
+      pauseBtn.style.display = "none";
+      stopBtn.style.display = "none";
+      pauseBtn.textContent = "Pause";
+      canvas.classList.remove("block");
+      canvas.classList.add("hidden");
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      startBtn.style.display = "block";
+      startBtn.textContent = "Resume";
     });
+    
+    // Set initial button state based on match status
+    if (match.status === "in_progress") {
+      //###
+      startBtn.textContent = "Resume";
+    } else {
+      startBtn.textContent = "Start Match";
+    }
   } else {
     console.error("Canvas or context not found");
   }
