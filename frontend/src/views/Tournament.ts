@@ -4,8 +4,12 @@ import { currentUser } from "../logic/auth";
 import { createElement } from "../utils/domUtils";
 import { initializePongGameUI } from "../logic/TournamentGameLogic";
 import { startPongGame } from "../logic/TournamentGameLogic";
+import { cleanupActiveGame } from "../logic/TournamentGameLogic";
 
 export function TournamentView(push = true) {
+
+  cleanupActiveGame();
+
   const main = document.getElementById("mainContent");
   if (!main) return;
 
@@ -362,6 +366,9 @@ async function createTournament() {
 }
 
 function viewTournament(tournamentId: number) {
+  
+  cleanupActiveGame();
+
   const main = document.getElementById("mainContent");
   if (!main) return;
 

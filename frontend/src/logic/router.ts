@@ -2,6 +2,7 @@ import { GameView } from '../views/GameView'
 import { LeaderboardView } from '../views/Leaderboard'
 import { ProfileView } from '../views/Profile'
 import { TournamentView } from '../views/Tournament'
+import { cleanupActiveGame } from './TournamentGameLogic'
 
 export function setupNavLinks() {
 	const tournamentLink = document.getElementById("tournamentLink")
@@ -37,5 +38,6 @@ export function setupNavLinks() {
 		else if (path === "/tournament") TournamentView(false)
 		else if (path === "/profile") ProfileView(false)
 		else GameView(false)
+		cleanupActiveGame();
 	})
 }

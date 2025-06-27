@@ -727,6 +727,73 @@ async function tournamentsRoutes(fastify, options) {
       }
     }
   );
+
+  fastify.post('/tournaments/matches/:id/pause', async (request, reply) => {
+  const matchId = parseInt(request.params.id);
+  const { timeRemaining, score1, score2 } = request.body;
+  
+  if (isNaN(matchId)) {
+    return reply.status(400).send({ error: 'Invalid match ID' });
+  }
+  
+  return new Promise((resolve, reject) => {
+    // First check if the match exists and is in 'in_progress' status
+    db.get('SELECT * FROM tournament_matches WHERE id = ?', [matchId], (err, match) => {
+      if (err) {
+        console.error('Error fetching match:', err);
+        return reject(reply.status(500).send({ error: 'Database error' }));
+      }
+      
+      if (!match) {
+        return reject(reply.status(404).send({ error: 'Match not found' }));
+      }
+      
+      if (match.status !== 'in_progress') {
+        return reject(reply.status(400).send({ 
+          error: `Match cannot be paused. Current status: ${match.status}` 
+        }));
+      }
+      
+      // Update match with saved state
+      const updateFields = [];
+      const updateValues = [];
+      
+      if (timeRemaining !== undefined) {
+        updateFields.push('time_remaining = ?');
+        updateValues.push(timeRemaining);
+      }
+      
+      if (score1 !== undefined) {
+        updateFields.push('score1 = ?');
+        updateValues.push(score1);
+      }
+      
+      if (score2 !== undefined) {
+        updateFields.push('score2 = ?');
+        updateValues.push(score2);
+      }
+      
+      if (updateFields.length === 0) {
+        return resolve(reply.send({ message: 'No changes to save' }));
+      }
+      
+      updateValues.push(matchId);
+      
+      db.run(
+        `UPDATE tournament_matches SET ${updateFields.join(', ')} WHERE id = ?`, 
+        updateValues, 
+        (err) => {
+          if (err) {
+            console.error('Error pausing match:', err);
+            return reject(reply.status(500).send({ error: 'Database error' }));
+          }
+          
+          resolve(reply.send({ message: 'Match state saved successfully' }));
+        }
+      );
+    });
+  });
+});
 }
 
 module.exports = tournamentsRoutes;

@@ -14,6 +14,23 @@ const paddleWidth = 10,
 let gamePaused = true;
 let gameOver = false;
 let animationId: number;
+let gameInterval: number;
+
+
+window.addEventListener("cleanupGame", () => {
+  if (typeof animationId !== 'undefined') {
+    cancelAnimationFrame(animationId);
+  }
+  
+  // Clear any timers
+  if (typeof gameInterval !== 'undefined') {
+    clearInterval(gameInterval);
+  }
+  
+  // Reset game state
+  gamePaused = true;
+  gameOver = true;
+});
 
 
 window.addEventListener("pauseStateChanged", (e: any) => {
@@ -89,10 +106,11 @@ function PongGameTimer(
       }
     }
   }, 1000);
-
+  
   window.addEventListener("resetGame", () => {
     clearInterval(interval);
   });
+  gameInterval = interval;
 }
 
 export function startPongGame(
@@ -393,3 +411,39 @@ export async function recordMatchScore(matchId: number, score1: number, score2: 
     console.error("Canvas or context not found");
   }
 }
+
+
+
+// Add this function to handle cleanup
+export function cleanupActiveGame() {
+  console.log("Cleaning up active game");
+  
+  // Clear any game animations and intervals
+  window.dispatchEvent(new CustomEvent("cleanupGame"));
+  
+  // Get current match details if a game is active
+  const gameContainer = document.getElementById("pong-game-container");
+  if (gameContainer) {
+    const matchIdElement = gameContainer.querySelector("[data-match-id]") as HTMLElement;
+    if (matchIdElement) {
+      const matchId = matchIdElement.dataset.matchId;
+      if (matchId) {
+        // Record the current state of the game if it's in progress
+        const timerElement = document.getElementById("timer");
+        const timeRemaining = timerElement?.textContent?.match(/\d+:\d+/)?.[0] || "0:00";
+        
+        // Parse time string (e.g., "1:30") to seconds
+        const timeParts = timeRemaining.split(":");
+        const seconds = parseInt(timeParts[0]) * 60 + parseInt(timeParts[1]);
+        
+        // Save game state to server
+        fetch(`/api/tournaments/matches/${matchId}/pause`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ timeRemaining: seconds })
+        }).catch(err => console.error("Error saving game state:", err));
+      }
+    }
+  }
+}
+
