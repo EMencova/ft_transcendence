@@ -635,7 +635,6 @@ function createMatchCard(match: any, players: any[]) {
     matchCard.appendChild(startBtn);
   } else if (match.status === "in_progress") {
     const resultForm = createElement("div", { className: "mt-3" });
-	// If the match is in progress, show a "Continue Match" button to re-enter the game UI
 	resultForm.innerHTML = `
 		<p class="text-sm text-gray-400 mb-2">Match in progress...</p>
 	`;
@@ -690,7 +689,6 @@ async function startTournamentPongMatch(match: any, players: any[]) {
 }
 
 async function createPongGameDiv(match: any, players: any[]) {
-  // Instead of using mainContent, find the tournament bracket container
   const bracketContainer = document.getElementById("tournament-bracket");
   if (!bracketContainer) return;
 
@@ -716,8 +714,8 @@ async function createPongGameDiv(match: any, players: any[]) {
   const gameSection = document.createElement("div");
   gameSection.id = "pong-game-container";
   gameSection.className = "mt-12 border-t-2 border-gray-700 pt-8";
-  
-  // Add header
+
+  // Header
   const gameHeader = document.createElement("h2");
   gameHeader.className = "text-2xl font-bold mb-6 text-center";
   gameHeader.textContent = "🎮 Active Match";
@@ -798,16 +796,12 @@ async function createPongGameDiv(match: any, players: any[]) {
   controls.appendChild(stopButton);
   container.appendChild(controls);
 
-  // Add game container to the game section
   gameSection.appendChild(container);
   
-  // Add the game section below the bracket view
   bracketContainer.parentElement?.appendChild(gameSection);
 
-  // Initialize game UI
   initializePongGameUI(match);
 
-  // Start game if in progress
   if (match.status === "in_progress") {
     const ctx = canvas.getContext("2d");
     if (ctx) {
@@ -818,134 +812,6 @@ async function createPongGameDiv(match: any, players: any[]) {
   // Scroll to the game section
   gameSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-
-// async function createPongGameDiv(match: any, players: any[]) {
-//   const main = document.getElementById("mainContent");
-//   if (!main) return;
-
-//   // Check if a game container already exists and remove it
-//   const existingContainer = document.querySelector(
-//     `[data-match-id="${match.id}"]`
-//   );
-//   if (existingContainer) {
-//     console.log("Removing existing game container");
-//     existingContainer.remove();
-//   }
-
-//   const existingGameContainer = document.getElementById("pong-game-container");
-//     if (existingGameContainer) {
-//       console.log("Removing existing game container");
-//       existingGameContainer.remove();
-//     }
-
-//   //### Also check for any other game containers and remove them
-//   const anyGameContainer = document.querySelector("[data-match-id]");
-//   if (anyGameContainer) {
-//     console.log("Removing any existing game container");
-//     anyGameContainer.remove();
-//   }
-
-
-//   try {
-//     const response = await fetch(`/api/tournaments/matches/${match.id}`);
-//     if (!response.ok) throw new Error("Failed to fetch match details");
-//     const latestMatch = await response.json();
-//     match = latestMatch;
-//   } catch (error) {
-//     console.error("Error fetching match details:", error);
-//     alert("Error loading match details");
-//     return;
-//   }
-
-//   const container = document.createElement("div");
-//   container.className = "container mx-auto p-8";
-//   container.dataset.matchId = match.id.toString();
-//   container.innerHTML = `<h2 class="text-xl font-bold mb-4">Game Box</h2>`;
-
-//   // Timer element
-//   const timerDiv = document.createElement("div");
-//   const timeRemaining = match.time_remaining;
-//   console.log("Time remaining:", timeRemaining);
-//   console.log(match);
-
-//   timerDiv.id = "timer";
-//   timerDiv.className = "text-center text-xl font-bold mb-4";
-//   container.appendChild(timerDiv);
-
-//   // Create Canvas element
-//   const canvas = document.createElement("canvas");
-//   canvas.id = `pong-game-${match.id}`;
-//   canvas.className = "pong-game-canvas bg-gray-800 rounded mx-auto";
-//   canvas.width = 800;
-//   canvas.height = 500;
-//   container.appendChild(canvas);
-
-//   // Get canvas context
-//   const ctx = canvas.getContext("2d");
-//   if (!ctx) {
-//     console.error("Could not get canvas context");
-//     return;
-//   }
-
-//   const player1 = players.find((p) => p.id === match.player1_id);
-//   const player2 = players.find((p) => p.id === match.player2_id);
-//   if (!player1 || !player2) {
-//     alert("Invalid players for this match");
-//     return;
-//   }
-
-//   // === FLEX HEADER ROW ===
-//   const matchHeader = document.createElement("div");
-//   matchHeader.className = "flex items-center justify-between mb-6 w-full";
-
-//   // === GAME CONTROLS ===
-//   const controls = document.createElement("div");
-//   controls.className = "flex justify-center gap-4 mt-4";
-
-//   const startButton = document.createElement("button");
-//   startButton.id = "startBtn";
-//   startButton.className =
-//     "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600";
-//   // Set start button text based on match status
-//   startButton.textContent = "Start Match"
-//     // match.status === "in_progress" ? "Continue" : "Start";
-
-//   const pauseButton = document.createElement("button");
-//   pauseButton.id = "pauseBtn";
-//   pauseButton.className =
-//     "bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600";
-//   pauseButton.textContent = "Pause";
-//   pauseButton.style.display = "none";
-
-//   const stopButton = document.createElement("button");
-//   stopButton.id = "stopBtn";
-//   stopButton.className =
-//     "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600";
-//   stopButton.textContent = "Stop Game";
-//   stopButton.style.display = "none";
-
-//   controls.appendChild(startButton);
-//   controls.appendChild(pauseButton);
-//   controls.appendChild(stopButton);
-
-//   // === APPEND ALL ===
-//   container.appendChild(matchHeader);
-//   container.appendChild(controls);
-//   main.appendChild(container);
-
-//   // Initialize game UI
-//   initializePongGameUI(match);
-
-//   if (match.status === "in_progress") {
-//     const canvas = document.getElementById(
-//       `pong-game-${match.id}`
-//     ) as HTMLCanvasElement;
-//     const ctx = canvas.getContext("2d");
-//     if (ctx) {
-//       startPongGame(canvas, ctx, match);
-//     }
-//   }
-// }
 
 
 export async function recordMatchResult(matchId: number, winnerId: string) {

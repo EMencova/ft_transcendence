@@ -46,7 +46,6 @@ function PongGameTimer(
     }${seconds}`;
   };
 
-  // Initialize the timer display at the start
     updateTimerDisplay(timeRemaining);
 
   const interval = setInterval(async () => {
@@ -114,19 +113,17 @@ export function startPongGame(
     stopBtn.style.display = "block";
     stopBtn.textContent = "Stop Match";
   }
-    // Always start paused if continuing a match
+
   if (match.status === "in_progress") {
     gamePaused = true;
     console.log("Continuing match - started in paused state");
 
-    // Update UI button text
     const pauseBtn = document.getElementById("pauseBtn") as HTMLButtonElement;
     if (pauseBtn) {
       //###
       pauseBtn.textContent = "Pause";
     }
   } else {
-    // New match - start immediately
     gamePaused = true;
     console.log("Starting new match");
   }
@@ -275,7 +272,6 @@ export function startPongGame(
     gamePaused = true;
     console.log("Continuing match - started in paused state");
 
-    // Update button text
     const startBtn = document.getElementById("startBtn") as HTMLButtonElement;
     const pauseBtn = document.getElementById("pauseBtn") as HTMLButtonElement;
     if (startBtn) startBtn.textContent = "Resume";
@@ -302,7 +298,6 @@ export function stopGame() {
   cancelAnimationFrame(animationId);
 }
 
-// Add this function to your Tournament.ts file
 export async function recordMatchScore(matchId: number, score1: number, score2: number) {
 	try {
 	  console.log(`Updating score for match ${matchId}: ${score1}-${score2}`);
@@ -327,7 +322,6 @@ export async function recordMatchScore(matchId: number, score1: number, score2: 
 
 	} catch (error) {
 	  console.error("Error updating match score:", error);
-	  // Don't throw the error - we don't want to stop the game if score saving fails
 	}
   }
 
@@ -345,7 +339,6 @@ export async function recordMatchScore(matchId: number, score1: number, score2: 
     context.fillStyle = "orange";
     context.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Initialize button states
     pauseBtn.style.display = "none";
     stopBtn.style.display = "none";
 
@@ -390,7 +383,6 @@ export async function recordMatchScore(matchId: number, score1: number, score2: 
       startBtn.textContent = "Resume";
     });
     
-    // Set initial button state based on match status
     if (match.status === "in_progress") {
       //###
       startBtn.textContent = "Resume";
