@@ -1,4 +1,5 @@
 import { currentUser, currentUserId } from '../logic/auth'
+import { createPasswordInput } from '../PasswordInput'
 import { userService } from '../services'
 
 export async function ProfileView(pushState = true) {
@@ -166,41 +167,40 @@ function createProfileContent(container: HTMLElement, profileData: any) {
     emailField.className = "text-gray-700"
     settingsForm.appendChild(emailField)
 
-    // Two-Factor Authentication
-    const twoFAContainer = document.createElement("div")
-    twoFAContainer.className = "flex justify-between items-center"
-
-    const twoFALabel = document.createElement("div")
-    twoFALabel.innerHTML = "<strong>Two-Factor Authentication</strong><p class='text-sm text-gray-500'>Enable additional security for your account</p>"
-    twoFALabel.className = "text-black"
-
-    const twoFAToggle = document.createElement("label")
-    twoFAToggle.className = "relative inline-flex items-center cursor-pointer"
-    twoFAToggle.innerHTML = `
-        <input type="checkbox" value="" class="sr-only peer">
-        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-    `
-
-    twoFAContainer.appendChild(twoFALabel)
-    twoFAContainer.appendChild(twoFAToggle)
-    settingsForm.appendChild(twoFAContainer)
-
     // Password change section
     const passwordSection = document.createElement("div")
-    passwordSection.className = "pt-4 border-t border-gray-200"
+    passwordSection.className = "pt-4 border-t border-gray-200 text-gray-700"
 
     const passwordTitle = document.createElement("h3")
     passwordTitle.textContent = "Change Password"
     passwordTitle.className = "text-lg font-medium mb-4 text-black"
-    passwordSection.appendChild(passwordTitle)
+    passwordSection.appendChild(passwordTitle)    // Current Password
+    const currentPasswordLabel = document.createElement("label")
+    currentPasswordLabel.textContent = "Current Password"
+    currentPasswordLabel.className = "block text-sm font-medium text-gray-700 mb-1"
+    passwordSection.appendChild(currentPasswordLabel)
 
-    const currentPasswordField = createFormField("Current Password", "password", "", "current-password")
-    const newPasswordField = createFormField("New Password", "password", "", "new-password")
-    const confirmPasswordField = createFormField("Confirm New Password", "password", "", "confirm-password")
+    const currentPasswordInput = createPasswordInput("current-password", "Enter your current password", "w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10")
+    passwordSection.appendChild(currentPasswordInput)
 
-    passwordSection.appendChild(currentPasswordField)
-    passwordSection.appendChild(newPasswordField)
-    passwordSection.appendChild(confirmPasswordField)
+    // New Password
+    const newPasswordLabel = document.createElement("label")
+    newPasswordLabel.textContent = "New Password"
+    newPasswordLabel.className = "block text-sm font-medium text-gray-700 mb-1 mt-4"
+    passwordSection.appendChild(newPasswordLabel)
+
+    const newPasswordInput = createPasswordInput("new-password", "Enter your new password", "w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10")
+    passwordSection.appendChild(newPasswordInput)
+
+    // Confirm New Password
+    const confirmPasswordLabel = document.createElement("label")
+    confirmPasswordLabel.textContent = "Confirm New Password"
+    confirmPasswordLabel.className = "block text-sm font-medium text-gray-700 mb-1 mt-4"
+    passwordSection.appendChild(confirmPasswordLabel)
+
+    const confirmPasswordInput = createPasswordInput("confirm-password", "Confirm your new password", "w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10")
+    passwordSection.appendChild(confirmPasswordInput)
+
     settingsForm.appendChild(passwordSection)
 
     // Save button
@@ -217,6 +217,9 @@ function createProfileContent(container: HTMLElement, profileData: any) {
         const formData = new FormData(settingsForm as HTMLFormElement)
         const username = formData.get("username") as string
         const email = formData.get("email") as string
+        const currentPassword = formData.get("current-password") as string
+        const newPassword = formData.get("new-password") as string
+        const confirmPassword = formData.get("confirm-password") as string
 
         // Remove any existing messages
         const existingMsg = settingsForm.querySelector(".bg-green-100, .bg-red-100")
@@ -224,8 +227,32 @@ function createProfileContent(container: HTMLElement, profileData: any) {
             settingsForm.removeChild(existingMsg)
         }
 
+        // Check if password change is requested
+        const isPasswordChange = currentPassword || newPassword || confirmPassword
+
+        if (isPasswordChange) {
+            // Validate password fields
+            if (!currentPassword) {
+                showFormMessage(settingsForm, "Current password is required", "error")
+                return
+            }
+            if (!newPassword) {
+                showFormMessage(settingsForm, "New password is required", "error")
+                return
+            }
+            if (newPassword !== confirmPassword) {
+                showFormMessage(settingsForm, "New passwords do not match", "error")
+                return
+            }
+            if (newPassword.length < 6) {
+                showFormMessage(settingsForm, "New password must be at least 6 characters", "error")
+                return
+            }
+        }
+
         try {
-            const result = await userService.updateProfile({
+            // Update profile (username and email)
+            const profileResult = await userService.updateProfile({
                 username,
                 email
             })
@@ -236,19 +263,39 @@ function createProfileContent(container: HTMLElement, profileData: any) {
                 usernameElement.textContent = username
             }
 
+            let successMessage = profileResult.message || "Profile updated successfully!"
+
+            // If password change was requested, update password too
+            if (isPasswordChange) {
+                try {
+                    await userService.changePassword(currentPassword, newPassword)
+                    successMessage += " Password changed successfully!"
+
+                    // Clear password fields after successful change
+                    const currentPwdInput = settingsForm.querySelector("#current-password") as HTMLInputElement
+                    const newPwdInput = settingsForm.querySelector("#new-password") as HTMLInputElement
+                    const confirmPwdInput = settingsForm.querySelector("#confirm-password") as HTMLInputElement
+
+                    if (currentPwdInput) currentPwdInput.value = ""
+                    if (newPwdInput) newPwdInput.value = ""
+                    if (confirmPwdInput) confirmPwdInput.value = ""
+                } catch (passwordError) {
+                    console.error("Error changing password:", passwordError)
+                    showFormMessage(settingsForm,
+                        passwordError instanceof Error ? passwordError.message : "Error changing password",
+                        "error")
+                    return
+                }
+            }
+
             // Show success message
-            const successMsg = document.createElement("div")
-            successMsg.className = "bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4"
-            successMsg.textContent = result.message || "Profile updated successfully!"
-            settingsForm.appendChild(successMsg)
+            showFormMessage(settingsForm, successMessage, "success")
 
         } catch (error) {
             console.error("Error updating profile:", error)
-            // Show error message
-            const errorMsg = document.createElement("div")
-            errorMsg.className = "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4"
-            errorMsg.textContent = error instanceof Error ? error.message : "Network error. Please try again."
-            settingsForm.appendChild(errorMsg)
+            showFormMessage(settingsForm,
+                error instanceof Error ? error.message : "Network error. Please try again.",
+                "error")
         }
     })
 
@@ -464,4 +511,20 @@ function createFormField(label: string, type: string, value: string, id: string)
     field.appendChild(input)
 
     return field
+}
+
+// Helper function to show form messages
+function showFormMessage(form: HTMLElement, message: string, type: "success" | "error") {
+    // Remove any existing messages
+    const existingMsg = form.querySelector(".bg-green-100, .bg-red-100")
+    if (existingMsg) {
+        form.removeChild(existingMsg)
+    }
+
+    const messageDiv = document.createElement("div")
+    messageDiv.className = type === "success"
+        ? "bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4"
+        : "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4"
+    messageDiv.textContent = message
+    form.appendChild(messageDiv)
 }
