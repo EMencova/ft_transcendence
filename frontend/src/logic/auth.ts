@@ -3,7 +3,30 @@ import { GameView } from '../views/GameView'
 import { OtherGamesView } from '../views/OtherGames'
 import { ProfileView } from '../views/Profile'
 import { setupNavLinks } from "./router"
+
 export let currentUser: string | null = localStorage.getItem("currentUser")
+export let currentUserId: number | null = (() => {
+	const id = localStorage.getItem("currentUserId")
+	return id ? parseInt(id) : null
+})()
+
+// Function to update currentUserId (needed for proper module exports)
+export function setCurrentUserId(id: number | null) {
+	currentUserId = id
+}
+
+// Function to update current user information
+export function updateCurrentUser(username: string) {
+	currentUser = username
+	localStorage.setItem("currentUser", username)
+	updateNav() // Refresh the navigation to show the new username
+}
+
+// Function to update current user avatar
+export function updateCurrentAvatar(avatarUrl: string) {
+	(window as any).currentAvatar = avatarUrl
+	updateNav() // Refresh the navigation to show the new avatar
+}
 
 export function initializeAuth() {
 	const loginBtn = document.getElementById("loginBtn")!
@@ -14,7 +37,9 @@ export function initializeAuth() {
 	signupBtn.addEventListener("click", () => showAuthForm("signup"))
 	logoutBtn.addEventListener("click", () => {
 		currentUser = null
+		setCurrentUserId(null)
 		localStorage.removeItem("currentUser")
+		localStorage.removeItem("currentUserId")
 		updateNav()
 		GameView(true)
 	})
@@ -87,8 +112,10 @@ function updateNav() {
 		if (logoutBtnInMenu) {
 			logoutBtnInMenu.addEventListener("click", () => {
 				currentUser = null
+				setCurrentUserId(null)
 					; (window as any).currentAvatar = null
 				localStorage.removeItem("currentUser")
+				localStorage.removeItem("currentUserId")
 				updateNav()
 				GameView(true)
 			})
@@ -96,9 +123,9 @@ function updateNav() {
 
 		const profileLink = menu.querySelector("#profileLink")
 		if (profileLink) {
-			profileLink.addEventListener("click", (e) => {
+			profileLink.addEventListener("click", async (e) => {
 				e.preventDefault()
-				ProfileView()
+				await ProfileView()
 				menu.classList.add("hidden")
 			})
 		}
@@ -253,7 +280,12 @@ function showAuthForm(mode: "login" | "signup") {
 			}
 
 			currentUser = data.username
+			const userId = data.userId || data.id // Handle both possible field names
+			setCurrentUserId(userId)
 			localStorage.setItem("currentUser", data.username)
+			if (userId) {
+				localStorage.setItem("currentUserId", userId.toString())
+			}
 			let avatar = data.avatar || "/avatar.png";
 			(window as any).currentAvatar = avatar
 			updateNav()
