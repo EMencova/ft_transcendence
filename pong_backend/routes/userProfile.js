@@ -76,6 +76,69 @@ async function userProfile(fastify, options) {
     });
   });
 
+  // Change user password
+  fastify.put('/profile/password', async (request, reply) => {
+    const { currentPassword, newPassword, userId } = request.body;
+
+    if (!currentPassword || !newPassword) {
+      return reply.status(400).send({ error: 'Current password and new password are required.' });
+    }
+
+    if (!userId) {
+      return reply.status(400).send({ error: 'User ID is required.' });
+    }
+
+    if (newPassword.length < 6) {
+      return reply.status(400).send({ error: 'New password must be at least 6 characters.' });
+    }
+
+    return new Promise((resolve, reject) => {
+      // First, get the current password hash
+      db.get(`SELECT password FROM players WHERE id = ?`, [userId], async function(err, row) {
+        if (err) {
+          console.error('Password fetch error:', err.message);
+          return reject(reply.status(500).send({ error: 'Database error' }));
+        }
+
+        if (!row) {
+          return reject(reply.status(404).send({ error: 'User not found.' }));
+        }
+
+        try {
+          // Verify current password
+          const bcrypt = require('bcrypt');
+          const passwordMatch = await bcrypt.compare(currentPassword, row.password);
+          
+          if (!passwordMatch) {
+            return reject(reply.status(400).send({ error: 'Current password is incorrect.' }));
+          }
+
+          // Hash new password
+          const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+          // Update password
+          db.run(`UPDATE players SET password = ? WHERE id = ?`, [hashedNewPassword, userId], function(updateErr) {
+            if (updateErr) {
+              console.error('Password update error:', updateErr.message);
+              return reject(reply.status(500).send({ error: 'Database error' }));
+            }
+
+            if (this.changes === 0) {
+              return reject(reply.status(404).send({ error: 'User not found.' }));
+            }
+
+            console.log('Password updated successfully for user:', userId);
+            resolve(reply.send({ message: 'Password changed successfully.' }));
+          });
+
+        } catch (bcryptError) {
+          console.error('Bcrypt error:', bcryptError);
+          return reject(reply.status(500).send({ error: 'Password processing error' }));
+        }
+      });
+    });
+  });
+
   // Get user game history
   fastify.get('/profile/:userId/games', async (request, reply) => {
     const { userId } = request.params;
