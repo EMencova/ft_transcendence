@@ -38,12 +38,12 @@ export function setupNavLinks() {
 	}
 
 	// To handle back/forward navigation
-	window.addEventListener("popstate", () => {
+	window.addEventListener("popstate", async () => {
 		const path = window.location.pathname
 		if (path === "/tournament") TournamentView(false)
 		else if (path === "/leaderboard") LeaderboardView(false)
 		else if (path === "/other-games") OtherGamesView(false)
-		else if (path === "/profile") ProfileView(false)
+		else if (path === "/profile") await ProfileView(false)
 		else GameView(false)
 	})
 }
