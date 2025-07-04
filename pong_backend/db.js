@@ -96,6 +96,24 @@ function setupDb(fastify) {
         FOREIGN KEY (player_id) REFERENCES players(id)
       )
     `);
+
+    // Games table for general game history
+    db.run(`
+      CREATE TABLE IF NOT EXISTS games (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        player1_id INTEGER NOT NULL,
+        player2_id INTEGER NOT NULL,
+        player1_score INTEGER DEFAULT 0,
+        player2_score INTEGER DEFAULT 0,
+        winner_id INTEGER,
+        game_type TEXT DEFAULT 'pong',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (player1_id) REFERENCES players(id),
+        FOREIGN KEY (player2_id) REFERENCES players(id),
+        FOREIGN KEY (winner_id) REFERENCES players(id)
+      )
+    `);
+
   });
 
   fastify.decorate('sqliteDb', db);
