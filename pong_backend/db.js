@@ -80,11 +80,35 @@ function setupDb(fastify) {
       CREATE TABLE IF NOT EXISTS friends (
         player_id INTEGER NOT NULL,
         friend_id INTEGER NOT NULL,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (player_id, friend_id),
         FOREIGN KEY (player_id) REFERENCES players(id),
         FOREIGN KEY (friend_id) REFERENCES players(id)
       )
     `);
+
+    // Add status column to existing friends table if it doesn't exist
+    db.run(`
+      ALTER TABLE friends ADD COLUMN status TEXT DEFAULT 'pending'
+    `, (err) => {
+      if (err && err.message.includes('duplicate column name')) {
+        // Column already exists, this is fine
+      } else if (err) {
+        console.log('Note: Could not add status column (may already exist):', err.message);
+      }
+    });
+
+    // Add created_at column to existing friends table if it doesn't exist
+    db.run(`
+      ALTER TABLE friends ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    `, (err) => {
+      if (err && err.message.includes('duplicate column name')) {
+        // Column already exists, this is fine
+      } else if (err) {
+        console.log('Note: Could not add created_at column (may already exist):', err.message);
+      }
+    });
 
     // Tetris game history table (score and timestamp only)
     db.run(`
@@ -111,6 +135,21 @@ function setupDb(fastify) {
         FOREIGN KEY (player1_id) REFERENCES players(id),
         FOREIGN KEY (player2_id) REFERENCES players(id),
         FOREIGN KEY (winner_id) REFERENCES players(id)
+      )
+    `);
+
+    // Friend request history table (for tracking declined/cancelled requests)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS friend_request_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        requester_id INTEGER NOT NULL,
+        target_id INTEGER NOT NULL,
+        action TEXT NOT NULL, -- 'declined', 'cancelled'
+        action_by INTEGER NOT NULL, -- who performed the action
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (requester_id) REFERENCES players(id),
+        FOREIGN KEY (target_id) REFERENCES players(id),
+        FOREIGN KEY (action_by) REFERENCES players(id)
       )
     `);
 

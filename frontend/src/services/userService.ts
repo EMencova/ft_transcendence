@@ -47,6 +47,14 @@ class UserService {
 		return apiService.get<{ requests: any[] }>(`/friends/${userId}/requests`)
 	}
 
+	async getSentFriendRequests(userId: number): Promise<{ sentRequests: any[] }> {
+		return apiService.get<{ sentRequests: any[] }>(`/friends/${userId}/sent`)
+	}
+
+	async getFriendHistory(userId: number): Promise<{ history: any[] }> {
+		return apiService.get<{ history: any[] }>(`/friends/${userId}/history`)
+	}
+
 	async searchPlayers(userId: number, query: string): Promise<{ players: any[] }> {
 		return apiService.get<{ players: any[] }>(`/players/search/${userId}?q=${encodeURIComponent(query)}`)
 	}
@@ -65,6 +73,13 @@ class UserService {
 
 	async removeFriend(friendId: number): Promise<{ message: string }> {
 		return apiService.request(`/friends/${friendId}`, {
+			method: 'DELETE',
+			body: JSON.stringify({ userId: currentUserId })
+		})
+	}
+
+	async cancelFriendRequest(friendId: number): Promise<{ message: string }> {
+		return apiService.request(`/friends/${friendId}/cancel`, {
 			method: 'DELETE',
 			body: JSON.stringify({ userId: currentUserId })
 		})
