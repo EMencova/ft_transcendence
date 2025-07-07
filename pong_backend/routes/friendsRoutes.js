@@ -3,7 +3,8 @@ async function friendsRoutes(fastify, options) {
 
   // Send a friend request (status = 'pending')
   fastify.post('/friends/:friendId', async (request, reply) => {
-    const playerId = request.user?.id || 1; // TEMPORARY
+    const { userId } = request.body; // Get userId from request body
+    const playerId = userId || request.user?.id || 1; // Use userId from request body
     const friendId = parseInt(request.params.friendId);
 
     if (playerId === friendId) {
@@ -29,7 +30,8 @@ async function friendsRoutes(fastify, options) {
 
   // Accept a friend request
   fastify.post('/friends/:friendId/accept', async (request, reply) => {
-    const playerId = request.user?.id || 1;
+    const { userId } = request.body;
+    const playerId = userId || request.user?.id || 1;
     const friendId = parseInt(request.params.friendId);
 
     return new Promise((resolve, reject) => {
@@ -71,7 +73,8 @@ async function friendsRoutes(fastify, options) {
 
   // Decline a friend request
   fastify.post('/friends/:friendId/decline', async (request, reply) => {
-    const playerId = request.user?.id || 1;
+    const { userId } = request.body;
+    const playerId = userId || request.user?.id || 1;
     const friendId = parseInt(request.params.friendId);
 
     return new Promise((resolve, reject) => {
@@ -91,12 +94,13 @@ async function friendsRoutes(fastify, options) {
   });
 
   // Get friend list (only accepted)
-  fastify.get('/friends', async (request, reply) => {
-    const playerId = request.user?.id || 1;
+  fastify.get('/friends/:userId', async (request, reply) => {
+    const { userId } = request.params;
+    const playerId = userId || request.user?.id || 1;
 
     return new Promise((resolve, reject) => {
       db.all(`
-        SELECT p.id, p.username, p.wins, p.losses
+        SELECT p.id, p.username, p.wins, p.losses, p.avatar
         FROM players p
         JOIN friends f ON f.friend_id = p.id
         WHERE f.player_id = ? AND f.status = 'accepted'
@@ -112,12 +116,13 @@ async function friendsRoutes(fastify, options) {
   });
 
   // Get incoming friend requests
-  fastify.get('/friends/requests', async (request, reply) => {
-    const playerId = request.user?.id || 1;
+  fastify.get('/friends/:userId/requests', async (request, reply) => {
+    const { userId } = request.params;
+    const playerId = userId || request.user?.id || 1;
 
     return new Promise((resolve, reject) => {
       db.all(`
-        SELECT p.id, p.username
+        SELECT p.id, p.username, p.avatar
         FROM players p
         JOIN friends f ON f.player_id = p.id
         WHERE f.friend_id = ? AND f.status = 'pending'
@@ -132,9 +137,43 @@ async function friendsRoutes(fastify, options) {
     });
   });
 
+  // Search players (excluding yourself and existing friends)
+  fastify.get('/players/search/:userId', async (request, reply) => {
+    const { userId } = request.params;
+    const { q } = request.query; // search query
+    
+    if (!q || q.length < 2) {
+      return reply.status(400).send({ error: 'Search query must be at least 2 characters' });
+    }
+
+    return new Promise((resolve, reject) => {
+      db.all(`
+        SELECT p.id, p.username, p.avatar, p.wins, p.losses
+        FROM players p
+        WHERE p.id != ? 
+        AND p.username LIKE ?
+        AND p.id NOT IN (
+          SELECT friend_id FROM friends WHERE player_id = ? AND status IN ('accepted', 'pending')
+        )
+        AND p.id NOT IN (
+          SELECT player_id FROM friends WHERE friend_id = ? AND status IN ('accepted', 'pending')
+        )
+        LIMIT 10
+      `, [userId, `%${q}%`, userId, userId], (err, rows) => {
+        if (err) {
+          console.error('Search players error:', err.message);
+          return reject(reply.status(500).send({ error: 'Database error' }));
+        }
+
+        resolve(reply.send({ players: rows }));
+      });
+    });
+  });
+
   // Delete a friend (remove accepted friendship both ways)
   fastify.delete('/friends/:friendId', async (request, reply) => {
-    const playerId = request.user?.id || 1;
+    const { userId } = request.body;
+    const playerId = userId || request.user?.id || 1;
     const friendId = parseInt(request.params.friendId);
 
     if (playerId === friendId) {
