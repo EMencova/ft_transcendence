@@ -38,6 +38,38 @@ class UserService {
 		return apiService.get<{ games: any[] }>(`/profile/${userId}/games`)
 	}
 
+	// Friends methods
+	async getFriends(userId: number): Promise<{ friends: any[] }> {
+		return apiService.get<{ friends: any[] }>(`/friends/${userId}`)
+	}
+
+	async getFriendRequests(userId: number): Promise<{ requests: any[] }> {
+		return apiService.get<{ requests: any[] }>(`/friends/${userId}/requests`)
+	}
+
+	async searchPlayers(userId: number, query: string): Promise<{ players: any[] }> {
+		return apiService.get<{ players: any[] }>(`/players/search/${userId}?q=${encodeURIComponent(query)}`)
+	}
+
+	async sendFriendRequest(friendId: number): Promise<{ message: string }> {
+		return apiService.post(`/friends/${friendId}`, { userId: currentUserId })
+	}
+
+	async acceptFriendRequest(friendId: number): Promise<{ message: string }> {
+		return apiService.post(`/friends/${friendId}/accept`, { userId: currentUserId })
+	}
+
+	async declineFriendRequest(friendId: number): Promise<{ message: string }> {
+		return apiService.post(`/friends/${friendId}/decline`, { userId: currentUserId })
+	}
+
+	async removeFriend(friendId: number): Promise<{ message: string }> {
+		return apiService.request(`/friends/${friendId}`, {
+			method: 'DELETE',
+			body: JSON.stringify({ userId: currentUserId })
+		})
+	}
+
 	// Update user profile (username and email)
 	async updateProfile(data: UpdateProfileData): Promise<UpdateProfileResponse> {
 		// Include the current user ID
@@ -114,7 +146,8 @@ class UserService {
 	async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
 		return apiService.put('/profile/password', {
 			currentPassword,
-			newPassword
+			newPassword,
+			userId: currentUserId
 		})
 	}
 
