@@ -140,6 +140,11 @@ function createProfileContent(container: HTMLElement, profileData: any) {
                 if (tab.dataset.tab === "game-history") {
                     await loadGameHistory(contentToShow as HTMLElement, profileData.id)
                 }
+
+                // Load friends when the tab is clicked
+                if (tab.dataset.tab === "friends") {
+                    await loadFriends(contentToShow as HTMLElement, profileData.id)
+                }
             }
         })
 
@@ -489,6 +494,281 @@ async function loadGameHistory(gameHistoryElement: HTMLElement, userId: number) 
             </div>
         `
     }
+}
+
+// Function to load friends dynamically
+async function loadFriends(friendsElement: HTMLElement, userId: number) {
+    // Clear current content and show loading
+    friendsElement.innerHTML = `
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b border-gray-200">
+                <h3 class="font-medium text-black">Friends</h3>
+            </div>
+            <div class="p-4">
+                <div class="text-center py-4 text-gray-600">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
+                    <p class="text-gray-600">Loading friends...</p>
+                </div>
+            </div>
+        </div>
+    `
+
+    try {
+        // Load friends, friend requests, and search functionality
+        const [friendsData, requestsData] = await Promise.all([
+            userService.getFriends(userId),
+            userService.getFriendRequests(userId)
+        ])
+
+        const friends = friendsData.friends || []
+        const requests = requestsData.requests || []
+
+        // Create the friends interface
+        const friendsHTML = createFriendsInterface(friends, requests)
+        friendsElement.innerHTML = friendsHTML
+
+        // Add event listeners after content is loaded
+        setupFriendsEventListeners(friendsElement, userId)
+
+    } catch (error) {
+        console.error("Error loading friends:", error)
+        friendsElement.innerHTML = `
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-4 border-b border-gray-200">
+                    <h3 class="font-medium text-black">Friends</h3>
+                </div>
+                <div class="p-4">
+                    <div class="text-red-500 text-center py-8">
+                        Error loading friends. Please try again.
+                    </div>
+                </div>
+            </div>
+        `
+    }
+}
+
+// Create the friends interface HTML
+function createFriendsInterface(friends: any[], requests: any[]): string {
+    return `
+        <div class="bg-white rounded-lg shadow">
+            <!-- Header with search -->
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-medium text-black">Friends</h3>
+                    <span class="text-sm text-gray-500">${friends.length} friends</span>
+                </div>
+                
+                <!-- Search for new friends -->
+                <div class="relative text-gray-600">
+                    <input 
+                        type="text" 
+                        id="friendSearch" 
+                        placeholder="Search for players to add as friends..."
+                        class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    >
+                    <div id="searchResults" class="absolute z-10 w-full bg-white border border-gray-300 rounded-b-lg shadow-lg hidden max-h-48 overflow-y-auto"></div>
+                </div>
+            </div>
+
+            <!-- Friend Requests -->
+            ${requests.length > 0 ? `
+                <div class="p-4 border-b border-gray-200 bg-blue-50">
+                    <h4 class="font-medium text-black mb-3">Friend Requests (${requests.length})</h4>
+                    <div class="space-y-2">
+                        ${requests.map(request => `
+                            <div class="flex items-center justify-between bg-white p-3 rounded border">
+                                <div class="flex items-center space-x-3">
+                                    <img src="${request.avatar || '/avatar.png'}" alt="${request.username}" class="w-10 h-10 rounded-full object-cover">
+                                    <div>
+                                        <div class="font-medium text-gray-900">${request.username}</div>
+                                        <div class="text-sm text-gray-500">Wants to be your friend</div>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="accept-request bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm" data-friend-id="${request.id}">
+                                        Accept
+                                    </button>
+                                    <button class="decline-request bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm" data-friend-id="${request.id}">
+                                        Decline
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
+
+            <!-- Friends List -->
+            <div class="p-4">
+                ${friends.length === 0 ? `
+                    <div class="text-gray-500 text-center py-8">
+                        ${requests.length === 0 ? 'No friends yet. Search for players above to send friend requests!' : 'No friends yet, but you have pending requests above!'}
+                    </div>
+                ` : `
+                    <div class="grid gap-3">
+                        ${friends.map(friend => `
+                            <div class="flex items-center justify-between p-3 border rounded hover:bg-gray-50">
+                                <div class="flex items-center space-x-3">
+                                    <img src="${friend.avatar || '/avatar.png'}" alt="${friend.username}" class="w-12 h-12 rounded-full object-cover">
+                                    <div>
+                                        <div class="font-medium text-gray-900">${friend.username}</div>
+                                        <div class="text-sm text-gray-500">
+                                            Wins: ${friend.wins || 0} • Losses: ${friend.losses || 0}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="challenge-friend bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm" data-friend-id="${friend.id}">
+                                        Challenge
+                                    </button>
+                                    <button class="remove-friend bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm" data-friend-id="${friend.id}">
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+            </div>
+        </div>
+    `
+}
+
+// Setup event listeners for friends functionality
+function setupFriendsEventListeners(friendsElement: HTMLElement, userId: number) {
+    // Search functionality
+    const searchInput = friendsElement.querySelector('#friendSearch') as HTMLInputElement
+    const searchResults = friendsElement.querySelector('#searchResults') as HTMLElement
+    let searchTimeout: any
+
+    if (searchInput && searchResults) {
+        searchInput.addEventListener('input', async () => {
+            clearTimeout(searchTimeout)
+            const query = searchInput.value.trim()
+
+            if (query.length < 2) {
+                searchResults.classList.add('hidden')
+                return
+            }
+
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const results = await userService.searchPlayers(userId, query)
+                    const players = results.players || []
+
+                    if (players.length === 0) {
+                        searchResults.innerHTML = '<div class="p-3 text-gray-500">No players found</div>'
+                    } else {
+                        searchResults.innerHTML = players.map(player => `
+                            <div class="flex items-center justify-between p-3 hover:bg-gray-50 border-b last:border-b-0">
+                                <div class="flex items-center space-x-3">
+                                    <img src="${player.avatar || '/avatar.png'}" alt="${player.username}" class="w-8 h-8 rounded-full object-cover">
+                                    <div>
+                                        <div class="font-medium text-gray-900">${player.username}</div>
+                                        <div class="text-xs text-gray-500">Wins: ${player.wins || 0} • Losses: ${player.losses || 0}</div>
+                                    </div>
+                                </div>
+                                <button class="add-friend bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs" data-player-id="${player.id}">
+                                    Add Friend
+                                </button>
+                            </div>
+                        `).join('')
+                    }
+
+                    searchResults.classList.remove('hidden')
+
+                    // Add event listeners for "Add Friend" buttons
+                    searchResults.querySelectorAll('.add-friend').forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            const playerId = btn.getAttribute('data-player-id')
+                            if (playerId) {
+                                try {
+                                    await userService.sendFriendRequest(parseInt(playerId))
+                                    btn.textContent = 'Sent!'
+                                    btn.classList.remove('bg-orange-500', 'hover:bg-orange-600')
+                                    btn.classList.add('bg-gray-500')
+                                        ; (btn as HTMLButtonElement).disabled = true
+                                } catch (error) {
+                                    console.error('Error sending friend request:', error)
+                                    alert('Error sending friend request')
+                                }
+                            }
+                        })
+                    })
+
+                } catch (error) {
+                    console.error('Error searching players:', error)
+                    searchResults.innerHTML = '<div class="p-3 text-red-500">Error searching players</div>'
+                    searchResults.classList.remove('hidden')
+                }
+            }, 300)
+        })
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!friendsElement.contains(e.target as Node)) {
+                searchResults.classList.add('hidden')
+            }
+        })
+    }
+
+    // Accept friend request
+    friendsElement.querySelectorAll('.accept-request').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const friendId = btn.getAttribute('data-friend-id')
+            if (friendId) {
+                try {
+                    await userService.acceptFriendRequest(parseInt(friendId))
+                    // Reload friends
+                    await loadFriends(friendsElement, userId)
+                } catch (error) {
+                    console.error('Error accepting friend request:', error)
+                    alert('Error accepting friend request')
+                }
+            }
+        })
+    })
+
+    // Decline friend request
+    friendsElement.querySelectorAll('.decline-request').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const friendId = btn.getAttribute('data-friend-id')
+            if (friendId) {
+                try {
+                    await userService.declineFriendRequest(parseInt(friendId))
+                    // Reload friends
+                    await loadFriends(friendsElement, userId)
+                } catch (error) {
+                    console.error('Error declining friend request:', error)
+                    alert('Error declining friend request')
+                }
+            }
+        })
+    })
+
+    // Remove friend
+    friendsElement.querySelectorAll('.remove-friend').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const friendId = btn.getAttribute('data-friend-id')
+            if (friendId && confirm('Are you sure you want to remove this friend?')) {
+                try {
+                    await userService.removeFriend(parseInt(friendId))
+                    // Reload friends
+                    await loadFriends(friendsElement, userId)
+                } catch (error) {
+                    console.error('Error removing friend:', error)
+                    alert('Error removing friend')
+                }
+            }
+        })
+    })
+
+    // Challenge friend (placeholder for now)
+    friendsElement.querySelectorAll('.challenge-friend').forEach(btn => {
+        btn.addEventListener('click', () => {
+            alert('Challenge functionality will be implemented soon!')
+        })
+    })
 }
 
 // Helper function to create form fields
