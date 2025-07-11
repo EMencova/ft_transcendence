@@ -227,109 +227,168 @@ function createProfileContent(container: HTMLElement, profileData: any) {
 }
 
 function createProfileSettingsContent(settingsElement: HTMLElement, profileData: any) {
-    settingsElement.innerHTML = `
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-4 border-b border-gray-200">
-                <h3 class="font-medium text-black">Profile Settings</h3>
-            </div>
-            <div class="p-4">
-                <form id="profileForm" class="space-y-4">
-                    <div id="usernameField"></div>
-                    <div id="emailField"></div>
-                    <div id="passwordFields"></div>
-                    <button type="submit" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">
-                        Update Profile
-                    </button>
-                </form>
-            </div>
-        </div>
-    `
+    // Create the profile settings content with the original styling
+    settingsElement.className = "bg-white rounded-lg shadow p-6"
 
-    // Add form fields
+    const settingsForm = document.createElement("form")
+    settingsForm.className = "space-y-6"
+
+    // Personal info section
+    const personalInfoSection = document.createElement("div")
+    personalInfoSection.className = "text-gray-700"
+
+    const personalInfoTitle = document.createElement("h3")
+    personalInfoTitle.textContent = "Change Personal Info"
+    personalInfoTitle.className = "text-lg font-medium mb-4 text-black"
+    personalInfoSection.appendChild(personalInfoTitle)
+
+    // Username field
     const usernameField = createFormField("Username", "text", profileData.username, "username")
+    usernameField.className = "text-gray-700 mb-4"
+    personalInfoSection.appendChild(usernameField)
+
+    // Email field
     const emailField = createFormField("Email", "email", profileData.email, "email")
+    emailField.className = "text-gray-700"
+    personalInfoSection.appendChild(emailField)
 
-    // Password fields
-    const passwordFields = document.createElement("div")
-    passwordFields.className = "space-y-4"
+    settingsForm.appendChild(personalInfoSection)
 
-    const currentPasswordField = createPasswordInput("Current Password", "currentPassword")
-    const newPasswordField = createPasswordInput("New Password", "newPassword")
-    const confirmPasswordField = createPasswordInput("Confirm New Password", "confirmPassword")
+    // Password change section
+    const passwordSection = document.createElement("div")
+    passwordSection.className = "pt-4 border-t border-gray-200 text-gray-700"
 
-    passwordFields.appendChild(currentPasswordField)
-    passwordFields.appendChild(newPasswordField)
-    passwordFields.appendChild(confirmPasswordField)
+    const passwordTitle = document.createElement("h3")
+    passwordTitle.textContent = "Change Password"
+    passwordTitle.className = "text-lg font-medium mb-4 text-black"
+    passwordSection.appendChild(passwordTitle)
 
-    settingsElement.querySelector("#usernameField")!.appendChild(usernameField)
-    settingsElement.querySelector("#emailField")!.appendChild(emailField)
-    settingsElement.querySelector("#passwordFields")!.appendChild(passwordFields)
+    // Current Password
+    const currentPasswordLabel = document.createElement("label")
+    currentPasswordLabel.textContent = "Current Password"
+    currentPasswordLabel.className = "block text-sm font-medium text-gray-700 mb-1 text-left"
+    passwordSection.appendChild(currentPasswordLabel)
 
-    // Handle form submission
-    const form = settingsElement.querySelector("#profileForm") as HTMLFormElement
-    form.addEventListener("submit", async (e) => {
+    const currentPasswordInput = createPasswordInput("current-password", "Enter your current password", "w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10")
+    passwordSection.appendChild(currentPasswordInput)
+
+    // New Password
+    const newPasswordLabel = document.createElement("label")
+    newPasswordLabel.textContent = "New Password"
+    newPasswordLabel.className = "block text-sm font-medium text-gray-700 mb-1 mt-4 text-left"
+    passwordSection.appendChild(newPasswordLabel)
+
+    const newPasswordInput = createPasswordInput("new-password", "Enter your new password", "w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10")
+    passwordSection.appendChild(newPasswordInput)
+
+    // Confirm New Password
+    const confirmPasswordLabel = document.createElement("label")
+    confirmPasswordLabel.textContent = "Confirm New Password"
+    confirmPasswordLabel.className = "block text-sm font-medium text-gray-700 mb-1 mt-4 text-left"
+    passwordSection.appendChild(confirmPasswordLabel)
+
+    const confirmPasswordInput = createPasswordInput("confirm-password", "Confirm your new password", "w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10")
+    passwordSection.appendChild(confirmPasswordInput)
+
+    settingsForm.appendChild(passwordSection)
+
+    // Save button
+    const saveButton = document.createElement("button")
+    saveButton.type = "submit"
+    saveButton.className = "bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-6 rounded"
+    saveButton.textContent = "Save Changes"
+    settingsForm.appendChild(saveButton)
+
+    // Form submission handler
+    settingsForm.addEventListener("submit", async (e) => {
         e.preventDefault()
 
-        const formData = new FormData(form)
+        const formData = new FormData(settingsForm as HTMLFormElement)
         const username = formData.get("username") as string
         const email = formData.get("email") as string
-        const currentPassword = formData.get("currentPassword") as string
-        const newPassword = formData.get("newPassword") as string
-        const confirmPassword = formData.get("confirmPassword") as string
+        const currentPassword = formData.get("current-password") as string
+        const newPassword = formData.get("new-password") as string
+        const confirmPassword = formData.get("confirm-password") as string
 
-        // Validation
-        const settingsForm = e.target as HTMLElement
-        if (newPassword && !currentPassword) {
-            showFormMessage(settingsForm, "Current password is required", "error")
-            return
+        // Remove any existing messages
+        const existingMsg = settingsForm.querySelector(".bg-green-100, .bg-red-100")
+        if (existingMsg) {
+            settingsForm.removeChild(existingMsg)
         }
-        if (newPassword && !newPassword.trim()) {
-            showFormMessage(settingsForm, "New password is required", "error")
-            return
-        }
-        if (newPassword && newPassword !== confirmPassword) {
-            showFormMessage(settingsForm, "New passwords do not match", "error")
-            return
-        }
-        if (newPassword && newPassword.length < 6) {
-            showFormMessage(settingsForm, "New password must be at least 6 characters", "error")
-            return
+
+        // Check if password change is requested
+        const isPasswordChange = currentPassword || newPassword || confirmPassword
+
+        if (isPasswordChange) {
+            // Validate password fields
+            if (!currentPassword) {
+                showFormMessage(settingsForm, "Current password is required", "error")
+                return
+            }
+            if (!newPassword) {
+                showFormMessage(settingsForm, "New password is required", "error")
+                return
+            }
+            if (newPassword !== confirmPassword) {
+                showFormMessage(settingsForm, "New passwords do not match", "error")
+                return
+            }
+            if (newPassword.length < 6) {
+                showFormMessage(settingsForm, "New password must be at least 6 characters", "error")
+                return
+            }
         }
 
         try {
-            // Prepare update data
-            const updateData: any = {
+            // Update profile (username and email)
+            const profileResult = await userService.updateProfile({
                 username,
                 email
+            })
+
+            // Update the displayed username in the page header
+            const usernameElement = document.querySelector("h1")
+            if (usernameElement) {
+                usernameElement.textContent = username
             }
 
-            // Only include password if provided
-            if (newPassword) {
-                updateData.currentPassword = currentPassword
-                updateData.newPassword = newPassword
-            }
+            let successMessage = profileResult.message || "Profile updated successfully!"
 
-            await userService.updateProfile(updateData)
+            // If password change was requested, update password too
+            if (isPasswordChange) {
+                try {
+                    await userService.changePassword(currentPassword, newPassword)
+                    successMessage += " Password changed successfully!"
+
+                    // Clear password fields after successful change
+                    const currentPwdInput = settingsForm.querySelector("#current-password") as HTMLInputElement
+                    const newPwdInput = settingsForm.querySelector("#new-password") as HTMLInputElement
+                    const confirmPwdInput = settingsForm.querySelector("#confirm-password") as HTMLInputElement
+
+                    if (currentPwdInput) currentPwdInput.value = ""
+                    if (newPwdInput) newPwdInput.value = ""
+                    if (confirmPwdInput) confirmPwdInput.value = ""
+                } catch (passwordError) {
+                    console.error("Error changing password:", passwordError)
+                    showFormMessage(settingsForm,
+                        passwordError instanceof Error ? passwordError.message : "Error changing password",
+                        "error")
+                    return
+                }
+            }
 
             // Show success message
-            let successMessage = "Profile updated successfully!"
-            if (newPassword) {
-                successMessage = "Profile and password updated successfully!"
-                    // Clear password fields
-                    ; (form.querySelector("#currentPassword") as HTMLInputElement).value = ""
-                    ; (form.querySelector("#newPassword") as HTMLInputElement).value = ""
-                    ; (form.querySelector("#confirmPassword") as HTMLInputElement).value = ""
-            }
             showFormMessage(settingsForm, successMessage, "success")
 
         } catch (error) {
-            console.error("Profile update error:", error)
+            console.error("Error updating profile:", error)
             showFormMessage(settingsForm,
-                error instanceof Error ? error.message : "Failed to update profile",
-                "error"
-            )
+                error instanceof Error ? error.message : "Network error. Please try again.",
+                "error")
         }
     })
+
+    settingsElement.appendChild(settingsForm)
 }
 
 // Function to load game history dynamically
@@ -407,11 +466,12 @@ async function loadGameHistory(gameHistoryElement: HTMLElement, userId: number) 
 // Helper function to create form fields
 function createFormField(label: string, type: string, value: string, id: string): HTMLElement {
     const field = document.createElement("div")
+    field.className = "text-gray-700"
 
     const labelElement = document.createElement("label")
     labelElement.htmlFor = id
     labelElement.textContent = label
-    labelElement.className = "block text-sm font-medium text-gray-700 mb-1"
+    labelElement.className = "block text-sm font-medium text-gray-700 mb-1 text-left"
 
     const input = document.createElement("input")
     input.type = type
