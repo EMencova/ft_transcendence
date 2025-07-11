@@ -78,17 +78,36 @@ async function friendsRoutes(fastify, options) {
     const friendId = parseInt(request.params.friendId);
 
     return new Promise((resolve, reject) => {
-      const deleteRequest = db.prepare(`
-        DELETE FROM friends WHERE player_id = ? AND friend_id = ? AND status = 'pending'
-      `);
+      db.serialize(() => {
+        // First, record the decline action in history
+        const insertHistory = db.prepare(`
+          INSERT INTO friend_request_history (requester_id, target_id, action, action_by)
+          VALUES (?, ?, 'declined', ?)
+        `);
 
-      deleteRequest.run(friendId, playerId, (err) => {
-        if (err) {
-          console.error('Decline request error:', err.message);
-          return reject(reply.status(500).send({ error: 'Database error' }));
-        }
+        insertHistory.run(friendId, playerId, playerId, (err) => {
+          if (err) {
+            console.log('Warning: Could not record decline history:', err.message);
+          }
+        });
 
-        resolve(reply.send({ message: 'Friend request declined.' }));
+        // Then delete the pending request
+        const deleteRequest = db.prepare(`
+          DELETE FROM friends WHERE player_id = ? AND friend_id = ? AND status = 'pending'
+        `);
+
+        deleteRequest.run(friendId, playerId, function(err) {
+          if (err) {
+            console.error('Decline request error:', err.message);
+            return reject(reply.status(500).send({ error: 'Database error' }));
+          }
+
+          if (this.changes === 0) {
+            return reject(reply.status(400).send({ error: 'No pending friend request found.' }));
+          }
+
+          resolve(reply.send({ message: 'Friend request declined.' }));
+        });
       });
     });
   });
@@ -133,6 +152,113 @@ async function friendsRoutes(fastify, options) {
         }
 
         resolve(reply.send({ requests: rows }));
+      });
+    });
+  });
+
+  // Get sent friend requests (requests I sent to others)
+  fastify.get('/friends/:userId/sent', async (request, reply) => {
+    const { userId } = request.params;
+    const playerId = userId || request.user?.id || 1;
+
+    return new Promise((resolve, reject) => {
+      db.all(`
+        SELECT p.id, p.username, p.avatar, f.status
+        FROM players p
+        JOIN friends f ON f.friend_id = p.id
+        WHERE f.player_id = ? AND f.status = 'pending'
+      `, [playerId], (err, rows) => {
+        if (err) {
+          console.error('Get sent requests error:', err.message);
+          return reject(reply.status(500).send({ error: 'Database error' }));
+        }
+
+        resolve(reply.send({ sentRequests: rows }));
+      });
+    });
+  });
+
+  // Cancel a sent friend request
+  fastify.delete('/friends/:friendId/cancel', async (request, reply) => {
+    const { userId } = request.body;
+    const playerId = userId || request.user?.id || 1;
+    const friendId = parseInt(request.params.friendId);
+
+    return new Promise((resolve, reject) => {
+      db.serialize(() => {
+        // First, record the cancel action in history
+        const insertHistory = db.prepare(`
+          INSERT INTO friend_request_history (requester_id, target_id, action, action_by)
+          VALUES (?, ?, 'cancelled', ?)
+        `);
+
+        insertHistory.run(playerId, friendId, playerId, (err) => {
+          if (err) {
+            console.log('Warning: Could not record cancel history:', err.message);
+          }
+        });
+
+        // Then delete the pending request
+        const deleteRequest = db.prepare(`
+          DELETE FROM friends WHERE player_id = ? AND friend_id = ? AND status = 'pending'
+        `);
+
+        deleteRequest.run(playerId, friendId, function(err) {
+          if (err) {
+            console.error('Cancel request error:', err.message);
+            return reject(reply.status(500).send({ error: 'Database error' }));
+          }
+
+          if (this.changes === 0) {
+            return reject(reply.status(400).send({ error: 'No pending request found.' }));
+          }
+
+          resolve(reply.send({ message: 'Friend request cancelled.' }));
+        });
+      });
+    });
+  });
+
+  // Get friend request history (declined and cancelled)
+  fastify.get('/friends/:userId/history', async (request, reply) => {
+    const { userId } = request.params;
+    const playerId = userId || request.user?.id || 1;
+
+    return new Promise((resolve, reject) => {
+      db.all(`
+        SELECT 
+          frh.id,
+          frh.action,
+          frh.created_at,
+          CASE 
+            WHEN frh.requester_id = ? THEN p_target.username
+            ELSE p_requester.username
+          END as other_username,
+          CASE 
+            WHEN frh.requester_id = ? THEN p_target.avatar
+            ELSE p_requester.avatar
+          END as other_avatar,
+          CASE 
+            WHEN frh.requester_id = ? THEN p_target.id
+            ELSE p_requester.id
+          END as other_id,
+          CASE 
+            WHEN frh.requester_id = ? THEN 'sent'
+            ELSE 'received'
+          END as request_direction
+        FROM friend_request_history frh
+        JOIN players p_requester ON frh.requester_id = p_requester.id
+        JOIN players p_target ON frh.target_id = p_target.id
+        WHERE frh.requester_id = ? OR frh.target_id = ?
+        ORDER BY frh.created_at DESC
+        LIMIT 50
+      `, [playerId, playerId, playerId, playerId, playerId, playerId], (err, rows) => {
+        if (err) {
+          console.error('Get friend history error:', err.message);
+          return reject(reply.status(500).send({ error: 'Database error' }));
+        }
+
+        resolve(reply.send({ history: rows }));
       });
     });
   });
@@ -202,5 +328,4 @@ async function friendsRoutes(fastify, options) {
 module.exports = friendsRoutes;
 
 
-  
-  
+
