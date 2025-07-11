@@ -2,7 +2,7 @@
 import { startGame, stopGame } from './game'
 
 export function initializeGameUI() {
-	const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement
+	const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
 	const context = canvas?.getContext('2d')
 	const startMenu = document.getElementById('startMenu')
 	const startBtn = document.getElementById('startBtn') as HTMLButtonElement

@@ -3,6 +3,7 @@ import { LeaderboardView } from '../views/Leaderboard'
 import { OtherGamesView } from '../views/OtherGames'
 import { ProfileView } from '../views/Profile'
 import { TournamentView } from '../views/Tournament'
+import { cleanupActiveGame } from './TournamentGameLogic'
 
 export function setupNavLinks() {
 	const tournamentLink = document.getElementById("tournamentLink")
@@ -37,13 +38,16 @@ export function setupNavLinks() {
 		})
 	}
 
+	//added
 	// To handle back/forward navigation
 	window.addEventListener("popstate", async () => {
 		const path = window.location.pathname
 		if (path === "/tournament") TournamentView(false)
 		else if (path === "/leaderboard") LeaderboardView(false)
 		else if (path === "/other-games") OtherGamesView(false)
+		else if (path === "/tournament") TournamentView(false)
 		else if (path === "/profile") await ProfileView(false)
 		else GameView(false)
+		cleanupActiveGame()
 	})
 }
