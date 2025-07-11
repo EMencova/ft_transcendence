@@ -63,13 +63,19 @@ async function authRoutes(fastify, options) {
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
         const query = `INSERT INTO players (username, email, password, wins, losses, avatar)
                        VALUES (?, ?, ?, 0, 0, ?)`;
-        await new Promise((resolve, reject) => {
+        const result = await new Promise((resolve, reject) => {
           db.run(query, [username, email, hashedPassword, `/avatars/${avatarFilename}`], function(err) {
             if (err) reject(err);
             else resolve(this);
           });
         });
-        reply.send({ success: true, username, avatar: `/avatars/${avatarFilename}` });
+        // Include userId in the response
+        reply.send({ 
+          success: true, 
+          userId: result.lastID, 
+          username, 
+          avatar: `/avatars/${avatarFilename}` 
+        });
       } catch (err) {
         if (err.message.includes('UNIQUE constraint failed')) {
           return reply.status(400).send({ error: 'Username or email already exists' });
@@ -90,9 +96,14 @@ async function authRoutes(fastify, options) {
       const query = `INSERT INTO players (username, email, password, wins, losses, avatar)
                      VALUES (?, ?, ?, 0, 0, ?)`;
 
-      await runQuery(query, [username, email, hashedPassword, avatar || 'avatar.png']);
+      const result = await runQuery(query, [username, email, hashedPassword, avatar || 'avatar.png']);
 
-      reply.send({ success: true, username });
+      reply.send({ 
+        success: true, 
+        userId: result.lastID, 
+        username,
+        avatar: avatar || '/avatar.png'
+      });
     } catch (err) {
       console.error('Register error:', err.message);
       // Handle unique constraint violation (username/email taken)
