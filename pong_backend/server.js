@@ -15,7 +15,7 @@ const playersRoutes = require('./routes/players');
 
 
 fastify.register(require('./routes/friendsRoutes'), { prefix: '/api' });
-fastify.register(require('./routes/leaderboard'), { prefix: '/api' });
+//fastify.register(require('./routes/leaderboard'), { prefix: '/api' });
 fastify.register(require('./routes/tournament_registr'), { prefix: '/api' });
 fastify.register(require('./routes/userProfile'), { prefix: '/api' });
 fastify.register(require('./routes/tournamentsRoutes'), { prefix: '/api' });
