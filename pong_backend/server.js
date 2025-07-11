@@ -12,10 +12,8 @@ setupDb(fastify);
 const authRoutes = require('./routes/auth');
 const playersRoutes = require('./routes/players');
 
-
-
 fastify.register(require('./routes/friendsRoutes'), { prefix: '/api' });
-//fastify.register(require('./routes/leaderboard'), { prefix: '/api' });
+fastify.register(require('./routes/leaderboard'), { prefix: '/api' });
 fastify.register(require('./routes/tournament_registr'), { prefix: '/api' });
 fastify.register(require('./routes/userProfile'), { prefix: '/api' });
 fastify.register(require('./routes/tournamentsRoutes'), { prefix: '/api' });
@@ -32,8 +30,7 @@ fastify.register(require('@fastify/static'), {
 
 fastify.register(authRoutes, { prefix: '/api' }); // Register auth routes with /api prefix
 fastify.register(playersRoutes, { prefix: '/api' });
-fastify.register(leaderboardRoutes, { prefix: '/api' });
-fastify.register(tournamentsRoutes, { prefix: '/api' });
+
 
 fastify.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
   if (err) {
