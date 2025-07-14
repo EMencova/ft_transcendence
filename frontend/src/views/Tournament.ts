@@ -551,10 +551,10 @@ function createMatchCard(match: any, players: any[]) {
   // Status badge
   const statusBadge = createElement("span", {
     className: `px-2 py-1 rounded text-xs ${match.status === "completed"
-        ? "bg-green-500"
-        : match.status === "in_progress"
-          ? "bg-yellow-500"
-          : "bg-gray-500"
+      ? "bg-green-500"
+      : match.status === "in_progress"
+        ? "bg-yellow-500"
+        : "bg-gray-500"
       }`,
     textContent: match.status,
   })
