@@ -1,4 +1,4 @@
-import { currentUser, currentUserId } from '../logic/auth'
+import { currentUser, currentUserId, updateCurrentAvatar } from '../logic/auth'
 import { createPasswordInput } from '../PasswordInput'
 import { userService } from '../services'
 import { loadFriendsTab } from './FriendsTab'
@@ -39,6 +39,11 @@ async function createProfileMainContent(): Promise<HTMLElement> {
     try {
         // Fetch user profile data
         const profileData = await userService.getProfile(currentUserId)
+
+        // Update avatar in localStorage if profile has one and localStorage doesn't
+        if (profileData.avatar && !localStorage.getItem("currentAvatar")) {
+            updateCurrentAvatar(profileData.avatar)
+        }
 
         // Remove loading message
         container.removeChild(loadingDiv)
@@ -200,6 +205,8 @@ function createProfileContent(container: HTMLElement, profileData: any) {
                     const avatarUrl = await userService.updateAvatar(file)
                     // Update the avatar image
                     avatar.src = avatarUrl.avatar
+                    // Update the navigation avatar as well
+                    updateCurrentAvatar(avatarUrl.avatar)
                     // Show success message
                     const successMsg = document.createElement("div")
                     successMsg.className = "bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4"

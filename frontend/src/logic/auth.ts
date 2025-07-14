@@ -9,6 +9,7 @@ export let currentUserId: number | null = (() => {
 	const id = localStorage.getItem("currentUserId")
 	return id ? parseInt(id) : null
 })()
+export let currentAvatar: string | null = localStorage.getItem("currentAvatar")
 
 // Function to update currentUserId (needed for proper module exports)
 export function setCurrentUserId(id: number | null) {
@@ -24,7 +25,8 @@ export function updateCurrentUser(username: string) {
 
 // Function to update current user avatar
 export function updateCurrentAvatar(avatarUrl: string) {
-	(window as any).currentAvatar = avatarUrl
+	currentAvatar = avatarUrl
+	localStorage.setItem("currentAvatar", avatarUrl)
 	updateNav() // Refresh the navigation to show the new avatar
 }
 
@@ -38,8 +40,10 @@ export function initializeAuth() {
 	logoutBtn.addEventListener("click", () => {
 		currentUser = null
 		setCurrentUserId(null)
+		currentAvatar = null
 		localStorage.removeItem("currentUser")
 		localStorage.removeItem("currentUserId")
+		localStorage.removeItem("currentAvatar")
 		updateNav()
 		GameView(true)
 	})
@@ -72,7 +76,7 @@ function updateNav() {
 		welcomeSpan.className = "mr-4"
 
 		const avatarImg = document.createElement("img")
-		avatarImg.src = (window as any).currentAvatar || "/avatar.png"
+		avatarImg.src = currentAvatar || "/avatar.png"
 		avatarImg.alt = "Avatar"
 		avatarImg.className = "w-10 h-10 rounded-full cursor-pointer border"
 
@@ -113,9 +117,10 @@ function updateNav() {
 			logoutBtnInMenu.addEventListener("click", () => {
 				currentUser = null
 				setCurrentUserId(null)
-					; (window as any).currentAvatar = null
+				currentAvatar = null
 				localStorage.removeItem("currentUser")
 				localStorage.removeItem("currentUserId")
+				localStorage.removeItem("currentAvatar")
 				updateNav()
 				GameView(true)
 			})
@@ -287,7 +292,8 @@ function showAuthForm(mode: "login" | "signup") {
 				localStorage.setItem("currentUserId", userId.toString())
 			}
 			let avatar = data.avatar || "/avatar.png";
-			(window as any).currentAvatar = avatar
+			currentAvatar = avatar
+			localStorage.setItem("currentAvatar", avatar)
 			updateNav()
 			modal.remove()
 			if (window.location.pathname === "/other-games") {
