@@ -26,10 +26,7 @@ services:
       - NODE_ENV=production
     volumes:
       - ./pong_backend:/app
-      - node_modules_volume:/app/node_modules
+      - ./pong_backend/data:/app/data
       - ./frontend:/frontend
     networks:
       - pong-network
-
-volumes:
-  node_modules_volume:

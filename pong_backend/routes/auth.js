@@ -84,12 +84,18 @@ async function authRoutes(fastify, options) {
         const query = `INSERT INTO players (username, email, password, wins, losses, avatar)
                        VALUES (?, ?, ?, 0, 0, ?)`;
 
-        await runQuery(query, [username, email, hashedPassword, `/avatars/${avatarFilename}`]);
+        const result = await runQuery(query, [username, email, hashedPassword, `/avatars/${avatarFilename}`]);
 
         // Escape username before sending response
         const escapedUsername = escapeHtml(username);
 
-        reply.send({ success: true, username: escapedUsername, avatar: `/avatars/${avatarFilename}` });
+        // Include userId in the response
+        reply.send({ 
+          success: true, 
+          userId: result.lastID, 
+          username: escapedUsername, 
+          avatar: `/avatars/${avatarFilename}` 
+        });
       } catch (err) {
         if (err.message.includes('UNIQUE constraint failed')) {
           return reply.status(400).send({ error: 'Username or email already exists' });
@@ -109,20 +115,23 @@ async function authRoutes(fastify, options) {
         const query = `INSERT INTO players (username, email, password, wins, losses, avatar)
                        VALUES (?, ?, ?, 0, 0, ?)`;
 
-        await runQuery(query, [username, email, hashedPassword, avatar || 'avatar.png']);
-
-        // Escape username before sending response
+        const result = await runQuery(query, [username, email, hashedPassword, avatar || 'avatar.png']);
         const escapedUsername = escapeHtml(username);
-
-        reply.send({ success: true, username: escapedUsername });
-      } catch (err) {
-        console.error('Register error:', err.message);
-        if (err.message.includes('UNIQUE constraint failed')) {
-          return reply.status(400).send({ error: 'Username or email already exists' });
-        }
-        reply.status(500).send({ error: 'Registration failed' });
+      reply.send({ 
+        success: true, 
+        userId: result.lastID, 
+        username: escapedUsername,
+        avatar: avatar || '/avatar.png'
+      });
+    } catch (err) {
+      console.error('Register error:', err.message);
+      // Handle unique constraint violation (username/email taken)
+      if (err.message.includes('UNIQUE constraint failed')) {
+        return reply.status(400).send({ error: 'Username or email already exists' });
       }
+      reply.status(500).send({ error: 'Registration failed' });
     }
+        }
   });
 
   fastify.post('/login', async (request, reply) => {

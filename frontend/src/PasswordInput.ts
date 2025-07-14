@@ -1,12 +1,13 @@
-export function createPasswordInput(id: string, placeholder: string): HTMLDivElement {
+export function createPasswordInput(id: string, placeholder: string, customInputClass?: string): HTMLDivElement {
 	const wrapper = document.createElement("div")
 	wrapper.className = "relative"
 
 	const input = document.createElement("input")
 	input.id = id
+	input.name = id
 	input.type = "password"
 	input.placeholder = placeholder
-	input.className = "w-full p-2 border rounded pr-10"
+	input.className = customInputClass || "w-full p-2 border rounded pr-10"
 
 	const toggleBtn = document.createElement("button")
 	toggleBtn.type = "button"
