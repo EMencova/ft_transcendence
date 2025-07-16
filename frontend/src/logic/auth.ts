@@ -62,9 +62,9 @@ function updateNav() {
 	const gameLink = document.getElementById("gameLink")!
 
 	userDisplay.innerHTML = ""
+	gameLink.style.display = "inline-block"
 
 	if (currentUser) {
-		gameLink.style.display = "inline-block"
 		tournamentLink.classList.remove("pointer-events-none", "opacity-50")
 		leaderboardLink.classList.remove("pointer-events-none", "opacity-50")
 		loginBtn.style.display = "none"
@@ -140,7 +140,6 @@ function updateNav() {
 		loginBtn.style.display = "inline-block"
 		signupBtn.style.display = "inline-block"
 		logoutBtn.style.display = "none"
-		gameLink.style.display = "none"
 
 		// Disable tournament and leaderboard links
 		tournamentLink.classList.add("pointer-events-none", "opacity-50")
