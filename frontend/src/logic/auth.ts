@@ -78,7 +78,7 @@ function updateNav() {
 		const avatarImg = document.createElement("img")
 		avatarImg.src = currentAvatar || "/avatar.png"
 		avatarImg.alt = "Avatar"
-		avatarImg.className = "w-10 h-10 rounded-full cursor-pointer border"
+		avatarImg.className = "w-10 h-10 rounded-full cursor-pointer border object-cover"
 
 		const menu = document.createElement("div")
 		menu.className = "absolute right-0 mt-2 bg-white border rounded shadow hidden text-black z-50"
