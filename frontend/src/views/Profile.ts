@@ -497,8 +497,7 @@ function createFormField(label: string, type: string, value: string, id: string)
     input.id = id
     input.name = id
     input.value = value
-    input.className = "w-full p-2 border border-gray-600 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"
-
+    input.className = inputClassName
     field.appendChild(labelElement)
     field.appendChild(input)
 
@@ -520,3 +519,5 @@ function showFormMessage(form: HTMLElement, message: string, type: "success" | "
     messageDiv.textContent = message
     form.appendChild(messageDiv)
 }
+
+const inputClassName = "w-full p-2 border border-gray-600 bg-zinc-800 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"
