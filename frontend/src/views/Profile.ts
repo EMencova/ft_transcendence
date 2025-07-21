@@ -276,11 +276,7 @@ function createProfileSettingsContent(settingsElement: HTMLElement, profileData:
     currentPasswordLabel.className = "block text-sm font-medium text-gray-300 mb-1 text-left"
     passwordSection.appendChild(currentPasswordLabel)
 
-    const currentPasswordInput = createPasswordInput("current-password", "Enter your current password", "w-full p-2 border border-gray-600 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10 placeholder-gray-400")
-    const currentToggleBtn = currentPasswordInput.querySelector('button')
-    if (currentToggleBtn) {
-        currentToggleBtn.className = "absolute right-2 top-2 text-gray-200 hover:text-white"
-    }
+    const currentPasswordInput = createPasswordInput("current-password", "Enter your current password")
     passwordSection.appendChild(currentPasswordInput)
 
     // New Password
@@ -289,11 +285,7 @@ function createProfileSettingsContent(settingsElement: HTMLElement, profileData:
     newPasswordLabel.className = "block text-sm font-medium text-gray-300 mb-1 mt-4 text-left"
     passwordSection.appendChild(newPasswordLabel)
 
-    const newPasswordInput = createPasswordInput("new-password", "Enter your new password", "w-full p-2 border border-gray-600 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10 placeholder-gray-400")
-    const newToggleBtn = newPasswordInput.querySelector('button')
-    if (newToggleBtn) {
-        newToggleBtn.className = "absolute right-2 top-2 text-gray-200 hover:text-white"
-    }
+    const newPasswordInput = createPasswordInput("new-password", "Enter your new password")
     passwordSection.appendChild(newPasswordInput)
 
     // Confirm New Password
@@ -302,11 +294,7 @@ function createProfileSettingsContent(settingsElement: HTMLElement, profileData:
     confirmPasswordLabel.className = "block text-sm font-medium text-gray-300 mb-1 mt-4 text-left"
     passwordSection.appendChild(confirmPasswordLabel)
 
-    const confirmPasswordInput = createPasswordInput("confirm-password", "Confirm your new password", "w-full p-2 border border-gray-600 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10 placeholder-gray-400")
-    const confirmToggleBtn = confirmPasswordInput.querySelector('button')
-    if (confirmToggleBtn) {
-        confirmToggleBtn.className = "absolute right-2 top-2 text-gray-200 hover:text-white"
-    }
+    const confirmPasswordInput = createPasswordInput("confirm-password", "Confirm your new password")
     passwordSection.appendChild(confirmPasswordInput)
 
     settingsForm.appendChild(passwordSection)
