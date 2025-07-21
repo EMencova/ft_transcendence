@@ -88,6 +88,7 @@ function createProfileContent(container: HTMLElement, profileData: any) {
 
     // User info
     const userInfo = document.createElement("div")
+    userInfo.className = "flex flex-col gap-3"
     const username = document.createElement("h1")
     username.textContent = profileData.username
     username.className = "text-2xl font-bold text-white"
