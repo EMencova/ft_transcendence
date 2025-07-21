@@ -1,7 +1,7 @@
 
 export function createNav(): HTMLElement {
 	const nav = document.createElement("nav")
-	nav.className = "flex justify-between items-center px-8 py-4 bg-zinc-900 text-white"
+	nav.className = "flex justify-between items-center px-8 py-4 bg-zinc-900 text-white border-b border-gray-700"
 
 	// Title
 	const title = document.createElement("div")
