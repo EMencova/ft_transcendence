@@ -9,7 +9,7 @@ export function Gameplay(): HTMLElement {
   section.innerHTML = `
     <h2 class="text-2xl font-semibold mb-6" data-translate="try_it_out_title">🕹️ Try It Out</h2>
     <div id="startMenu" class="max-w-md mx-auto bg-[#141414] p-6 rounded-lg shadow-md border border-gray-700">
-      <h3 class="text-xl font-bold mb-4 text-center" data-translate="start_game_title">Start Game</h3>
+      <h3 class="text-xl font-bold mb-4 text-center text-orange-500" data-translate="start_game_title">Start Game</h3>
 
       <label for="modeSelect" data-translate="game_mode_label">Game Mode:</label>
       <select id="modeSelect" class="w-full p-2 pr-8 bg-zinc-800 rounded mb-4 text-white">
