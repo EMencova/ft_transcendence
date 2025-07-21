@@ -81,7 +81,7 @@ function updateNav() {
 		avatarImg.className = "w-10 h-10 rounded-full cursor-pointer border object-cover"
 
 		const menu = document.createElement("div")
-		menu.className = "absolute right-0 mt-2 bg-zinc-900 border border-gray-700 rounded shadow-lg hidden text-white z-50"
+		menu.className = "absolute right-0 mt-4 bg-zinc-900 border border-orange-500 rounded shadow-2xl hidden text-white z-50 min-w-48"
 		menu.innerHTML = `
 			<a href="/profile" id="profileLink" class="px-4 py-2 hover:bg-gray-700 flex items-center">
 			<span class="mr-2">👤</span> Profile
