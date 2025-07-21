@@ -81,13 +81,13 @@ function updateNav() {
 		avatarImg.className = "w-10 h-10 rounded-full cursor-pointer border object-cover"
 
 		const menu = document.createElement("div")
-		menu.className = "absolute right-0 mt-2 bg-white border rounded shadow hidden text-black z-50"
+		menu.className = "absolute right-0 mt-2 bg-zinc-900 border border-gray-700 rounded shadow-lg hidden text-white z-50"
 		menu.innerHTML = `
-			<a href="/profile" id="profileLink" class="px-4 py-2 hover:bg-gray-100 flex items-center">
+			<a href="/profile" id="profileLink" class="px-4 py-2 hover:bg-gray-700 flex items-center">
 			<span class="mr-2">👤</span> Profile
 			</a>
-			<hr class="my-1 border-gray-200">
-			<button id="dropdownLogout" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center">
+			<hr class="my-1 border-gray-600">
+			<button id="dropdownLogout" class="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center">
 				<span class="mr-2">🚪</span> Logout
 			</button>
 		`
@@ -149,15 +149,15 @@ function updateNav() {
 
 function showAuthForm(mode: "login" | "signup") {
 	const modal = document.createElement("div")
-	modal.className = "fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+	modal.className = "fixed inset-0 bg-[#242424] flex justify-center items-center z-50"
 
 	const formBox = document.createElement("div")
-	formBox.className = "bg-white rounded-lg p-6 max-w-sm w-full shadow-md text-black"
+	formBox.className = "bg-[#141414] rounded-lg p-6 max-w-sm w-full shadow-lg text-white border border-gray-700"
 
 	const isSignup = mode === "signup"
 
 	const title = document.createElement("h2")
-	title.className = "text-xl font-bold mb-4"
+	title.className = "text-xl font-bold mb-4 text-white"
 	title.textContent = isSignup ? "Signup" : "Login"
 
 	const form = document.createElement("form")
@@ -166,7 +166,7 @@ function showAuthForm(mode: "login" | "signup") {
 
 	const usernameInput = document.createElement("input")
 	usernameInput.id = "authUsername"
-	usernameInput.className = "w-full p-2 border rounded"
+	usernameInput.className = inputClassName
 	usernameInput.placeholder = "Username"
 	usernameInput.type = "text"
 	form.appendChild(usernameInput)
@@ -174,14 +174,14 @@ function showAuthForm(mode: "login" | "signup") {
 	if (isSignup) {
 		const emailInput = document.createElement("input")
 		emailInput.id = "authEmail"
-		emailInput.className = "w-full p-2 border rounded"
+		emailInput.className = inputClassName
 		emailInput.placeholder = "Email"
 		emailInput.type = "email"
 		form.appendChild(emailInput)
 		// avatar
 		const avatarInput = document.createElement("input")
 		avatarInput.id = "authAvatar"
-		avatarInput.className = "w-full p-2 border rounded"
+		avatarInput.className = inputClassName
 		avatarInput.type = "file"
 		avatarInput.accept = "image/*"
 		form.appendChild(avatarInput)
@@ -190,17 +190,13 @@ function showAuthForm(mode: "login" | "signup") {
 	form.appendChild(createPasswordInput("authPassword", "Password"))
 
 	if (isSignup) {
-		const confirmInput = document.createElement("input")
-		confirmInput.id = "authConfirm"
-		confirmInput.className = "w-full p-2 border rounded"
-		confirmInput.placeholder = "Repeat Password"
-		confirmInput.type = "password"
+		const confirmInput = createPasswordInput("authConfirm", "Repeat Password")
 		form.appendChild(confirmInput)
 	}
 
 	const errorText = document.createElement("p")
 	errorText.id = "authError"
-	errorText.className = "text-red-600 text-sm hidden"
+	errorText.className = "text-red-400 text-sm hidden"
 	form.appendChild(errorText)
 
 	const buttonsDiv = document.createElement("div")
@@ -208,12 +204,12 @@ function showAuthForm(mode: "login" | "signup") {
 
 	const submitBtn = document.createElement("button")
 	submitBtn.type = "submit"
-	submitBtn.className = "bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
+	submitBtn.className = "bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded font-medium"
 	submitBtn.textContent = isSignup ? "Signup" : "Login"
 
 	const cancelBtn = document.createElement("button")
 	cancelBtn.type = "button"
-	cancelBtn.className = "bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded"
+	cancelBtn.className = "bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
 	cancelBtn.textContent = "Cancel"
 
 	buttonsDiv.appendChild(submitBtn)
@@ -312,3 +308,5 @@ function showAuthForm(mode: "login" | "signup") {
 function validateEmail(email: string): boolean {
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
+
+const inputClassName = "w-full p-2 border border-gray-600 bg-zinc-800 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"
