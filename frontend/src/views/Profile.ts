@@ -21,7 +21,7 @@ async function createProfileMainContent(): Promise<HTMLElement> {
     // Check if user is logged in
     if (!currentUser || !currentUserId) {
         const notLoggedIn = document.createElement("div")
-        notLoggedIn.className = "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
+        notLoggedIn.className = "bg-red-800 border border-red-600 text-red-200 px-4 py-3 rounded"
         notLoggedIn.textContent = "You must be logged in to view your profile"
         container.appendChild(notLoggedIn)
         return container
@@ -32,7 +32,7 @@ async function createProfileMainContent(): Promise<HTMLElement> {
     loadingDiv.className = "text-center py-8"
     loadingDiv.innerHTML = `
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-        <p class="text-gray-600">Loading profile...</p>
+        <p class="text-gray-300">Loading profile...</p>
     `
     container.appendChild(loadingDiv)
 
@@ -56,7 +56,7 @@ async function createProfileMainContent(): Promise<HTMLElement> {
         container.removeChild(loadingDiv)
 
         const errorDiv = document.createElement("div")
-        errorDiv.className = "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
+        errorDiv.className = "bg-red-800 border border-red-600 text-red-200 px-4 py-3 rounded"
         errorDiv.textContent = "Error loading profile data. Please try again."
         container.appendChild(errorDiv)
     }
@@ -79,7 +79,7 @@ function createProfileContent(container: HTMLElement, profileData: any) {
     avatar.className = "w-24 h-24 rounded-full object-cover"
 
     const changeAvatarBtn = document.createElement("button")
-    changeAvatarBtn.className = "absolute bottom-0 right-0 bg-orange-500 text-white rounded-full p-2 shadow-md"
+    changeAvatarBtn.className = "absolute bottom-0 right-0 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-2 shadow-md"
     changeAvatarBtn.innerHTML = "📷"
     changeAvatarBtn.title = "Change avatar"
 
@@ -90,12 +90,12 @@ function createProfileContent(container: HTMLElement, profileData: any) {
     const userInfo = document.createElement("div")
     const username = document.createElement("h1")
     username.textContent = profileData.username
-    username.className = "text-2xl font-bold"
+    username.className = "text-2xl font-bold text-white"
     userInfo.appendChild(username)
 
     // Stats preview
     const stats = document.createElement("div")
-    stats.className = "text-sm text-gray-600"
+    stats.className = "text-sm text-gray-300"
     stats.innerHTML = `
         <span>Wins: ${profileData.wins || 0}</span> | 
         <span>Losses: ${profileData.losses || 0}</span> | 
@@ -109,7 +109,7 @@ function createProfileContent(container: HTMLElement, profileData: any) {
 
     // Tabs
     const tabs = document.createElement("div")
-    tabs.className = "border-b border-gray-200 mb-6"
+    tabs.className = "border-b border-gray-600 mb-6"
 
     const tabsList = ["Profile Settings", "Game History", "Friends"]
     const tabsContainer = document.createElement("div")
@@ -120,13 +120,13 @@ function createProfileContent(container: HTMLElement, profileData: any) {
         tab.textContent = tabName
         tab.className = index === 0
             ? "border-b-2 border-orange-500 py-4 px-1 text-orange-500 font-medium"
-            : "py-4 px-1 text-gray-500 hover:text-orange-500"
+            : "py-4 px-1 text-gray-400 hover:text-orange-500"
         tab.dataset.tab = tabName.toLowerCase().replace(" ", "-")
 
         tab.addEventListener("click", async () => {
             // Remove active class from all tabs
             tabsContainer.querySelectorAll("button").forEach(t => {
-                t.className = "py-4 px-1 text-gray-500 hover:text-orange-500"
+                t.className = "py-4 px-1 text-gray-400 hover:text-orange-500"
             })
 
             // Add active class to clicked tab
@@ -209,7 +209,7 @@ function createProfileContent(container: HTMLElement, profileData: any) {
                     updateCurrentAvatar(avatarUrl.avatar)
                     // Show success message
                     const successMsg = document.createElement("div")
-                    successMsg.className = "bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4"
+                    successMsg.className = "bg-green-800 border border-green-600 text-green-200 px-4 py-3 rounded mt-4"
                     successMsg.textContent = "Avatar updated successfully!"
                     header.appendChild(successMsg)
 
@@ -234,67 +234,78 @@ function createProfileContent(container: HTMLElement, profileData: any) {
 }
 
 function createProfileSettingsContent(settingsElement: HTMLElement, profileData: any) {
-    // Create the profile settings content with the original styling
-    settingsElement.className = "bg-white rounded-lg shadow p-6"
+    settingsElement.className = "bg-zinc-900 rounded-lg shadow-lg p-6 border border-gray-700"
 
     const settingsForm = document.createElement("form")
     settingsForm.className = "space-y-6"
 
     // Personal info section
     const personalInfoSection = document.createElement("div")
-    personalInfoSection.className = "text-gray-700"
+    personalInfoSection.className = "text-gray-300"
 
     const personalInfoTitle = document.createElement("h3")
     personalInfoTitle.textContent = "Change Personal Info"
-    personalInfoTitle.className = "text-lg font-medium mb-4 text-black"
+    personalInfoTitle.className = "text-lg font-medium mb-4 text-white"
     personalInfoSection.appendChild(personalInfoTitle)
 
     // Username field
     const usernameField = createFormField("Username", "text", profileData.username, "username")
-    usernameField.className = "text-gray-700 mb-4"
+    usernameField.className = "text-gray-300 mb-4"
     personalInfoSection.appendChild(usernameField)
 
     // Email field
     const emailField = createFormField("Email", "email", profileData.email, "email")
-    emailField.className = "text-gray-700"
+    emailField.className = "text-gray-300"
     personalInfoSection.appendChild(emailField)
 
     settingsForm.appendChild(personalInfoSection)
 
     // Password change section
     const passwordSection = document.createElement("div")
-    passwordSection.className = "pt-4 border-t border-gray-200 text-gray-700"
+    passwordSection.className = "pt-4 border-t border-gray-600 text-gray-300"
 
     const passwordTitle = document.createElement("h3")
     passwordTitle.textContent = "Change Password"
-    passwordTitle.className = "text-lg font-medium mb-4 text-black"
+    passwordTitle.className = "text-lg font-medium mb-4 text-white"
     passwordSection.appendChild(passwordTitle)
 
     // Current Password
     const currentPasswordLabel = document.createElement("label")
     currentPasswordLabel.textContent = "Current Password"
-    currentPasswordLabel.className = "block text-sm font-medium text-gray-700 mb-1 text-left"
+    currentPasswordLabel.className = "block text-sm font-medium text-gray-300 mb-1 text-left"
     passwordSection.appendChild(currentPasswordLabel)
 
-    const currentPasswordInput = createPasswordInput("current-password", "Enter your current password", "w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10")
+    const currentPasswordInput = createPasswordInput("current-password", "Enter your current password", "w-full p-2 border border-gray-600 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10 placeholder-gray-400")
+    const currentToggleBtn = currentPasswordInput.querySelector('button')
+    if (currentToggleBtn) {
+        currentToggleBtn.className = "absolute right-2 top-2 text-gray-200 hover:text-white"
+    }
     passwordSection.appendChild(currentPasswordInput)
 
     // New Password
     const newPasswordLabel = document.createElement("label")
     newPasswordLabel.textContent = "New Password"
-    newPasswordLabel.className = "block text-sm font-medium text-gray-700 mb-1 mt-4 text-left"
+    newPasswordLabel.className = "block text-sm font-medium text-gray-300 mb-1 mt-4 text-left"
     passwordSection.appendChild(newPasswordLabel)
 
-    const newPasswordInput = createPasswordInput("new-password", "Enter your new password", "w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10")
+    const newPasswordInput = createPasswordInput("new-password", "Enter your new password", "w-full p-2 border border-gray-600 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10 placeholder-gray-400")
+    const newToggleBtn = newPasswordInput.querySelector('button')
+    if (newToggleBtn) {
+        newToggleBtn.className = "absolute right-2 top-2 text-gray-200 hover:text-white"
+    }
     passwordSection.appendChild(newPasswordInput)
 
     // Confirm New Password
     const confirmPasswordLabel = document.createElement("label")
     confirmPasswordLabel.textContent = "Confirm New Password"
-    confirmPasswordLabel.className = "block text-sm font-medium text-gray-700 mb-1 mt-4 text-left"
+    confirmPasswordLabel.className = "block text-sm font-medium text-gray-300 mb-1 mt-4 text-left"
     passwordSection.appendChild(confirmPasswordLabel)
 
-    const confirmPasswordInput = createPasswordInput("confirm-password", "Confirm your new password", "w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10")
+    const confirmPasswordInput = createPasswordInput("confirm-password", "Confirm your new password", "w-full p-2 border border-gray-600 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 pr-10 placeholder-gray-400")
+    const confirmToggleBtn = confirmPasswordInput.querySelector('button')
+    if (confirmToggleBtn) {
+        confirmToggleBtn.className = "absolute right-2 top-2 text-gray-200 hover:text-white"
+    }
     passwordSection.appendChild(confirmPasswordInput)
 
     settingsForm.appendChild(passwordSection)
@@ -302,7 +313,7 @@ function createProfileSettingsContent(settingsElement: HTMLElement, profileData:
     // Save button
     const saveButton = document.createElement("button")
     saveButton.type = "submit"
-    saveButton.className = "bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-6 rounded"
+    saveButton.className = "bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-6 rounded"
     saveButton.textContent = "Save Changes"
     settingsForm.appendChild(saveButton)
 
@@ -318,7 +329,7 @@ function createProfileSettingsContent(settingsElement: HTMLElement, profileData:
         const confirmPassword = formData.get("confirm-password") as string
 
         // Remove any existing messages
-        const existingMsg = settingsForm.querySelector(".bg-green-100, .bg-red-100")
+        const existingMsg = settingsForm.querySelector(".bg-green-800, .bg-red-800")
         if (existingMsg) {
             settingsForm.removeChild(existingMsg)
         }
@@ -402,14 +413,14 @@ function createProfileSettingsContent(settingsElement: HTMLElement, profileData:
 async function loadGameHistory(gameHistoryElement: HTMLElement, userId: number) {
     // Clear current content and show loading
     gameHistoryElement.innerHTML = `
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-4 border-b border-gray-200">
-                <h3 class="font-medium text-black">Game History</h3>
+        <div class="bg-zinc-900 rounded-lg shadow-lg border border-gray-700">
+            <div class="p-4 border-b border-gray-600">
+                <h3 class="font-medium text-white">Game History</h3>
             </div>
             <div class="p-4">
-                <div class="text-center py-4 text-gray-600">
+                <div class="text-center py-4 text-gray-300">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
-                    <p class="text-gray-600">Loading game history...</p>
+                    <p class="text-gray-300">Loading game history...</p>
                 </div>
             </div>
         </div>
@@ -419,31 +430,31 @@ async function loadGameHistory(gameHistoryElement: HTMLElement, userId: number) 
         const gameHistory = await userService.getGameHistory(userId)
 
         gameHistoryElement.innerHTML = `
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-4 border-b border-gray-200">
-                    <h3 class="font-medium text-black">Game History</h3>
+            <div class="bg-zinc-900 rounded-lg shadow-lg border border-gray-700">
+                <div class="p-4 border-b border-gray-600">
+                    <h3 class="font-medium text-white">Game History</h3>
                 </div>
                 <div class="p-4">
                     ${gameHistory.games.length === 0 ? `
-                        <div class="text-gray-500 text-center py-8">
+                        <div class="text-gray-400 text-center py-8">
                             No games played yet. Start playing to see your history!
                         </div>
                     ` : `
                         <div class="space-y-3">
                             ${gameHistory.games.map((game: any) => `
-                                <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="border border-gray-600 bg-gray-700 rounded-lg p-4">
                                     <div class="flex justify-between items-center">
                                         <div>
-                                            <span class="font-semibold ${game.result === 'won' ? 'text-green-600' : 'text-red-600'}">
+                                            <span class="font-semibold ${game.result === 'won' ? 'text-green-400' : 'text-red-400'}">
                                                 ${game.result === 'won' ? 'Victory' : 'Defeat'}
                                             </span>
-                                            <span class="text-gray-500 ml-2">vs ${game.opponent}</span>
+                                            <span class="text-gray-300 ml-2">vs ${game.opponent}</span>
                                         </div>
-                                        <div class="text-sm text-gray-500">
+                                        <div class="text-sm text-gray-400">
                                             ${new Date(game.date).toLocaleDateString()}
                                         </div>
                                     </div>
-                                    <div class="mt-2 text-sm text-gray-600">
+                                    <div class="mt-2 text-sm text-gray-300">
                                         Score: ${game.score} | Duration: ${game.duration}
                                     </div>
                                 </div>
@@ -456,12 +467,12 @@ async function loadGameHistory(gameHistoryElement: HTMLElement, userId: number) 
     } catch (error) {
         console.error("Error loading game history:", error)
         gameHistoryElement.innerHTML = `
-            <div class="bg-white rounded-lg shadow">
-                <div class="p-4 border-b border-gray-200">
-                    <h3 class="font-medium text-black">Game History</h3>
+            <div class="bg-zinc-900 rounded-lg shadow-lg border border-gray-700">
+                <div class="p-4 border-b border-gray-600">
+                    <h3 class="font-medium text-white">Game History</h3>
                 </div>
                 <div class="p-4">
-                    <div class="text-red-500 text-center py-8">
+                    <div class="text-red-400 text-center py-8">
                         Error loading game history. Please try again.
                     </div>
                 </div>
@@ -473,19 +484,19 @@ async function loadGameHistory(gameHistoryElement: HTMLElement, userId: number) 
 // Helper function to create form fields
 function createFormField(label: string, type: string, value: string, id: string): HTMLElement {
     const field = document.createElement("div")
-    field.className = "text-gray-700"
+    field.className = "text-gray-300"
 
     const labelElement = document.createElement("label")
     labelElement.htmlFor = id
     labelElement.textContent = label
-    labelElement.className = "block text-sm font-medium text-gray-700 mb-1 text-left"
+    labelElement.className = "block text-sm font-medium text-gray-300 mb-1 text-left"
 
     const input = document.createElement("input")
     input.type = type
     input.id = id
     input.name = id
     input.value = value
-    input.className = "w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+    input.className = "w-full p-2 border border-gray-600 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"
 
     field.appendChild(labelElement)
     field.appendChild(input)
@@ -496,15 +507,15 @@ function createFormField(label: string, type: string, value: string, id: string)
 // Helper function to show form messages
 function showFormMessage(form: HTMLElement, message: string, type: "success" | "error") {
     // Remove any existing messages
-    const existingMsg = form.querySelector(".bg-green-100, .bg-red-100")
+    const existingMsg = form.querySelector(".bg-green-800, .bg-red-800")
     if (existingMsg) {
         form.removeChild(existingMsg)
     }
 
     const messageDiv = document.createElement("div")
     messageDiv.className = type === "success"
-        ? "bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4"
-        : "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4"
+        ? "bg-green-800 border border-green-600 text-green-200 px-4 py-3 rounded mt-4"
+        : "bg-red-800 border border-red-600 text-red-200 px-4 py-3 rounded mt-4"
     messageDiv.textContent = message
     form.appendChild(messageDiv)
 }
