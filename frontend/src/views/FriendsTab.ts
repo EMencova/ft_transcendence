@@ -112,7 +112,7 @@ function createFriendsInterface(friends: any[], requests: any[], sentRequests: a
                         type="text" 
                         id="friendSearch" 
                         placeholder="Search for players to add as friends..."
-                        class="w-full p-2 pr-10 border border-gray-600 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"
+                        class="w-full p-2 pr-10 border border-gray-600 bg-zinc-800 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"
                     >
                     <button 
                         id="clearSearchBtn" 
