@@ -9,15 +9,15 @@ export function Features(): HTMLElement {
 
 <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
   <div class="bg-[#1a1a1a] rounded-lg p-6 text-center shadow-md border border-gray-700">
-    <h3 class="text-xl font-bold mb-2" data-translate="game_mode_1player_title">1 Player</h3>
+    <h3 class="text-xl font-bold mb-2 text-orange-500" data-translate="game_mode_1player_title">1 Player</h3>
     <p data-translate="game_mode_1player_desc">Challenge an adaptive AI</p>
   </div>
   <div class="bg-[#1a1a1a] rounded-lg p-6 text-center shadow-md border border-gray-700">
-    <h3 class="text-xl font-bold mb-2" data-translate="game_mode_2players_title">2 Players</h3>
+    <h3 class="text-xl font-bold mb-2 text-orange-500" data-translate="game_mode_2players_title">2 Players</h3>
     <p data-translate="game_mode_2players_desc">Compete with a friend</p>
   </div>
   <div class="bg-[#1a1a1a] rounded-lg p-6 text-center shadow-md border border-gray-700">
-    <h3 class="text-xl font-bold mb-2" data-translate="game_mode_4players_title">4 Players</h3>
+    <h3 class="text-xl font-bold mb-2 text-orange-500" data-translate="game_mode_4players_title">4 Players</h3>
     <p data-translate="game_mode_4players_desc">Use all four paddles</p>
   </div>
 </div>
