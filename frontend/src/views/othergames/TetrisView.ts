@@ -16,6 +16,7 @@ export function TetrisView(push = true, container?: HTMLElement) {
                 <canvas id="tetrisCanvas" class="border border-gray-700 bg-gray-900"></canvas>
                 <div id="tetrisScoreboard" class="flex flex-col items-start ml-4">
                     <span id="tetrisScore" class="text-white mt-4">Score: 0</span>
+                    <span id="tetrisLevel" class="text-orange-400 mt-2 font-semibold">Level: 1</span>
                     ${recordHtml}
                     <div class="flex justify-center text-center space-x-4 mt-4">
                         <button id="pauseBtn" class="w-24 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 opacity-50 cursor-not-allowed" disabled>Pause</button>
@@ -77,6 +78,8 @@ function initTetrisGame() {
     // board[BOARD_HEIGHT - 1][10] = 0
 
     let score = 0
+    let level = 1
+    let linesCleared = 0
 
     let paused = false
     let started = false
@@ -108,11 +111,19 @@ function initTetrisGame() {
     // Game loop with autodrop
     let dropInterval = 0
     let lastTime = 0
+
+    // Calculate drop speed based on level (starts at 1000ms, decreases by 50ms per level, minimum 100ms)
+    function getDropSpeed() {
+        return Math.max(100, 1000 - (level - 1) * 50)
+    }
+
     function update(time = 0) {
         if (!started || paused) return
         const deltaTime = time - lastTime
         dropInterval += deltaTime
-        if (dropInterval > 1000) { // 1 second
+        const currentDropSpeed = getDropSpeed()
+
+        if (dropInterval > currentDropSpeed) {
             piece.position.y++
             if (checkCollision()) {
                 piece.position.y--
@@ -168,6 +179,10 @@ function initTetrisGame() {
                 piece.position.y-- // Undo if collision
                 solidify() // Solidify the piece
                 clearLines() // Clear completed lines
+            } else {
+                // Add soft drop bonus points
+                score += 1
+                updateScore()
             }
         }
         else if (e.key === "ArrowUp") {
@@ -203,6 +218,11 @@ function initTetrisGame() {
                 }
             })
         })
+
+        // Add points for placing a piece
+        score += level
+        updateScore()
+
         // Randomly select a new piece
         const randomIndex = Math.floor(Math.random() * pieces.length)
         piece.shape = pieces[randomIndex]
@@ -216,10 +236,30 @@ function initTetrisGame() {
 
     function updateScore() {
         const scoreElem = document.getElementById("tetrisScore")
+        const levelElem = document.getElementById("tetrisLevel")
         if (scoreElem) scoreElem.textContent = `Score: ${score}`
+        if (levelElem) levelElem.textContent = `Level: ${level}`
+    }
+
+    function updateLevel() {
+        const newLevel = Math.floor(linesCleared / 10) + 1
+        if (newLevel > level) {
+            level = newLevel
+            updateScore() // Update the display
+
+            // Visual feedback for level up
+            const levelElem = document.getElementById("tetrisLevel")
+            if (levelElem) {
+                levelElem.classList.add("text-yellow-300")
+                setTimeout(() => {
+                    levelElem.classList.remove("text-yellow-300")
+                }, 1000)
+            }
+        }
     }
 
     function clearLines() {
+        let clearedLinesCount = 0
         for (let y = BOARD_HEIGHT - 1;y >= 0;y--) {
             if (board[y].every((cell) => cell !== 0)) {
                 // Remove the line
@@ -227,9 +267,21 @@ function initTetrisGame() {
                 // Add a new empty line at the top
                 board.unshift(Array(BOARD_WIDTH).fill(0))
                 y++ // Adjust the index to account for the removed line
-                score += 10 // Increment score
-                updateScore() // Update the score display
+                clearedLinesCount++
             }
+        }
+
+        if (clearedLinesCount > 0) {
+            // Update lines cleared counter
+            linesCleared += clearedLinesCount
+
+            // Calculate score based on number of lines cleared at once (bonus for multiple lines)
+            const lineScores = [0, 40, 100, 300, 1200] // Points for 0, 1, 2, 3, 4 lines
+            const baseScore = lineScores[Math.min(clearedLinesCount, 4)]
+            score += baseScore * level // Multiply by level for bonus
+
+            updateScore() // Update the score display
+            updateLevel() // Check if level should increase
         }
     }
 
@@ -252,13 +304,15 @@ function initTetrisGame() {
             }
         }
 
-        alert(`Game Over!${savedMessage}\nFinal Score: ${score}`)
+        alert(`Game Over!${savedMessage}\nFinal Score: ${score}\nLevel Reached: ${level}\nLines Cleared: ${linesCleared}`)
 
         // Reset the board
         for (let y = 0;y < BOARD_HEIGHT;y++) {
             board[y] = Array(BOARD_WIDTH).fill(0)
         }
         score = 0
+        level = 1
+        linesCleared = 0
         updateScore()
 
         // Reset UI
@@ -320,6 +374,8 @@ function initTetrisGame() {
                 board[y] = Array(BOARD_WIDTH).fill(0)
             }
             score = 0
+            level = 1
+            linesCleared = 0
             updateScore()
             piece.shape = pieces[Math.floor(Math.random() * pieces.length)]
             piece.position = { x: 5, y: 0 }
@@ -400,6 +456,8 @@ function initTetrisGame() {
                     board[y] = Array(BOARD_WIDTH).fill(0)
                 }
                 score = 0
+                level = 1
+                linesCleared = 0
                 updateScore()
                 piece.shape = pieces[Math.floor(Math.random() * pieces.length)]
                 piece.position = { x: 5, y: 0 }
