@@ -341,7 +341,7 @@ function initTetrisGame() {
         // Save score if user is logged in
         let savedMessage = ""
         if (currentUser && score > 0) {
-            const saved = await saveTetrisScore(score)
+            const saved = await saveTetrisScore(score, level, linesCleared)
             if (saved) {
                 savedMessage = "\nScore saved to your history!"
                 // Update the record display if this score beats the current record

@@ -4,10 +4,10 @@ import { apiService } from "../../services/apiService"
 interface TetrisHistoryEntry {
 	id: number
 	score: number
+	level: number
+	lines_cleared: number
 	game_date: string
-}
-
-export function TetrisHistoryView(container: HTMLElement) {
+}export function TetrisHistoryView(container: HTMLElement) {
 	if (!currentUser) {
 		container.innerHTML = `
             <div class="text-center py-8">
@@ -19,35 +19,33 @@ export function TetrisHistoryView(container: HTMLElement) {
 	}
 
 	container.innerHTML = `
-        <div class="max-w-4xl mx-auto p-6">
-            <h3 class="text-xl font-bold mb-6 text-white">📊 Your Tetris History</h3>
+        <div class="container mx-auto px-4 py-8">
+            <h1 class="text-3xl font-bold text-white text-center mb-8">Tetris History</h1>
             
-            <div id="historyStats" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="bg-[#1a1a1a] rounded-lg p-6 text-center shadow-md border border-gray-700">
-                    <h4 class="text-orange-400 font-semibold">Games Played</h4>
-                    <p id="totalGames" class="text-2xl font-bold text-white">-</p>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-slate-800 border border-gray-700 rounded-lg p-6 text-center">
+                    <h3 class="text-sm font-medium text-gray-400 mb-2">Total Games</h3>
+                    <p id="totalGames" class="text-2xl font-bold text-white">0</p>
                 </div>
-                <div class="bg-[#1a1a1a] rounded-lg p-6 text-center shadow-md border border-gray-700">
-                    <h4 class="text-orange-400 font-semibold">Best Score</h4>
-                    <p id="bestScore" class="text-2xl font-bold text-white">-</p>
+                <div class="bg-slate-800 border border-gray-700 rounded-lg p-6 text-center">
+                    <h3 class="text-sm font-medium text-gray-400 mb-2">Best Score</h3>
+                    <p id="bestScore" class="text-2xl font-bold text-white">0</p>
                 </div>
-                <div class="bg-[#1a1a1a] rounded-lg p-6 text-center shadow-md border border-gray-700">
-                    <h4 class="text-orange-400 font-semibold">Average Score</h4>
-                    <p id="avgScore" class="text-2xl font-bold text-white">-</p>
+                <div class="bg-slate-800 border border-gray-700 rounded-lg p-6 text-center">
+                    <h3 class="text-sm font-medium text-gray-400 mb-2">Best Level</h3>
+                    <p id="bestLevel" class="text-2xl font-bold text-white">0</p>
+                </div>
+                <div class="bg-slate-800 border border-gray-700 rounded-lg p-6 text-center">
+                    <h3 class="text-sm font-medium text-gray-400 mb-2">Total Lines</h3>
+                    <p id="totalLines" class="text-2xl font-bold text-white">0</p>
                 </div>
             </div>
 
-            <div class="bg-[#1a1a1a] rounded-lg p-6 shadow-md border border-gray-700">
-                <h4 class="text-white font-semibold mb-4">Recent Games</h4>
-                <div id="historyList" class="space-y-2">
-                    <div class="text-center py-4">
-                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                        <p class="text-gray-400 mt-2">Loading your game history...</p>
-                    </div>
+            <div class="bg-slate-800 border border-gray-700 rounded-lg p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Recent Games</h2>
+                <div id="historyList" class="space-y-3">
+                    <p class="text-gray-400 text-center py-8">Loading history...</p>
                 </div>
-                <button id="loadMoreBtn" class="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white py-2 rounded hidden">
-                    Load More Games
-                </button>
             </div>
         </div>
     `
@@ -83,20 +81,21 @@ async function loadTetrisHistory() {
 function displayHistoryStats(history: TetrisHistoryEntry[]) {
 	const totalGamesEl = document.getElementById('totalGames')
 	const bestScoreEl = document.getElementById('bestScore')
-	const avgScoreEl = document.getElementById('avgScore')
+	const bestLevelEl = document.getElementById('bestLevel')
+	const totalLinesEl = document.getElementById('totalLines')
 
-	if (!totalGamesEl || !bestScoreEl || !avgScoreEl) return
+	if (!totalGamesEl || !bestScoreEl || !bestLevelEl || !totalLinesEl) return
 
 	const totalGames = history.length
 	const bestScore = history.length > 0 ? Math.max(...history.map(h => h.score)) : 0
-	const avgScore = history.length > 0 ? Math.round(history.reduce((sum, h) => sum + h.score, 0) / history.length) : 0
+	const bestLevel = history.length > 0 ? Math.max(...history.map(h => h.level || 1)) : 0
+	const totalLines = history.length > 0 ? history.reduce((sum, h) => sum + (h.lines_cleared || 0), 0) : 0
 
 	totalGamesEl.textContent = totalGames.toString()
 	bestScoreEl.textContent = bestScore.toString()
-	avgScoreEl.textContent = avgScore.toString()
-}
-
-function displayHistoryList(history: TetrisHistoryEntry[]) {
+	bestLevelEl.textContent = bestLevel.toString()
+	totalLinesEl.textContent = totalLines.toString()
+} function displayHistoryList(history: TetrisHistoryEntry[]) {
 	const historyList = document.getElementById('historyList')
 	if (!historyList) return
 
@@ -120,6 +119,10 @@ function displayHistoryList(history: TetrisHistoryEntry[]) {
                     <span class="text-gray-400 text-sm w-8">#${index + 1}</span>
                     <div>
                         <p class="text-white font-medium">Score: ${entry.score.toLocaleString()}</p>
+                        <div class="flex space-x-4 text-gray-400 text-sm">
+                            <span>Level: ${entry.level || 1}</span>
+                            <span>Lines: ${entry.lines_cleared || 0}</span>
+                        </div>
                         <p class="text-gray-400 text-sm">${date}</p>
                     </div>
                 </div>
@@ -130,7 +133,7 @@ function displayHistoryList(history: TetrisHistoryEntry[]) {
 }
 
 // Function to save a new Tetris score (to be called from TetrisView)
-export async function saveTetrisScore(score: number): Promise<boolean> {
+export async function saveTetrisScore(score: number, level: number, linesCleared: number): Promise<boolean> {
 	try {
 		if (!currentUserId) {
 			console.warn('Cannot save score: user not logged in')
@@ -139,7 +142,9 @@ export async function saveTetrisScore(score: number): Promise<boolean> {
 
 		await apiService.post('/tetris/history', {
 			player_id: currentUserId,
-			score: score
+			score: score,
+			level: level,
+			lines_cleared: linesCleared
 		})
 
 		return true
