@@ -23,25 +23,25 @@ interface TetrisHistoryEntry {
             <h1 class="text-3xl font-bold text-white text-center mb-8">Tetris History</h1>
             
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div class="bg-slate-800 border border-gray-700 rounded-lg p-6 text-center">
+                <div class="bg-[#1a1a1a] border border-gray-700 rounded-lg p-6 text-center">
                     <h3 class="text-sm font-medium text-gray-400 mb-2">Total Games</h3>
                     <p id="totalGames" class="text-2xl font-bold text-white">0</p>
                 </div>
-                <div class="bg-slate-800 border border-gray-700 rounded-lg p-6 text-center">
+                <div class="bg-[#1a1a1a] border border-gray-700 rounded-lg p-6 text-center">
                     <h3 class="text-sm font-medium text-gray-400 mb-2">Best Score</h3>
                     <p id="bestScore" class="text-2xl font-bold text-white">0</p>
                 </div>
-                <div class="bg-slate-800 border border-gray-700 rounded-lg p-6 text-center">
+                <div class="bg-[#1a1a1a] border border-gray-700 rounded-lg p-6 text-center">
                     <h3 class="text-sm font-medium text-gray-400 mb-2">Best Level</h3>
                     <p id="bestLevel" class="text-2xl font-bold text-white">0</p>
                 </div>
-                <div class="bg-slate-800 border border-gray-700 rounded-lg p-6 text-center">
+                <div class="bg-[#1a1a1a] border border-gray-700 rounded-lg p-6 text-center">
                     <h3 class="text-sm font-medium text-gray-400 mb-2">Total Lines</h3>
                     <p id="totalLines" class="text-2xl font-bold text-white">0</p>
                 </div>
             </div>
 
-            <div class="bg-slate-800 border border-gray-700 rounded-lg p-6">
+            <div class="bg-[#1a1a1a] border border-gray-700 rounded-lg p-6">
                 <h2 class="text-xl font-bold text-white mb-4">Recent Games</h2>
                 <div id="historyList" class="space-y-3">
                     <p class="text-gray-400 text-center py-8">Loading history...</p>
