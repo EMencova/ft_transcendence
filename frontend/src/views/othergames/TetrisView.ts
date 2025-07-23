@@ -22,6 +22,10 @@ export function TetrisView(push = true, container?: HTMLElement) {
                         <button id="pauseBtn" class="w-24 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 opacity-50 cursor-not-allowed" disabled>Pause</button>
                         <button id="resetBtn" class="w-24 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 opacity-50 cursor-not-allowed" disabled>Reset</button>
                     </div>
+                    <div class="mt-4 text-xs text-gray-400">
+                        <p class="font-semibold mb-1">Controls:</p>
+                        <p>← → Move • ↓ Soft Drop • ↑ Rotate</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -195,7 +199,15 @@ function initTetrisGame() {
     }
 
     // Move the piece
-    document.addEventListener("keydown", (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        // Only prevent default and handle game controls when the game is started
+        if (!started) return
+
+        // Prevent page scrolling when using arrow keys during gameplay
+        if (['ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp'].includes(e.key)) {
+            e.preventDefault()
+        }
+
         if (e.key === "ArrowLeft") {
             piece.position.x--
             if (checkCollision()) piece.position.x++ // Undo if collision
@@ -228,7 +240,9 @@ function initTetrisGame() {
                 piece.shape = previousShape
             }
         }
-    })
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
 
     function checkCollision() {
         return piece.shape.find((row, dy) => {
@@ -375,6 +389,12 @@ function initTetrisGame() {
         if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
     }
 
+    // Cleanup function to remove event listeners when the game ends or component unmounts
+    // function cleanup() {
+    //     document.removeEventListener("keydown", handleKeyDown)
+    //     if (animationId) cancelAnimationFrame(animationId)
+    // }
+
     async function updateRecordDisplay() {
         const recordEl = document.getElementById("tetrisRecord")
         if (!recordEl || !currentUser) return
@@ -488,6 +508,11 @@ function initTetrisGame() {
                     (resetBtn as HTMLButtonElement).disabled = false
                     resetBtn.classList.remove("opacity-50", "cursor-not-allowed")
                 }
+
+                // Focus on canvas to ensure keyboard events work properly
+                canvas.focus()
+                canvas.tabIndex = 0 // Make canvas focusable
+
                 lastTime = performance.now()
                 animationId = window.requestAnimationFrame(update)
             } else {
