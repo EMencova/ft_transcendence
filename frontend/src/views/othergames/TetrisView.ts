@@ -1,5 +1,6 @@
 import { currentUser } from "../../logic/auth"
 import { saveTetrisScore } from "./TetrisHistoryView"
+import { handleTournamentGameOver, updateTournamentProgress } from "./TetrisTournamentView"
 
 export function TetrisView(push = true, container?: HTMLElement) {
     const target = container || document.getElementById("mainContent")
@@ -286,6 +287,9 @@ function initTetrisGame() {
         const levelElem = document.getElementById("tetrisLevel")
         if (scoreElem) scoreElem.textContent = `Score: ${score}`
         if (levelElem) levelElem.textContent = `Level: ${level}`
+
+        // Update tournament progress if in tournament mode
+        updateTournamentProgress(score, level, linesCleared)
     }
 
     function updateLevel() {
@@ -337,6 +341,9 @@ function initTetrisGame() {
         started = false
         paused = false
         if (animationId) cancelAnimationFrame(animationId)
+
+        // Handle tournament game over
+        handleTournamentGameOver()
 
         // Save score if user is logged in
         let savedMessage = ""
