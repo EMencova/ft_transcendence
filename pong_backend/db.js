@@ -113,16 +113,31 @@ function setupDb(fastify) {
       }
     });
 
-    // Tetris game history table (score and timestamp only)
+    // Tetris game history table (enhanced with level and lines cleared)
     db.run(`
       CREATE TABLE IF NOT EXISTS tetris_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         player_id INTEGER NOT NULL,
         game_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         score INTEGER NOT NULL,
+        level INTEGER DEFAULT 1,
+        lines_cleared INTEGER DEFAULT 0,
         FOREIGN KEY (player_id) REFERENCES players(id)
       )
     `);
+
+    // Add level and lines_cleared columns if they don't exist (for existing databases)
+    db.run(`ALTER TABLE tetris_history ADD COLUMN level INTEGER DEFAULT 1`, (err) => {
+      if (err && !err.message.includes('duplicate column name')) {
+        console.log('Note: Could not add level column (may already exist):', err.message);
+      }
+    });
+
+    db.run(`ALTER TABLE tetris_history ADD COLUMN lines_cleared INTEGER DEFAULT 0`, (err) => {
+      if (err && !err.message.includes('duplicate column name')) {
+        console.log('Note: Could not add lines_cleared column (may already exist):', err.message);
+      }
+    });
 
     // Games table for general game history
     db.run(`
