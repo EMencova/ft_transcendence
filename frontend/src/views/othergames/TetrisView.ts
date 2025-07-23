@@ -96,10 +96,28 @@ function initTetrisGame() {
         [[1, 1, 1], [1, 0, 0]], // J piece
     ]
 
+    // Colors for each piece type (traditional Tetris colors)
+    const pieceColors = [
+        "#00FFFF", // I piece - Cyan
+        "#FFFF00", // O piece - Yellow
+        "#800080", // T piece - Purple
+        "#00FF00", // S piece - Green
+        "#FF0000", // Z piece - Red
+        "#FFA500", // L piece - Orange
+        "#0000FF", // J piece - Blue
+    ]
+
     const piece = {
         position: { x: 5, y: 5 },
-        shape: [[1, 1], [1, 1]], // I piece
+        shape: [[1, 1], [1, 1]], // O piece (default)
+        typeIndex: 1, // Index to track which piece type it is
     }
+
+    // Initialize with a random piece
+    const initialRandomIndex = Math.floor(Math.random() * pieces.length)
+    piece.shape = pieces[initialRandomIndex]
+    piece.typeIndex = initialRandomIndex
+    piece.position = { x: 5, y: 0 }
 
     // // Game loop
     // function update() {
@@ -143,21 +161,34 @@ function initTetrisGame() {
         if (!ctx) return
         ctx.fillStyle = "#000"
         ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+        // Draw placed pieces on the board
         board.forEach((row, y) => {
             row.forEach((cell, x) => {
-                if (cell === 1) {
-                    ctx.fillStyle = "yellow"
+                if (cell > 0) {
+                    // Use the piece color based on the stored type index
+                    ctx.fillStyle = pieceColors[cell - 1] || "#FFFFFF"
                     ctx.fillRect(x, y, 1, 1)
+
+                    // Add a subtle border for better visibility
+                    ctx.strokeStyle = "#333333"
+                    ctx.lineWidth = 0.05
+                    ctx.strokeRect(x, y, 1, 1)
                 }
             })
         })
 
-        // Draw the current piece
+        // Draw the current falling piece
         piece.shape.forEach((row, dy) => {
             row.forEach((cell, dx) => {
                 if (cell === 1) {
-                    ctx.fillStyle = "red"
+                    ctx.fillStyle = pieceColors[piece.typeIndex]
                     ctx.fillRect(piece.position.x + dx, piece.position.y + dy, 1, 1)
+
+                    // Add border to current piece too
+                    ctx.strokeStyle = "#333333"
+                    ctx.lineWidth = 0.05
+                    ctx.strokeRect(piece.position.x + dx, piece.position.y + dy, 1, 1)
                 }
             })
         })
@@ -214,7 +245,8 @@ function initTetrisGame() {
         piece.shape.forEach((row, dy) => {
             row.forEach((cell, dx) => {
                 if (cell === 1) {
-                    board[piece.position.y + dy][piece.position.x + dx] = 1
+                    // Store the piece type index + 1 (so 0 remains empty)
+                    board[piece.position.y + dy][piece.position.x + dx] = piece.typeIndex + 1
                 }
             })
         })
@@ -226,6 +258,7 @@ function initTetrisGame() {
         // Randomly select a new piece
         const randomIndex = Math.floor(Math.random() * pieces.length)
         piece.shape = pieces[randomIndex]
+        piece.typeIndex = randomIndex
         piece.position = { x: 5, y: 0 } // Reset the piece position
 
         // Check for game over
@@ -313,6 +346,13 @@ function initTetrisGame() {
         score = 0
         level = 1
         linesCleared = 0
+
+        // Reset piece with new random type
+        const randomIndex = Math.floor(Math.random() * pieces.length)
+        piece.shape = pieces[randomIndex]
+        piece.typeIndex = randomIndex
+        piece.position = { x: 5, y: 0 }
+
         updateScore()
 
         // Reset UI
@@ -377,8 +417,13 @@ function initTetrisGame() {
             level = 1
             linesCleared = 0
             updateScore()
-            piece.shape = pieces[Math.floor(Math.random() * pieces.length)]
+
+            // Reset piece with new random type
+            const randomIndex = Math.floor(Math.random() * pieces.length)
+            piece.shape = pieces[randomIndex]
+            piece.typeIndex = randomIndex
             piece.position = { x: 5, y: 0 }
+
             paused = false
             if (pauseBtn) pauseBtn.textContent = "Pause"
             lastTime = performance.now()
@@ -459,7 +504,11 @@ function initTetrisGame() {
                 level = 1
                 linesCleared = 0
                 updateScore()
-                piece.shape = pieces[Math.floor(Math.random() * pieces.length)]
+
+                // Reset piece with new random type
+                const randomIndex = Math.floor(Math.random() * pieces.length)
+                piece.shape = pieces[randomIndex]
+                piece.typeIndex = randomIndex
                 piece.position = { x: 5, y: 0 }
                 // Clean canvas
                 ctx.clearRect(0, 0, canvas.width, canvas.height)
