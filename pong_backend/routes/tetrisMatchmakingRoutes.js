@@ -148,6 +148,7 @@ module.exports = async function (fastify, opts) {
   fastify.get('/queue', async (request, reply) => {
     try {
         const queueArray = Array.from(matchmakingQueue.values()).map(player => ({
+            id: player.id,
             username: player.username,
             skillLevel: player.skillLevel,
             mode: player.mode,
@@ -158,6 +159,90 @@ module.exports = async function (fastify, opts) {
     } catch (error) {
         console.error('Error getting queue:', error);
         reply.code(500).send({ error: 'Failed to get queue' });
+    }
+  });
+
+  // Join an existing match from the queue
+  fastify.post('/join-match', async (request, reply) => {
+    try {
+        const { player_id, target_player_id } = request.body;
+        
+        // Get user info for the joining player
+        const user = await getQuery(`
+            SELECT p.username, 
+                   COALESCE(AVG(th.level), 1) as avg_level,
+                   COUNT(th.id) as games_played,
+                   MAX(th.score) as best_score
+            FROM players p
+            LEFT JOIN tetris_history th ON p.id = th.player_id
+            WHERE p.id = ?
+            GROUP BY p.id, p.username
+        `, [player_id]);
+        
+        if (!user) {
+            return reply.code(404).send({ error: 'User not found' });
+        }
+        
+        // Check if target player is still in queue
+        const targetPlayer = matchmakingQueue.get(target_player_id);
+        if (!targetPlayer) {
+            return reply.code(404).send({ error: 'Target player no longer in queue' });
+        }
+        
+        // Check if joining player is already in queue or match
+        if (matchmakingQueue.has(player_id)) {
+            return reply.code(400).send({ error: 'You are already in queue' });
+        }
+        
+        // Check if user is already in an active match
+        for (let [matchId, match] of activeMatches) {
+            if (match.player1.id === player_id || match.player2.id === player_id) {
+                return reply.code(400).send({ error: 'You are already in a match' });
+            }
+        }
+        
+        // Calculate skill level for joining player
+        const skillLevel = calculateSkillLevel(user.avg_level, user.games_played, user.best_score);
+        
+        // Create the joining player object
+        const joiningPlayer = {
+            id: player_id,
+            username: user.username,
+            skillLevel: skillLevel,
+            mode: targetPlayer.mode,
+            joinTime: Date.now()
+        };
+        
+        // Create match between the two players
+        const matchId = generateMatchId();
+        activeMatches.set(matchId, {
+            id: matchId,
+            player1: { ...targetPlayer, accepted: false, progress: null },
+            player2: { ...joiningPlayer, accepted: false, progress: null },
+            mode: targetPlayer.mode,
+            status: 'pending',
+            createdAt: Date.now()
+        });
+        
+        // Remove target player from queue
+        matchmakingQueue.delete(target_player_id);
+        
+        console.log(`Match created: ${targetPlayer.username} vs ${joiningPlayer.username} in ${targetPlayer.mode} mode`);
+        
+        reply.send({ 
+            success: true,
+            matchId: matchId,
+            opponent: {
+                id: targetPlayer.id,
+                username: targetPlayer.username,
+                skillLevel: targetPlayer.skillLevel
+            },
+            mode: targetPlayer.mode
+        });
+        
+    } catch (error) {
+        console.error('Error joining match:', error);
+        reply.code(500).send({ error: 'Failed to join match' });
     }
   });
 

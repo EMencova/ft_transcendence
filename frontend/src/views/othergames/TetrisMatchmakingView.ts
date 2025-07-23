@@ -71,14 +71,14 @@ export function TetrisMatchmakingView(container: HTMLElement) {
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Quick Match Section -->
+                <!-- Create Match Section -->
                 <div class="bg-[#1a1a1a] rounded-lg p-6 shadow-md border border-gray-700">
                     <h4 class="text-orange-400 font-semibold mb-4 flex items-center">
-                        🎯 Quick Match
+                        ➕ Create Match
                     </h4>
-                    <p class="text-gray-300 mb-4">Find an opponent based on your skill level</p>
+                    <p class="text-gray-300 mb-4">Create a new match and wait for an opponent</p>
                     
-                    <div id="quickMatchStatus" class="mb-4">
+                    <div id="createMatchStatus" class="mb-4">
                         <div class="flex items-center justify-between bg-zinc-700 p-3 rounded">
                             <span class="text-white">Your Skill Level:</span>
                             <span id="playerSkillLevel" class="text-orange-400 font-bold">-</span>
@@ -86,37 +86,37 @@ export function TetrisMatchmakingView(container: HTMLElement) {
                     </div>
                     
                     <div id="matchmakingButtons" class="space-y-3">
-                        <button id="findMatchBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
-                            🔍 Find Match
+                        <button id="createMatchBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                            🎮 Create Match
                         </button>
                         <button id="cancelMatchBtn" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded font-semibold hidden">
-                            ❌ Cancel Search
+                            ❌ Leave Queue
                         </button>
                     </div>
                     
                     <div id="matchmakingStatus" class="mt-4 text-center hidden">
                         <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                        <p class="text-gray-300 mt-2">Searching for opponent...</p>
+                        <p class="text-gray-300 mt-2">Waiting for opponent...</p>
                         <p id="searchTime" class="text-gray-400 text-sm">00:00</p>
                     </div>
                 </div>
 
-                <!-- Queue Status Section -->
+                <!-- Available Matches Section -->
                 <div class="bg-[#1a1a1a] rounded-lg p-6 shadow-md border border-gray-700">
                     <h4 class="text-orange-400 font-semibold mb-4 flex items-center">
-                        👥 Current Queue
+                        🎯 Available Matches
                     </h4>
-                    <p class="text-gray-300 mb-4">Players currently looking for matches</p>
+                    <p class="text-gray-300 mb-4">Join an existing match created by other players</p>
                     
                     <div id="queueList" class="space-y-2 max-h-60 overflow-y-auto">
                         <div class="text-center py-4">
                             <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
-                            <p class="text-gray-400 mt-2 text-sm">Loading queue...</p>
+                            <p class="text-gray-400 mt-2 text-sm">Loading available matches...</p>
                         </div>
                     </div>
                     
                     <button id="refreshQueueBtn" class="w-full mt-4 bg-zinc-700 hover:bg-zinc-600 text-white py-2 rounded">
-                        🔄 Refresh Queue
+                        🔄 Refresh Matches
                     </button>
                 </div>
             </div>
@@ -133,6 +133,38 @@ export function TetrisMatchmakingView(container: HTMLElement) {
                     </div>
                 </div>
             </div>
+
+            <!-- Join Match Confirmation Modal -->
+            <div id="joinMatchModal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center hidden z-50">
+                <div class="bg-[#1a1a1a] rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-4">🎮 Join Match</h3>
+                    <div id="matchDetails" class="mb-6">
+                        <p class="text-gray-300 mb-2">Do you want to join this match?</p>
+                        <div class="bg-zinc-800 p-4 rounded border border-gray-600">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-gray-400">Opponent:</span>
+                                <span id="modalOpponentName" class="text-white font-semibold">-</span>
+                            </div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-gray-400">Mode:</span>
+                                <span id="modalMatchMode" class="text-orange-400">-</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-400">Skill Level:</span>
+                                <span id="modalOpponentSkill" class="text-green-400">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button id="confirmJoinBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold">
+                            ✅ Join Match
+                        </button>
+                        <button id="cancelJoinBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold">
+                            ❌ Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     `
 
@@ -145,7 +177,7 @@ let queueRefreshInterval: number | null = null
 let selectedTournamentMode: string = 'sprint' // Default mode
 
 function initializeMatchmaking() {
-	const findMatchBtn = document.getElementById('findMatchBtn')
+	const createMatchBtn = document.getElementById('createMatchBtn')
 	const cancelMatchBtn = document.getElementById('cancelMatchBtn')
 	const refreshQueueBtn = document.getElementById('refreshQueueBtn')
 
@@ -155,8 +187,8 @@ function initializeMatchmaking() {
 	// Setup WebSocket listeners for real-time matchmaking events
 	setupWebSocketListeners()
 
-	if (findMatchBtn) {
-		findMatchBtn.addEventListener('click', startMatchmaking)
+	if (createMatchBtn) {
+		createMatchBtn.addEventListener('click', createMatch)
 	}
 
 	if (cancelMatchBtn) {
@@ -214,12 +246,12 @@ function initializeModeSelection() {
 	const modeCards = document.querySelectorAll('.mode-card')
 	const selectedModeDiv = document.getElementById('selectedMode')
 	const selectedModeText = document.getElementById('selectedModeText')
-	const findMatchBtn = document.getElementById('findMatchBtn') as HTMLButtonElement
+	const createMatchBtn = document.getElementById('createMatchBtn') as HTMLButtonElement
 
-	// Initially disable find match button until mode is selected
-	if (findMatchBtn) {
-		findMatchBtn.disabled = true
-		findMatchBtn.textContent = '🎮 Select a mode first'
+	// Initially disable create match button until mode is selected
+	if (createMatchBtn) {
+		createMatchBtn.disabled = true
+		createMatchBtn.textContent = '🎮 Select a mode first'
 	}
 
 	modeCards.forEach(card => {
@@ -243,10 +275,10 @@ function initializeModeSelection() {
 				selectedModeText.textContent = `${selectedMode.name} Selected - ${selectedMode.description}`
 			}
 
-			// Enable find match button
-			if (findMatchBtn) {
-				findMatchBtn.disabled = false
-				findMatchBtn.textContent = '🔍 Find Match'
+			// Enable create match button
+			if (createMatchBtn) {
+				createMatchBtn.disabled = false
+				createMatchBtn.textContent = '🎮 Create Match'
 			}
 		})
 	})
@@ -257,12 +289,12 @@ function initializeModeSelection() {
 	}
 }
 
-async function startMatchmaking() {
-	const findMatchBtn = document.getElementById('findMatchBtn')
+async function createMatch() {
+	const createMatchBtn = document.getElementById('createMatchBtn')
 	const cancelMatchBtn = document.getElementById('cancelMatchBtn')
 	const matchmakingStatus = document.getElementById('matchmakingStatus')
 
-	if (!findMatchBtn || !cancelMatchBtn || !matchmakingStatus) return
+	if (!createMatchBtn || !cancelMatchBtn || !matchmakingStatus) return
 
 	const selectedMode = TOURNAMENT_MODES.find(mode => mode.id === selectedTournamentMode)
 	if (!selectedMode) {
@@ -271,21 +303,21 @@ async function startMatchmaking() {
 	}
 
 	try {
-		// Update UI to show searching state
-		findMatchBtn.classList.add('hidden')
+		// Update UI to show waiting state
+		createMatchBtn.classList.add('hidden')
 		cancelMatchBtn.classList.remove('hidden')
 		matchmakingStatus.classList.remove('hidden')
 
 		// Update status to show selected mode
 		const statusText = matchmakingStatus.querySelector('p')
 		if (statusText) {
-			statusText.textContent = `Searching for ${selectedMode.name} opponent...`
+			statusText.textContent = `Waiting for opponent to join ${selectedMode.name}...`
 		}
 
 		searchStartTime = Date.now()
 		searchInterval = window.setInterval(updateSearchTime, 1000)
 
-		// Join real matchmaking queue
+		// Create match in the queue
 		const result = await tetrisMatchmakingService.joinQueue(selectedTournamentMode)
 		console.log('Joined matchmaking queue:', result)
 
@@ -319,11 +351,11 @@ async function cancelMatchmaking() {
 }
 
 function resetMatchmakingUI() {
-	const findMatchBtn = document.getElementById('findMatchBtn')
+	const createMatchBtn = document.getElementById('createMatchBtn')
 	const cancelMatchBtn = document.getElementById('cancelMatchBtn')
 	const matchmakingStatus = document.getElementById('matchmakingStatus')
 
-	if (findMatchBtn) findMatchBtn.classList.remove('hidden')
+	if (createMatchBtn) createMatchBtn.classList.remove('hidden')
 	if (cancelMatchBtn) cancelMatchBtn.classList.add('hidden')
 	if (matchmakingStatus) matchmakingStatus.classList.add('hidden')
 
@@ -450,8 +482,8 @@ async function loadQueue() {
 		if (queue.length === 0) {
 			queueList.innerHTML = `
                 <div class="text-center py-4 text-gray-400">
-                    <p>👥 Queue is empty</p>
-                    <p class="text-sm mt-1">Be the first to join!</p>
+                    <p>🎮 No matches available</p>
+                    <p class="text-sm mt-1">Create a match to get started!</p>
                 </div>
             `
 			return
@@ -463,7 +495,11 @@ async function loadQueue() {
 			const waitTimeStr = `${waitMinutes}:${waitSeconds.toString().padStart(2, '0')}`
 
 			return `
-                <div class="flex justify-between items-center p-3 bg-zinc-700 rounded">
+                <div class="match-card flex justify-between items-center p-3 bg-zinc-700 rounded cursor-pointer hover:bg-zinc-600 transition-colors border border-gray-600 hover:border-orange-400"
+                     data-player-id="${player.id}" 
+                     data-username="${player.username}" 
+                     data-mode="${player.mode}" 
+                     data-skill="${player.skillLevel}">
                     <div class="flex items-center space-x-3">
                         <span class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
                             ${player.username.charAt(0).toUpperCase()}
@@ -474,18 +510,33 @@ async function loadQueue() {
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-orange-400 font-semibold">${player.skillLevel}</p>
-                        <p class="text-gray-400 text-xs">${waitTimeStr}</p>
+                        <p class="text-orange-400 font-semibold">Level ${player.skillLevel}</p>
+                        <p class="text-gray-400 text-xs">Waiting ${waitTimeStr}</p>
+                        <p class="text-green-400 text-xs font-medium">👆 Click to Join</p>
                     </div>
                 </div>
             `
 		}).join('')
 
+		// Add click listeners to match cards
+		document.querySelectorAll('.match-card').forEach(card => {
+			card.addEventListener('click', () => {
+				const playerId = card.getAttribute('data-player-id')
+				const username = card.getAttribute('data-username')
+				const mode = card.getAttribute('data-mode')
+				const skill = card.getAttribute('data-skill')
+
+				if (playerId && username && mode && skill) {
+					showJoinMatchModal(playerId, username, mode, skill)
+				}
+			})
+		})
+
 	} catch (error) {
 		console.error('Failed to load queue:', error)
 		queueList.innerHTML = `
             <div class="text-center py-4 text-red-400">
-                <p>❌ Failed to load queue</p>
+                <p>❌ Failed to load matches</p>
                 <p class="text-sm text-gray-500 mt-1">Please try refreshing</p>
             </div>
         `
@@ -523,6 +574,61 @@ async function loadRecentMatches() {
 
 	} catch (error) {
 		console.error('Failed to load recent matches:', error)
+	}
+}
+
+// Modal functions for joining matches
+function showJoinMatchModal(playerId: string, username: string, mode: string, skill: string) {
+	const modal = document.getElementById('joinMatchModal')
+	const opponentName = document.getElementById('modalOpponentName')
+	const matchMode = document.getElementById('modalMatchMode')
+	const opponentSkill = document.getElementById('modalOpponentSkill')
+	const confirmBtn = document.getElementById('confirmJoinBtn')
+	const cancelBtn = document.getElementById('cancelJoinBtn')
+
+	if (!modal || !opponentName || !matchMode || !opponentSkill || !confirmBtn || !cancelBtn) return
+
+	// Populate modal data
+	opponentName.textContent = username
+	matchMode.textContent = getModeDisplayName(mode)
+	opponentSkill.textContent = skill
+
+	// Show modal
+	modal.classList.remove('hidden')
+	modal.classList.add('flex')
+
+	// Set up event listeners
+	confirmBtn.onclick = () => joinMatch(playerId, modal)
+	cancelBtn.onclick = () => hideJoinMatchModal(modal)
+
+	// Close modal when clicking outside
+	modal.onclick = (e) => {
+		if (e.target === modal) {
+			hideJoinMatchModal(modal)
+		}
+	}
+}
+
+function hideJoinMatchModal(modal: HTMLElement) {
+	modal.classList.add('hidden')
+	modal.classList.remove('flex')
+}
+
+async function joinMatch(playerId: string, modal: HTMLElement) {
+	try {
+		// Here we would implement the logic to join an existing match
+		// For now, we'll use the existing service but modify it to handle joining
+		await tetrisMatchmakingService.joinExistingMatch(playerId, selectedTournamentMode)
+
+		hideJoinMatchModal(modal)
+		alert('Successfully joined the match! Tournament will start shortly.')
+
+		// Refresh the queue to remove the joined match
+		loadQueue()
+
+	} catch (error) {
+		console.error('Failed to join match:', error)
+		alert('Failed to join match. Please try again.')
 	}
 }
 

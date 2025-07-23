@@ -119,6 +119,54 @@ class TetrisMatchmakingService {
 		}
 	}
 
+	async joinExistingMatch(opponentId: string, mode: string): Promise<{ success: boolean; matchId?: string }> {
+		if (!currentUserId) {
+			throw new Error('User not logged in')
+		}
+
+		console.log('Joining existing match:', { opponentId, mode })
+
+		try {
+			const response = await apiService.post('/matchmaking/join-match', {
+				player_id: currentUserId,
+				opponent_id: opponentId,
+				mode: mode
+			})
+
+			console.log('Join match response:', response)
+
+			if (response.success && response.matchId) {
+				this.currentMatchId = response.matchId
+
+				// Emit match found event immediately since we're joining an existing match
+				setTimeout(() => {
+					this.emit('match_found', {
+						matchId: response.matchId,
+						opponent: response.opponent || { username: 'Opponent' },
+						mode: mode
+					})
+				}, 100)
+
+				// Then emit tournament start
+				setTimeout(() => {
+					this.emit('tournament_start', {
+						matchId: response.matchId,
+						opponent: response.opponent || { username: 'Opponent' },
+						mode: mode
+					})
+				}, 500)
+			}
+
+			return {
+				success: response.success,
+				matchId: response.matchId
+			}
+		} catch (error) {
+			console.error('Error joining existing match:', error)
+			throw error
+		}
+	}
+
 	async leaveQueue(): Promise<void> {
 		if (!currentUserId) return
 
