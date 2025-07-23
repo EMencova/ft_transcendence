@@ -1,4 +1,5 @@
-import { currentUser } from "../logic/auth"
+import { currentUser } from "../../logic/auth"
+import { saveTetrisScore } from "./TetrisHistoryView"
 
 export function TetrisView(push = true, container?: HTMLElement) {
     const target = container || document.getElementById("mainContent")
@@ -9,7 +10,6 @@ export function TetrisView(push = true, container?: HTMLElement) {
         : `<span id="tetrisRecord" class="text-white mt-4 text-sm italic">If you want to save your record, please log in.</span>`
 
     target.innerHTML = `
-        <h2 class="text-2xl font-bold mb-4 mt-6">🕹️ Tetris</h2>
        <div id="tetrisGame" class="border border-gray-500 p-4 flex flex-col items-center mx-auto max-w-4xl">
             <button id="startTetrisBtn" class="mb-6 w-48 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 text-lg">Start Game</button>
             <div class="flex justify-center w-full">
@@ -26,7 +26,31 @@ export function TetrisView(push = true, container?: HTMLElement) {
         </div>
     `
     initTetrisGame()
+    loadUserRecord()
     if (push && !container) history.pushState({ page: "tetris" }, "", "/tetris")
+}
+
+async function loadUserRecord() {
+    const recordEl = document.getElementById("tetrisRecord")
+    if (!recordEl || !currentUser) return
+
+    try {
+        // Import the API service to fetch user's best score
+        const { apiService } = await import("../../services/apiService")
+        const { currentUserId } = await import("../../logic/auth")
+
+        if (!currentUserId) return
+
+        const response = await apiService.get<{ history: any[] }>(`/tetris/history/${currentUserId}`)
+        const history = response.history || []
+
+        if (history.length > 0) {
+            const bestScore = Math.max(...history.map((h: any) => h.score))
+            recordEl.textContent = `Record: ${bestScore}`
+        }
+    } catch (error) {
+        console.error('Failed to load user record:', error)
+    }
 }
 
 function initTetrisGame() {
@@ -186,11 +210,7 @@ function initTetrisGame() {
 
         // Check for game over
         if (checkCollision()) {
-            alert("Game Over!")
-            // Reset the board
-            for (let y = 0;y < BOARD_HEIGHT;y++) {
-                board[y] = Array(BOARD_WIDTH).fill(0)
-            }
+            handleGameOver()
         }
     }
 
@@ -210,6 +230,70 @@ function initTetrisGame() {
                 score += 10 // Increment score
                 updateScore() // Update the score display
             }
+        }
+    }
+
+    async function handleGameOver() {
+        // Stop the game
+        started = false
+        paused = false
+        if (animationId) cancelAnimationFrame(animationId)
+
+        // Save score if user is logged in
+        let savedMessage = ""
+        if (currentUser && score > 0) {
+            const saved = await saveTetrisScore(score)
+            if (saved) {
+                savedMessage = "\nScore saved to your history!"
+                // Update the record display if this score beats the current record
+                await updateRecordDisplay()
+            } else {
+                savedMessage = "\nFailed to save score."
+            }
+        }
+
+        alert(`Game Over!${savedMessage}\nFinal Score: ${score}`)
+
+        // Reset the board
+        for (let y = 0;y < BOARD_HEIGHT;y++) {
+            board[y] = Array(BOARD_WIDTH).fill(0)
+        }
+        score = 0
+        updateScore()
+
+        // Reset UI
+        const startBtn = document.getElementById("startTetrisBtn")
+        const pauseBtn = document.getElementById("pauseBtn")
+        const resetBtn = document.getElementById("resetBtn")
+
+        if (startBtn) startBtn.textContent = "Start Game"
+        if (pauseBtn) {
+            (pauseBtn as HTMLButtonElement).disabled = true
+            pauseBtn.classList.add("opacity-50", "cursor-not-allowed")
+            pauseBtn.textContent = "Pause"
+        }
+        if (resetBtn) {
+            (resetBtn as HTMLButtonElement).disabled = true
+            resetBtn.classList.add("opacity-50", "cursor-not-allowed")
+        }
+
+        // Clear canvas
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
+    }
+
+    async function updateRecordDisplay() {
+        const recordEl = document.getElementById("tetrisRecord")
+        if (!recordEl || !currentUser) return
+
+        try {
+            // This would typically fetch the latest record from the backend
+            // For now, we'll just update with the current score if it seems to be a new record
+            const currentRecord = parseInt(recordEl.textContent?.replace("Record: ", "") || "0")
+            if (score > currentRecord) {
+                recordEl.textContent = `Record: ${score}`
+            }
+        } catch (error) {
+            console.error('Failed to update record display:', error)
         }
     }
 
