@@ -1,4 +1,4 @@
-import { currentUser } from "../../logic/auth"
+import { currentUser, currentUserId } from "../../logic/auth"
 import { tetrisMatchmakingService } from "../../services/tetrisMatchmakingService"
 import { startTournamentMatch as initTournament } from "./TetrisTournamentView"
 
@@ -90,14 +90,16 @@ export function TetrisMatchmakingView(container: HTMLElement) {
                             🎮 Create Match
                         </button>
                         <button id="cancelMatchBtn" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded font-semibold hidden">
-                            ❌ Leave Queue
+                            🗑️ Remove Match
                         </button>
                     </div>
                     
-                    <div id="matchmakingStatus" class="mt-4 text-center hidden">
-                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                        <p class="text-gray-300 mt-2">Waiting for opponent...</p>
-                        <p id="searchTime" class="text-gray-400 text-sm">00:00</p>
+                    <div id="matchmakingStatus" class="mt-4 p-3 bg-green-900/30 border border-green-500/30 rounded hidden">
+                        <div class="flex items-center justify-center space-x-2">
+                            <span class="text-green-400">✅</span>
+                            <p id="statusMessage" class="text-green-300 font-medium">Match created successfully!</p>
+                        </div>
+                        <p class="text-green-200 text-sm text-center mt-1">Other players can now join your match</p>
                     </div>
                 </div>
 
@@ -171,7 +173,6 @@ export function TetrisMatchmakingView(container: HTMLElement) {
 	initializeMatchmaking()
 }
 
-let searchStartTime: number | null = null
 let searchInterval: number | null = null
 let queueRefreshInterval: number | null = null
 let selectedTournamentMode: string = 'sprint' // Default mode
@@ -204,8 +205,56 @@ function initializeMatchmaking() {
 	loadQueue()
 	loadRecentMatches()
 
+	// Check current user status to restore proper UI state (async, after DOM is ready)
+	setTimeout(() => {
+		checkUserMatchmakingStatus().catch(error => {
+			console.error('Failed to check user status:', error)
+		})
+	}, 100)
+
 	// Set up automatic queue refresh
 	queueRefreshInterval = window.setInterval(loadQueue, 10000) // Refresh every 10 seconds
+}
+
+async function checkUserMatchmakingStatus() {
+	try {
+		console.log('Checking user matchmaking status...')
+		const status = await tetrisMatchmakingService.getMatchmakingStatus()
+		console.log('User status response:', status)
+
+		if (status.status === 'in_queue') {
+			console.log('User is in queue, restoring UI state')
+
+			// User is already in queue, show the "Remove Match" state
+			const createMatchBtn = document.getElementById('createMatchBtn')
+			const cancelMatchBtn = document.getElementById('cancelMatchBtn')
+			const matchmakingStatus = document.getElementById('matchmakingStatus')
+			const statusMessage = document.getElementById('statusMessage')
+
+			const mode = TOURNAMENT_MODES.find(m => m.id === status.mode)
+			console.log('Found mode:', mode)
+
+			if (createMatchBtn) createMatchBtn.classList.add('hidden')
+			if (cancelMatchBtn) cancelMatchBtn.classList.remove('hidden')
+			if (matchmakingStatus) matchmakingStatus.classList.remove('hidden')
+			if (statusMessage && mode) {
+				statusMessage.textContent = `Match created in ${mode.name}!`
+			}
+
+			// Update skill level if available
+			if (status.skillLevel) {
+				const skillLevelEl = document.getElementById('playerSkillLevel')
+				if (skillLevelEl) {
+					skillLevelEl.textContent = status.skillLevel.toString()
+				}
+			}
+		} else {
+			console.log('User is not in queue, keeping default state')
+		}
+	} catch (error) {
+		console.error('Error checking user status:', error)
+		// If error, assume user is not in queue (default state)
+	}
 }
 
 function setupWebSocketListeners() {
@@ -303,20 +352,6 @@ async function createMatch() {
 	}
 
 	try {
-		// Update UI to show waiting state
-		createMatchBtn.classList.add('hidden')
-		cancelMatchBtn.classList.remove('hidden')
-		matchmakingStatus.classList.remove('hidden')
-
-		// Update status to show selected mode
-		const statusText = matchmakingStatus.querySelector('p')
-		if (statusText) {
-			statusText.textContent = `Waiting for opponent to join ${selectedMode.name}...`
-		}
-
-		searchStartTime = Date.now()
-		searchInterval = window.setInterval(updateSearchTime, 1000)
-
 		// Create match in the queue
 		const result = await tetrisMatchmakingService.joinQueue(selectedTournamentMode)
 		console.log('Joined matchmaking queue:', result)
@@ -327,7 +362,21 @@ async function createMatch() {
 			skillLevelEl.textContent = result.skillLevel.toString()
 		}
 
-		// If match was found immediately
+		// Show success message and update UI
+		createMatchBtn.classList.add('hidden')
+		cancelMatchBtn.classList.remove('hidden')
+		matchmakingStatus.classList.remove('hidden')
+
+		// Update status message
+		const statusMessage = document.getElementById('statusMessage')
+		if (statusMessage) {
+			statusMessage.textContent = `Match created in ${selectedMode.name}!`
+		}
+
+		// Refresh the queue to show the current match
+		loadQueue()
+
+		// If match was found immediately (someone joined right away)
 		if (result.matchFound) {
 			console.log('Match found immediately!')
 		}
@@ -343,9 +392,10 @@ async function cancelMatchmaking() {
 	try {
 		await tetrisMatchmakingService.leaveQueue()
 		resetMatchmakingUI()
-		console.log('Left matchmaking queue')
+		loadQueue() // Refresh to remove the match from the list
+		console.log('Removed match from queue')
 	} catch (error) {
-		console.error('Failed to leave matchmaking queue:', error)
+		console.error('Failed to remove match from queue:', error)
 		resetMatchmakingUI()
 	}
 }
@@ -363,17 +413,6 @@ function resetMatchmakingUI() {
 		clearInterval(searchInterval)
 		searchInterval = null
 	}
-	searchStartTime = null
-}
-
-function updateSearchTime() {
-	const searchTimeEl = document.getElementById('searchTime')
-	if (!searchTimeEl || !searchStartTime) return
-
-	const elapsed = Math.floor((Date.now() - searchStartTime) / 1000)
-	const minutes = Math.floor(elapsed / 60)
-	const seconds = elapsed % 60
-	searchTimeEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 }
 
 function showMatchFoundNotification(data: any) {
@@ -494,42 +533,55 @@ async function loadQueue() {
 			const waitSeconds = Math.floor((player.waitTime % 60000) / 1000)
 			const waitTimeStr = `${waitMinutes}:${waitSeconds.toString().padStart(2, '0')}`
 
+			const isOwnMatch = player.id === currentUserId
+			const cardClasses = isOwnMatch
+				? "match-card flex justify-between items-center p-3 bg-zinc-800 rounded border border-gray-500 opacity-75"
+				: "match-card flex justify-between items-center p-3 bg-zinc-700 rounded cursor-pointer hover:bg-zinc-600 transition-colors border border-gray-600 hover:border-orange-400"
+
 			return `
-                <div class="match-card flex justify-between items-center p-3 bg-zinc-700 rounded cursor-pointer hover:bg-zinc-600 transition-colors border border-gray-600 hover:border-orange-400"
+                <div class="${cardClasses}"
                      data-player-id="${player.id}" 
                      data-username="${player.username}" 
                      data-mode="${player.mode}" 
-                     data-skill="${player.skillLevel}">
+                     data-skill="${player.skillLevel}"
+                     data-is-own="${isOwnMatch}">
                     <div class="flex items-center space-x-3">
-                        <span class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        <span class="w-8 h-8 ${isOwnMatch ? 'bg-gray-500' : 'bg-orange-500'} rounded-full flex items-center justify-center text-white text-sm font-bold">
                             ${player.username.charAt(0).toUpperCase()}
                         </span>
                         <div>
-                            <p class="text-white font-medium">${player.username}</p>
+                            <p class="text-white font-medium">${player.username} ${isOwnMatch ? '(You)' : ''}</p>
                             <p class="text-gray-400 text-sm">${getModeDisplayName(player.mode)}</p>
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-orange-400 font-semibold">Level ${player.skillLevel}</p>
+                        <p class="${isOwnMatch ? 'text-gray-400' : 'text-orange-400'} font-semibold">Level ${player.skillLevel}</p>
                         <p class="text-gray-400 text-xs">Waiting ${waitTimeStr}</p>
-                        <p class="text-green-400 text-xs font-medium">👆 Click to Join</p>
+                        ${isOwnMatch
+					? '<p class="text-gray-500 text-xs">Your match</p>'
+					: '<p class="text-green-400 text-xs font-medium">👆 Click to Join</p>'
+                        }
                     </div>
                 </div>
             `
 		}).join('')
 
-		// Add click listeners to match cards
+		// Add click listeners to match cards (only for other players' matches)
 		document.querySelectorAll('.match-card').forEach(card => {
-			card.addEventListener('click', () => {
-				const playerId = card.getAttribute('data-player-id')
-				const username = card.getAttribute('data-username')
-				const mode = card.getAttribute('data-mode')
-				const skill = card.getAttribute('data-skill')
+			const isOwnMatch = card.getAttribute('data-is-own') === 'true'
 
-				if (playerId && username && mode && skill) {
-					showJoinMatchModal(playerId, username, mode, skill)
-				}
-			})
+			if (!isOwnMatch) {
+				card.addEventListener('click', () => {
+					const playerId = card.getAttribute('data-player-id')
+					const username = card.getAttribute('data-username')
+					const mode = card.getAttribute('data-mode')
+					const skill = card.getAttribute('data-skill')
+
+					if (playerId && username && mode && skill) {
+						showJoinMatchModal(playerId, username, mode, skill)
+					}
+				})
+			}
 		})
 
 	} catch (error) {

@@ -40,40 +40,16 @@ class TetrisMatchmakingService {
 		})
 	}
 
-	private startPolling() {
-		if (this.pollingInterval) {
-			clearInterval(this.pollingInterval)
-		}
-
-		// Poll for match status every 2 seconds
-		this.pollingInterval = window.setInterval(async () => {
-			try {
-				const status = await this.getMatchmakingStatus()
-
-				if (status.status === 'in_match' && !this.currentMatchId) {
-					// New match found
-					this.currentMatchId = status.matchId
-					this.emit('match_found', {
-						matchId: status.matchId,
-						opponent: status.opponent,
-						mode: 'local' // For local multiplayer
-					})
-				} else if (status.status === 'idle' && this.currentMatchId) {
-					// Match ended
-					this.currentMatchId = null
-					this.stopPolling()
-				}
-			} catch (error) {
-				console.error('Error polling match status:', error)
-			}
-		}, 2000)
-	}
-
 	private stopPolling() {
 		if (this.pollingInterval) {
 			clearInterval(this.pollingInterval)
 			this.pollingInterval = null
 		}
+	}
+
+	// Getter for current match ID
+	getCurrentMatchId(): string | null {
+		return this.currentMatchId
 	}
 
 	// Matchmaking API methods
@@ -92,7 +68,7 @@ class TetrisMatchmakingService {
 
 			console.log('Queue response:', response)
 
-			// If match was found immediately
+			// If match was found immediately (automatic matchmaking)
 			if (response.matchFound) {
 				this.currentMatchId = response.matchFound.matchId
 
@@ -104,10 +80,9 @@ class TetrisMatchmakingService {
 						mode: mode
 					})
 				}, 100)
-			} else {
-				// Start polling for matches
-				this.startPolling()
 			}
+			// Note: We no longer start polling here since users create matches 
+			// and wait for others to join them manually
 
 			return {
 				skillLevel: response.skillLevel,
