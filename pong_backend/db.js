@@ -210,6 +210,67 @@ function setupDb(fastify) {
         ('Verca', 'verca@verca.com', 'verca', '/avatar2.png', 3, 4),
         ('Azaman', 'azaman@azaman.com', 'azaman', '/avatar3.png', 7, 1)
     `);
+
+    // Tetris Matchmaking Queue table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS tetris_matchmaking_queue (
+        user_id INTEGER PRIMARY KEY,
+        username TEXT NOT NULL,
+        skill_level INTEGER NOT NULL,
+        mode TEXT NOT NULL,
+        join_time INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES players(id)
+      )
+    `);
+
+    // Tetris Active Matches table  
+    db.run(`
+      CREATE TABLE IF NOT EXISTS tetris_active_matches (
+        match_id TEXT PRIMARY KEY,
+        player1_id INTEGER NOT NULL,
+        player1_username TEXT NOT NULL,
+        player1_skill_level INTEGER NOT NULL,
+        player1_accepted BOOLEAN DEFAULT 0,
+        player1_score INTEGER DEFAULT 0,
+        player1_level INTEGER DEFAULT 1,
+        player1_lines INTEGER DEFAULT 0,
+        player1_game_over BOOLEAN DEFAULT 0,
+        player2_id INTEGER NOT NULL,
+        player2_username TEXT NOT NULL,
+        player2_skill_level INTEGER NOT NULL,
+        player2_accepted BOOLEAN DEFAULT 0,
+        player2_score INTEGER DEFAULT 0,
+        player2_level INTEGER DEFAULT 1,
+        player2_lines INTEGER DEFAULT 0,
+        player2_game_over BOOLEAN DEFAULT 0,
+        mode TEXT NOT NULL,
+        status TEXT DEFAULT 'pending',
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY (player1_id) REFERENCES players(id),
+        FOREIGN KEY (player2_id) REFERENCES players(id)
+      )
+    `);
+
+    // Tetris Tournament Matches history table (already exists, but ensuring it's here)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS tetris_tournament_matches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        player1_id INTEGER NOT NULL,
+        player2_id INTEGER NOT NULL,
+        mode TEXT NOT NULL,
+        winner_id INTEGER,
+        player1_score INTEGER DEFAULT 0,
+        player1_level INTEGER DEFAULT 1,
+        player1_lines INTEGER DEFAULT 0,
+        player2_score INTEGER DEFAULT 0,
+        player2_level INTEGER DEFAULT 1,
+        player2_lines INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (player1_id) REFERENCES players(id),
+        FOREIGN KEY (player2_id) REFERENCES players(id),
+        FOREIGN KEY (winner_id) REFERENCES players(id)
+      )
+    `);
   });
 
   db.run(

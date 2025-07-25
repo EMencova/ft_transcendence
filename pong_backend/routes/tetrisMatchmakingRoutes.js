@@ -1,6 +1,5 @@
-// Matchmaking queue storage (in-memory for local multiplayer)
-let matchmakingQueue = new Map(); // userId -> { username, skillLevel, mode, joinTime }
-let activeMatches = new Map(); // matchId -> { player1, player2, mode, status }
+// Tetris Matchmaking with Database Persistence
+// Queue and matches are now stored in SQLite database
 
 module.exports = async function (fastify, opts) {
   const db = fastify.sqliteDb;
@@ -33,31 +32,117 @@ module.exports = async function (fastify, opts) {
     });
   }
 
+  // Database helper functions for Tetris Matchmaking
+  async function addToQueue(userId, username, skillLevel, mode) {
+    const query = `
+      INSERT OR REPLACE INTO tetris_matchmaking_queue 
+      (user_id, username, skill_level, mode, join_time) 
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    await runQuery(query, [userId, username, skillLevel, mode, Date.now()]);
+  }
+
+  async function removeFromQueue(userId) {
+    const query = `DELETE FROM tetris_matchmaking_queue WHERE user_id = ?`;
+    await runQuery(query, [userId]);
+  }
+
+  async function getQueuePlayer(userId) {
+    const query = `SELECT * FROM tetris_matchmaking_queue WHERE user_id = ?`;
+    return await getQuery(query, [userId]);
+  }
+
+  async function getAllQueuePlayers() {
+    const query = `SELECT * FROM tetris_matchmaking_queue ORDER BY join_time ASC`;
+    return await allQuery(query);
+  }
+
+  async function createActiveMatch(matchId, player1, player2, mode) {
+    const query = `
+      INSERT INTO tetris_active_matches (
+        match_id, player1_id, player1_username, player1_skill_level,
+        player2_id, player2_username, player2_skill_level,
+        mode, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    await runQuery(query, [
+      matchId, player1.id, player1.username, player1.skillLevel,
+      player2.id, player2.username, player2.skillLevel,
+      mode, 'pending', Date.now()
+    ]);
+  }
+
+  async function getActiveMatch(matchId) {
+    const query = `SELECT * FROM tetris_active_matches WHERE match_id = ?`;
+    return await getQuery(query, [matchId]);
+  }
+
+  async function updateMatchPlayer(matchId, playerId, updates) {
+    const isPlayer1Query = `SELECT player1_id FROM tetris_active_matches WHERE match_id = ? AND player1_id = ?`;
+    const isPlayer1 = await getQuery(isPlayer1Query, [matchId, playerId]);
+    
+    const prefix = isPlayer1 ? 'player1_' : 'player2_';
+    const setClauses = [];
+    const params = [];
+    
+    for (const [key, value] of Object.entries(updates)) {
+      setClauses.push(`${prefix}${key} = ?`);
+      params.push(value);
+    }
+    
+    if (setClauses.length > 0) {
+      params.push(matchId);
+      const query = `UPDATE tetris_active_matches SET ${setClauses.join(', ')} WHERE match_id = ?`;
+      await runQuery(query, params);
+    }
+  }
+
+  async function deleteActiveMatch(matchId) {
+    const query = `DELETE FROM tetris_active_matches WHERE match_id = ?`;
+    await runQuery(query, [matchId]);
+  }
+
+  async function getUserActiveMatch(userId) {
+    const query = `
+      SELECT * FROM tetris_active_matches 
+      WHERE player1_id = ? OR player2_id = ?
+    `;
+    return await getQuery(query, [userId, userId]);
+  }
+
   // Get user's matchmaking status
   fastify.get('/status/:userId', async (request, reply) => {
     try {
         const userId = request.params.userId;
         
         // Check if user is in queue
-        const queueStatus = matchmakingQueue.get(userId);
+        const queueStatus = await getQueuePlayer(userId);
         if (queueStatus) {
             return reply.send({
                 status: 'in_queue',
                 mode: queueStatus.mode,
-                waitTime: Date.now() - queueStatus.joinTime,
-                skillLevel: queueStatus.skillLevel
+                waitTime: Date.now() - queueStatus.join_time,
+                skillLevel: queueStatus.skill_level
             });
         }
         
         // Check if user is in active match
-        for (let [matchId, match] of activeMatches) {
-            if (match.player1.id === userId || match.player2.id === userId) {
-                return reply.send({
-                    status: 'in_match',
-                    matchId: matchId,
-                    opponent: match.player1.id === userId ? match.player2 : match.player1
-                });
-            }
+        const activeMatch = await getUserActiveMatch(userId);
+        if (activeMatch) {
+            const isPlayer1 = activeMatch.player1_id === parseInt(userId);
+            const opponent = isPlayer1 ? {
+                id: activeMatch.player2_id,
+                username: activeMatch.player2_username
+            } : {
+                id: activeMatch.player1_id,
+                username: activeMatch.player1_username
+            };
+            
+            return reply.send({
+                status: 'in_match',
+                matchId: activeMatch.match_id,
+                opponent: opponent
+            });
         }
 
         // Get user's skill level from database
@@ -108,22 +193,16 @@ module.exports = async function (fastify, opts) {
         // Calculate skill level based on stats
         const skillLevel = calculateSkillLevel(user.avg_level, user.games_played, user.best_score);
         
-        // Add to queue
-        matchmakingQueue.set(player_id, {
-            id: player_id,
-            username: user.username,
-            skillLevel: skillLevel,
-            mode: mode,
-            joinTime: Date.now()
-        });
+        // Add to queue (database)
+        await addToQueue(player_id, user.username, skillLevel, mode);
         
-        // For local multiplayer, we need at least 2 players in queue
-        const matchFound = tryFindMatch(player_id, mode);
+        // In the new flow, users create matches and others join them manually
+        // No automatic matchmaking when joining the queue
         
         reply.send({ 
             success: true, 
             skillLevel: skillLevel,
-            matchFound: matchFound
+            matchFound: false // Always false since we don't auto-match anymore
         });
         
     } catch (error) {
@@ -136,7 +215,7 @@ module.exports = async function (fastify, opts) {
   fastify.delete('/queue/:userId', async (request, reply) => {
     try {
         const userId = request.params.userId;
-        matchmakingQueue.delete(userId);
+        await removeFromQueue(userId);
         reply.send({ success: true });
     } catch (error) {
         console.error('Error leaving queue:', error);
@@ -147,12 +226,13 @@ module.exports = async function (fastify, opts) {
   // Get current queue (for display purposes)
   fastify.get('/queue', async (request, reply) => {
     try {
-        const queueArray = Array.from(matchmakingQueue.values()).map(player => ({
-            id: player.id,
+        const queuePlayers = await getAllQueuePlayers();
+        const queueArray = queuePlayers.map(player => ({
+            id: player.user_id,
             username: player.username,
-            skillLevel: player.skillLevel,
+            skillLevel: player.skill_level,
             mode: player.mode,
-            waitTime: Date.now() - player.joinTime
+            waitTime: Date.now() - player.join_time
         }));
         
         reply.send({ queue: queueArray });
@@ -184,21 +264,21 @@ module.exports = async function (fastify, opts) {
         }
         
         // Check if target player is still in queue
-        const targetPlayer = matchmakingQueue.get(target_player_id);
+        const targetPlayer = await getQueuePlayer(target_player_id);
         if (!targetPlayer) {
             return reply.code(404).send({ error: 'Target player no longer in queue' });
         }
         
         // Check if joining player is already in queue or match
-        if (matchmakingQueue.has(player_id)) {
+        const joiningPlayerInQueue = await getQueuePlayer(player_id);
+        if (joiningPlayerInQueue) {
             return reply.code(400).send({ error: 'You are already in queue' });
         }
         
         // Check if user is already in an active match
-        for (let [matchId, match] of activeMatches) {
-            if (match.player1.id === player_id || match.player2.id === player_id) {
-                return reply.code(400).send({ error: 'You are already in a match' });
-            }
+        const userActiveMatch = await getUserActiveMatch(player_id);
+        if (userActiveMatch) {
+            return reply.code(400).send({ error: 'You are already in a match' });
         }
         
         // Calculate skill level for joining player
@@ -215,17 +295,14 @@ module.exports = async function (fastify, opts) {
         
         // Create match between the two players
         const matchId = generateMatchId();
-        activeMatches.set(matchId, {
-            id: matchId,
-            player1: { ...targetPlayer, accepted: false, progress: null },
-            player2: { ...joiningPlayer, accepted: false, progress: null },
-            mode: targetPlayer.mode,
-            status: 'pending',
-            createdAt: Date.now()
-        });
+        await createActiveMatch(matchId, {
+            id: targetPlayer.user_id,
+            username: targetPlayer.username,
+            skillLevel: targetPlayer.skill_level
+        }, joiningPlayer, targetPlayer.mode);
         
         // Remove target player from queue
-        matchmakingQueue.delete(target_player_id);
+        await removeFromQueue(target_player_id);
         
         console.log(`Match created: ${targetPlayer.username} vs ${joiningPlayer.username} in ${targetPlayer.mode} mode`);
         
@@ -233,9 +310,9 @@ module.exports = async function (fastify, opts) {
             success: true,
             matchId: matchId,
             opponent: {
-                id: targetPlayer.id,
+                id: targetPlayer.user_id,
                 username: targetPlayer.username,
-                skillLevel: targetPlayer.skillLevel
+                skillLevel: targetPlayer.skill_level
             },
             mode: targetPlayer.mode
         });
