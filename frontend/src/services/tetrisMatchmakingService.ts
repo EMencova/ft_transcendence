@@ -102,9 +102,18 @@ class TetrisMatchmakingService {
 		console.log('Joining existing match:', { opponentId, mode })
 
 		try {
+			// First, check if we're currently in queue and leave if we are
+			try {
+				await this.leaveQueue()
+				console.log('Left existing queue before joining match')
+			} catch (error) {
+				// It's OK if we weren't in queue, just continue
+				console.log('Not in queue, continuing to join match')
+			}
+
 			const response = await apiService.post('/tetris-matchmaking/join-match', {
 				player_id: currentUserId,
-				target_player_id: opponentId,
+				target_player_id: parseInt(opponentId), // Ensure it's a number
 				mode: mode
 			})
 
@@ -118,7 +127,7 @@ class TetrisMatchmakingService {
 					this.emit('match_found', {
 						matchId: response.matchId,
 						opponent: response.opponent || { username: 'Opponent' },
-						mode: mode
+						mode: response.mode || mode // Use the mode from response (which is the target player's mode)
 					})
 				}, 100)
 
@@ -127,7 +136,7 @@ class TetrisMatchmakingService {
 					this.emit('tournament_start', {
 						matchId: response.matchId,
 						opponent: response.opponent || { username: 'Opponent' },
-						mode: mode
+						mode: response.mode || mode // Use the mode from response
 					})
 				}, 500)
 			}
@@ -146,7 +155,7 @@ class TetrisMatchmakingService {
 		if (!currentUserId) return
 
 		this.stopPolling()
-		await apiService.delete(`/tetris-matchmaking/queue/${currentUserId}`)
+		await apiService.delete(`/tetris-matchmaking/queue/${currentUserId}`, { skipContentType: true })
 	}
 
 	async getQueueStatus(): Promise<any> {
