@@ -61,7 +61,7 @@ class TetrisMatchmakingService {
 		console.log('Joining queue with:', { player_id: currentUserId, mode })
 
 		try {
-			const response = await apiService.post('/matchmaking/queue', {
+			const response = await apiService.post('/tetris-matchmaking/queue', {
 				player_id: currentUserId,
 				mode: mode
 			})
@@ -102,9 +102,9 @@ class TetrisMatchmakingService {
 		console.log('Joining existing match:', { opponentId, mode })
 
 		try {
-			const response = await apiService.post('/matchmaking/join-match', {
+			const response = await apiService.post('/tetris-matchmaking/join-match', {
 				player_id: currentUserId,
-				opponent_id: opponentId,
+				target_player_id: opponentId,
 				mode: mode
 			})
 
@@ -146,11 +146,11 @@ class TetrisMatchmakingService {
 		if (!currentUserId) return
 
 		this.stopPolling()
-		await apiService.delete(`/matchmaking/queue/${currentUserId}`)
+		await apiService.delete(`/tetris-matchmaking/queue/${currentUserId}`)
 	}
 
 	async getQueueStatus(): Promise<any> {
-		const response = await apiService.get('/matchmaking/queue')
+		const response = await apiService.get('/tetris-matchmaking/queue')
 		return response
 	}
 
@@ -162,7 +162,7 @@ class TetrisMatchmakingService {
 		console.log('Getting matchmaking status for user:', currentUserId)
 
 		try {
-			const response = await apiService.get(`/matchmaking/status/${currentUserId}`)
+			const response = await apiService.get(`/tetris-matchmaking/status/${currentUserId}`)
 			console.log('Matchmaking status response:', response)
 			return response
 		} catch (error) {
@@ -174,7 +174,7 @@ class TetrisMatchmakingService {
 	async respondToMatch(matchId: string, response: 'accept' | 'decline'): Promise<void> {
 		if (!currentUserId) return
 
-		await apiService.post(`/matchmaking/match/${matchId}/response`, {
+		await apiService.post(`/tetris-matchmaking/match/${matchId}/response`, {
 			player_id: currentUserId,
 			response: response
 		})
@@ -195,7 +195,7 @@ class TetrisMatchmakingService {
 	async updateMatchProgress(matchId: string, score: number, level: number, lines: number, isGameOver = false): Promise<void> {
 		if (!currentUserId) return
 
-		await apiService.post(`/matchmaking/match/${matchId}/progress`, {
+		await apiService.post(`/tetris-matchmaking/match/${matchId}/progress`, {
 			player_id: currentUserId,
 			score: score,
 			level: level,
@@ -205,7 +205,7 @@ class TetrisMatchmakingService {
 	}
 
 	async getMatchStatus(matchId: string): Promise<any> {
-		const response = await apiService.get(`/matchmaking/match/${matchId}`)
+		const response = await apiService.get(`/tetris-matchmaking/match/${matchId}`)
 		return response
 	}
 
