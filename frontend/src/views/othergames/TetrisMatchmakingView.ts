@@ -70,8 +70,37 @@ export function TetrisMatchmakingView(container: HTMLElement) {
                 </div>
             </div>
             
+            <!-- Pending Matches Section -->
+            <div id="pendingMatchesSection" class="bg-[#1a1a1a] rounded-lg p-6 shadow-md border border-orange-700 mb-6 hidden">
+                <h4 class="text-orange-400 font-semibold mb-4 flex items-center">
+                    🔔 Pending Matches
+                </h4>
+                <p class="text-gray-300 mb-4">Matches waiting for action</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Waiting for You -->
+                    <div class="bg-orange-900/10 border border-orange-500/30 rounded-lg p-4">
+                        <h5 class="text-orange-400 font-semibold mb-3 flex items-center">
+                            🎮 Your Turn
+                        </h5>
+                        <div id="waitingForYouList" class="space-y-3">
+                            <!-- Matches waiting for user will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Waiting for Opponent -->
+                    <div class="bg-blue-900/10 border border-blue-500/30 rounded-lg p-4">
+                        <h5 class="text-blue-400 font-semibold mb-3 flex items-center">
+                            ⏳ Waiting for Opponent
+                        </h5>
+                        <div id="waitingForOpponentList" class="space-y-3">
+                            <!-- Matches waiting for opponent will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Create Match Section -->
                 <div class="bg-[#1a1a1a] rounded-lg p-6 shadow-md border border-gray-700">
                     <h4 class="text-orange-400 font-semibold mb-4 flex items-center">
                         ➕ Create Match
@@ -136,13 +165,13 @@ export function TetrisMatchmakingView(container: HTMLElement) {
                 </div>
             </div>
 
-            <!-- Join Match Confirmation Modal -->
+            <!-- Join Match Options Modal -->
             <div id="joinMatchModal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center hidden z-50">
                 <div class="bg-[#1a1a1a] rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
                     <h3 class="text-xl font-bold text-white mb-4">🎮 Join Match</h3>
                     <div id="matchDetails" class="mb-6">
-                        <p class="text-gray-300 mb-2">Do you want to join this match?</p>
-                        <div class="bg-zinc-800 p-4 rounded border border-gray-600">
+                        <p class="text-gray-300 mb-4">Choose how you want to play this match:</p>
+                        <div class="bg-zinc-800 p-4 rounded border border-gray-600 mb-4">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-gray-400">Opponent:</span>
                                 <span id="modalOpponentName" class="text-white font-semibold">-</span>
@@ -156,12 +185,57 @@ export function TetrisMatchmakingView(container: HTMLElement) {
                                 <span id="modalOpponentSkill" class="text-green-400">-</span>
                             </div>
                         </div>
+                        
+                        <!-- Play Options -->
+                        <div class="space-y-3">
+                            <div class="bg-green-900/20 border border-green-500/30 rounded-lg p-4 hover:bg-green-900/30 transition-colors cursor-pointer" id="playNowOption">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">⚡</span>
+                                    <div>
+                                        <h4 class="text-green-400 font-semibold">Play Now (Both Present)</h4>
+                                        <p class="text-gray-300 text-sm">Play simultaneously if both players are available</p>
+                                        <p class="text-green-200 text-xs mt-1">⚠️ Opponent must confirm with password</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 hover:bg-blue-900/30 transition-colors cursor-pointer" id="playLaterOption">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">⏰</span>
+                                    <div>
+                                        <h4 class="text-blue-400 font-semibold">Play Later (Turn-based)</h4>
+                                        <p class="text-gray-300 text-sm">Take turns playing when convenient</p>
+                                        <p class="text-blue-200 text-xs mt-1">✅ No need for opponent to be online</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="flex space-x-3">
-                        <button id="confirmJoinBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold">
-                            ✅ Join Match
+                        <button id="cancelJoinBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold">
+                            ❌ Cancel
                         </button>
-                        <button id="cancelJoinBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Opponent Password Confirmation Modal -->
+            <div id="passwordConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center hidden z-50">
+                <div class="bg-[#1a1a1a] rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-4">🔐 Opponent Confirmation</h3>
+                    <div class="mb-6">
+                        <p class="text-gray-300 mb-4">To play simultaneously, <span id="confirmOpponentName" class="text-orange-400 font-semibold">opponent</span> must confirm they are present:</p>
+                        <div class="bg-zinc-800 p-4 rounded border border-gray-600">
+                            <label class="block text-gray-400 text-sm mb-2">Opponent's Password:</label>
+                            <input type="password" id="opponentPasswordInput" class="w-full bg-zinc-700 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none" placeholder="Enter opponent's password">
+                            <p class="text-gray-500 text-xs mt-2">⚠️ This confirms both players are present</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button id="confirmPasswordBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold">
+                            ✅ Confirm & Play Now
+                        </button>
+                        <button id="cancelPasswordBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold">
                             ❌ Cancel
                         </button>
                     </div>
@@ -204,6 +278,7 @@ function initializeMatchmaking() {
 	loadPlayerSkillLevel()
 	loadQueue()
 	loadRecentMatches()
+	loadPendingMatches()
 
 	// Check current user status to restore proper UI state (async, after DOM is ready)
 	setTimeout(() => {
@@ -267,9 +342,10 @@ function setupWebSocketListeners() {
 	// Listen for tournament start events
 	tetrisMatchmakingService.on('tournament_start', (data: any) => {
 		console.log('Tournament starting:', data)
-		// Start the tournament with real opponent data
+		// Start the tournament with real opponent data directly without additional confirmation
 		const selectedMode = TOURNAMENT_MODES.find(mode => mode.id === data.mode)
 		if (selectedMode) {
+			// Go directly to tournament view without any additional modal
 			initTournament({
 				mode: selectedMode.id,
 				opponent: data.opponent.username,
@@ -498,11 +574,16 @@ async function loadPlayerSkillLevel() {
 	if (!skillLevelEl) return
 
 	try {
+		console.log('Loading player skill level...')
 		const status = await tetrisMatchmakingService.getMatchmakingStatus()
-		if (status.skillLevel) {
+		console.log('Skill level status response:', status)
+
+		if (status.skillLevel !== undefined && status.skillLevel !== null) {
 			skillLevelEl.textContent = status.skillLevel.toString()
+			console.log('Skill level set to:', status.skillLevel)
 		} else {
 			skillLevelEl.textContent = 'New Player'
+			console.log('No skill level found, defaulting to "New Player"')
 		}
 	} catch (error) {
 		console.error('Failed to load skill level:', error)
@@ -629,16 +710,119 @@ async function loadRecentMatches() {
 	}
 }
 
+async function loadPendingMatches() {
+	const pendingSection = document.getElementById('pendingMatchesSection')
+	const waitingForYouList = document.getElementById('waitingForYouList')
+	const waitingForOpponentList = document.getElementById('waitingForOpponentList')
+	if (!pendingSection || !waitingForYouList || !waitingForOpponentList) return
+
+	try {
+		// Get real pending matches from the API
+		const pendingMatches = await tetrisMatchmakingService.getPendingMatches()
+
+		// Separate matches by status
+		const waitingForYou = pendingMatches.filter(match => match.status === 'waiting_for_you')
+		const waitingForOpponent = pendingMatches.filter(match => match.status === 'waiting_for_opponent')
+
+		// Show/hide section based on whether there are any pending matches
+		if (pendingMatches.length === 0) {
+			pendingSection.classList.add('hidden')
+			return
+		}
+
+		pendingSection.classList.remove('hidden')
+
+		// Populate "Waiting for You" list
+		if (waitingForYou.length === 0) {
+			waitingForYouList.innerHTML = `
+				<div class="text-center py-6 text-orange-300">
+					<p class="text-sm">🎯 No matches waiting</p>
+					<p class="text-xs text-gray-400 mt-1">All caught up!</p>
+				</div>
+			`
+		} else {
+			waitingForYouList.innerHTML = waitingForYou.map(match => `
+				<div class="bg-orange-900/20 border border-orange-500/30 rounded-lg p-3 cursor-pointer hover:bg-orange-900/30 transition-colors" 
+					 data-match-id="${match.id}">
+					<div class="flex justify-between items-start">
+						<div>
+							<h6 class="text-white font-semibold text-sm">vs ${match.opponent}</h6>
+							<p class="text-gray-400 text-xs">${getModeDisplayName(match.mode)}</p>
+							<p class="text-orange-400 text-xs font-medium mt-1">🎮 Your turn!</p>
+						</div>
+						<div class="text-right text-xs">
+							<p class="text-gray-300">Target to beat:</p>
+							<p class="text-orange-400 font-bold">${match.opponentScore} pts</p>
+							<p class="text-gray-400">${match.opponentLines} lines</p>
+							<p class="text-gray-500 mt-1">${new Date(match.created).toLocaleTimeString()}</p>
+						</div>
+					</div>
+					<p class="text-orange-300 text-xs mt-2 text-center">👆 Click to play</p>
+				</div>
+			`).join('')
+
+			// Add click listeners for "waiting for you" matches
+			waitingForYouList.querySelectorAll('[data-match-id]').forEach(card => {
+				card.addEventListener('click', () => {
+					const matchId = card.getAttribute('data-match-id')
+					if (matchId) {
+						startPendingMatch(matchId)
+					}
+				})
+			})
+		}
+
+		// Populate "Waiting for Opponent" list
+		if (waitingForOpponent.length === 0) {
+			waitingForOpponentList.innerHTML = `
+				<div class="text-center py-6 text-blue-300">
+					<p class="text-sm">⏳ No pending results</p>
+					<p class="text-xs text-gray-400 mt-1">Start some matches!</p>
+				</div>
+			`
+		} else {
+			waitingForOpponentList.innerHTML = waitingForOpponent.map(match => `
+				<div class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
+					<div class="flex justify-between items-start">
+						<div>
+							<h6 class="text-white font-semibold text-sm">vs ${match.opponent}</h6>
+							<p class="text-gray-400 text-xs">${getModeDisplayName(match.mode)}</p>
+							<p class="text-blue-400 text-xs font-medium mt-1">⏳ Waiting for opponent</p>
+						</div>
+						<div class="text-right text-xs">
+							<p class="text-gray-300">Your result:</p>
+							<p class="text-blue-400 font-bold">${match.yourScore} pts</p>
+							<p class="text-gray-400">${match.yourLines} lines</p>
+							<p class="text-gray-500 mt-1">${new Date(match.created).toLocaleTimeString()}</p>
+						</div>
+					</div>
+				</div>
+			`).join('')
+		}
+
+	} catch (error) {
+		console.error('Failed to load pending matches:', error)
+		pendingSection.classList.add('hidden')
+	}
+}
+
+function startPendingMatch(matchId: string) {
+	// TODO: Implement starting a pending match
+	console.log('Starting pending match:', matchId)
+	alert('Starting your turn in the match! (Implementation pending)')
+}
+
 // Modal functions for joining matches
 function showJoinMatchModal(playerId: string, username: string, mode: string, skill: string) {
 	const modal = document.getElementById('joinMatchModal')
 	const opponentName = document.getElementById('modalOpponentName')
 	const matchMode = document.getElementById('modalMatchMode')
 	const opponentSkill = document.getElementById('modalOpponentSkill')
-	const confirmBtn = document.getElementById('confirmJoinBtn')
 	const cancelBtn = document.getElementById('cancelJoinBtn')
+	const playNowOption = document.getElementById('playNowOption')
+	const playLaterOption = document.getElementById('playLaterOption')
 
-	if (!modal || !opponentName || !matchMode || !opponentSkill || !confirmBtn || !cancelBtn) return
+	if (!modal || !opponentName || !matchMode || !opponentSkill || !cancelBtn || !playNowOption || !playLaterOption) return
 
 	// Populate modal data
 	opponentName.textContent = username
@@ -649,8 +833,16 @@ function showJoinMatchModal(playerId: string, username: string, mode: string, sk
 	modal.classList.remove('hidden')
 	modal.classList.add('flex')
 
-	// Set up event listeners
-	confirmBtn.onclick = () => joinMatch(playerId, modal)
+	// Set up event listeners for options
+	playNowOption.onclick = () => {
+		hideJoinMatchModal(modal)
+		showPasswordConfirmModal(playerId, username, mode, skill)
+	}
+
+	playLaterOption.onclick = () => {
+		joinMatchAsync(playerId, modal, 'turn_based')
+	}
+
 	cancelBtn.onclick = () => hideJoinMatchModal(modal)
 
 	// Close modal when clicking outside
@@ -661,19 +853,106 @@ function showJoinMatchModal(playerId: string, username: string, mode: string, sk
 	}
 }
 
+function showPasswordConfirmModal(playerId: string, username: string, mode: string, skill: string) {
+	const modal = document.getElementById('passwordConfirmModal')
+	const confirmOpponentName = document.getElementById('confirmOpponentName')
+	const passwordInput = document.getElementById('opponentPasswordInput') as HTMLInputElement
+	const confirmBtn = document.getElementById('confirmPasswordBtn')
+	const cancelBtn = document.getElementById('cancelPasswordBtn')
+
+	if (!modal || !confirmOpponentName || !passwordInput || !confirmBtn || !cancelBtn) return
+
+	// Populate modal data
+	confirmOpponentName.textContent = username
+	passwordInput.value = ''
+
+	// Show modal
+	modal.classList.remove('hidden')
+	modal.classList.add('flex')
+
+	// Set up event listeners
+	confirmBtn.onclick = async () => {
+		const password = passwordInput.value.trim()
+		if (!password) {
+			alert('Please enter the opponent\'s password')
+			return
+		}
+
+		try {
+			// Verify password and join match for simultaneous play
+			await joinMatchSimultaneous(playerId, password, modal)
+		} catch (error) {
+			console.error('Failed to verify password:', error)
+			alert('Invalid password or failed to join match')
+		}
+	}
+
+	cancelBtn.onclick = () => {
+		hidePasswordConfirmModal(modal)
+		// Return to join options modal
+		showJoinMatchModal(playerId, username, mode, skill)
+	}
+
+	// Close modal when clicking outside
+	modal.onclick = (e) => {
+		if (e.target === modal) {
+			hidePasswordConfirmModal(modal)
+		}
+	}
+
+	// Focus on password input
+	setTimeout(() => passwordInput.focus(), 100)
+}
+
 function hideJoinMatchModal(modal: HTMLElement) {
 	modal.classList.add('hidden')
 	modal.classList.remove('flex')
 }
 
-async function joinMatch(playerId: string, modal: HTMLElement) {
+function hidePasswordConfirmModal(modal: HTMLElement) {
+	modal.classList.add('hidden')
+	modal.classList.remove('flex')
+}
+
+async function joinMatchAsync(playerId: string, modal: HTMLElement, playType: 'turn_based' | 'simultaneous') {
 	try {
-		// Here we would implement the logic to join an existing match
-		// For now, we'll use the existing service but modify it to handle joining
-		await tetrisMatchmakingService.joinExistingMatch(playerId, selectedTournamentMode)
+		// Join match for asynchronous/turn-based play
+		await tetrisMatchmakingService.joinExistingMatch(playerId, selectedTournamentMode, playType)
 
 		hideJoinMatchModal(modal)
-		alert('Successfully joined the match! Tournament will start shortly.')
+
+		if (playType === 'turn_based') {
+			alert('Successfully joined the match! You can play when it\'s your turn.')
+		} else {
+			alert('Successfully joined the match for simultaneous play!')
+		}
+
+		// Refresh the queue to remove the joined match
+		loadQueue()
+		// Load pending matches for this user
+		loadPendingMatches()
+
+	} catch (error) {
+		console.error('Failed to join match:', error)
+		alert('Failed to join match. Please try again.')
+	}
+}
+
+async function joinMatchSimultaneous(playerId: string, password: string, modal: HTMLElement) {
+	try {
+		// Verify password first
+		const passwordVerification = await tetrisMatchmakingService.verifyOpponentPassword(playerId, password)
+
+		if (!passwordVerification.valid) {
+			alert('Invalid password. Please ask your opponent for the correct password.')
+			return
+		}
+
+		// Join match for simultaneous play
+		await tetrisMatchmakingService.joinExistingMatch(playerId, selectedTournamentMode, 'simultaneous')
+
+		hidePasswordConfirmModal(modal)
+		alert('Password confirmed! Both players can now play simultaneously.')
 
 		// Refresh the queue to remove the joined match
 		loadQueue()
