@@ -72,6 +72,22 @@ module.exports = async function (fastify, opts) {
     ]);
   }
 
+  async function createActiveMatchWithPlayType(matchId, player1, player2, mode, playType) {
+    const currentTurn = playType === 'turn_based' ? `player${Math.random() < 0.5 ? '1' : '2'}` : null;
+    const query = `
+      INSERT INTO tetris_active_matches (
+        match_id, player1_id, player1_username, player1_skill_level,
+        player2_id, player2_username, player2_skill_level,
+        mode, play_type, current_turn, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    await runQuery(query, [
+      matchId, player1.id, player1.username, player1.skillLevel,
+      player2.id, player2.username, player2.skillLevel,
+      mode, playType, currentTurn, 'pending', Date.now()
+    ]);
+  }
+
   async function getActiveMatch(matchId) {
     const query = `SELECT * FROM tetris_active_matches WHERE match_id = ?`;
     return await getQuery(query, [matchId]);
@@ -105,7 +121,15 @@ module.exports = async function (fastify, opts) {
   async function getUserActiveMatch(userId) {
     const query = `
       SELECT * FROM tetris_active_matches 
-      WHERE player1_id = ? OR player2_id = ?
+      WHERE (player1_id = ? OR player2_id = ?)
+    `;
+    return await getQuery(query, [userId, userId]);
+  }
+
+  async function getUserSimultaneousMatch(userId) {
+    const query = `
+      SELECT * FROM tetris_active_matches 
+      WHERE (player1_id = ? OR player2_id = ?) AND play_type = 'simultaneous'
     `;
     return await getQuery(query, [userId, userId]);
   }
@@ -114,10 +138,12 @@ module.exports = async function (fastify, opts) {
   fastify.get('/status/:userId', async (request, reply) => {
     try {
         const userId = request.params.userId;
+        console.log(`Getting status for user ${userId}`);
         
         // Check if user is in queue
         const queueStatus = await getQueuePlayer(userId);
         if (queueStatus) {
+            console.log(`User ${userId} is in queue with skill level ${queueStatus.skill_level}`);
             return reply.send({
                 status: 'in_queue',
                 mode: queueStatus.mode,
@@ -138,17 +164,33 @@ module.exports = async function (fastify, opts) {
                 username: activeMatch.player1_username
             };
             
+            // Get user's skill level even when in match
+            const user = await getQuery(`
+                SELECT p.username, 
+                       COALESCE(AVG(th.score), 0) as avg_score,
+                       COUNT(th.id) as games_played,
+                       MAX(th.score) as best_score
+                FROM players p
+                LEFT JOIN tetris_history th ON p.id = th.player_id
+                WHERE p.id = ?
+                GROUP BY p.id, p.username
+            `, [userId]);
+
+            const skillLevel = user ? calculateSkillLevel(user.avg_score, user.games_played, user.best_score) : 100;
+            console.log(`User ${userId} in match, calculated skill level: ${skillLevel}`);
+            
             return reply.send({
                 status: 'in_match',
                 matchId: activeMatch.match_id,
-                opponent: opponent
+                opponent: opponent,
+                skillLevel: skillLevel
             });
         }
 
         // Get user's skill level from database
         const user = await getQuery(`
             SELECT p.username, 
-                   COALESCE(AVG(th.level), 1) as avg_level,
+                   COALESCE(AVG(th.score), 0) as avg_score,
                    COUNT(th.id) as games_played,
                    MAX(th.score) as best_score
             FROM players p
@@ -157,7 +199,9 @@ module.exports = async function (fastify, opts) {
             GROUP BY p.id, p.username
         `, [userId]);
 
-        const skillLevel = user ? calculateSkillLevel(user.avg_level, user.games_played, user.best_score) : 100;
+        const skillLevel = user ? calculateSkillLevel(user.avg_score, user.games_played, user.best_score) : 100;
+        console.log(`User ${userId} idle state - user data:`, user);
+        console.log(`User ${userId} calculated skill level: ${skillLevel}`);
         
         reply.send({ 
             status: 'idle',
@@ -177,7 +221,7 @@ module.exports = async function (fastify, opts) {
         // Get user info and skill level
         const user = await getQuery(`
             SELECT p.username, 
-                   COALESCE(AVG(th.level), 1) as avg_level,
+                   COALESCE(AVG(th.score), 0) as avg_score,
                    COUNT(th.id) as games_played,
                    MAX(th.score) as best_score
             FROM players p
@@ -191,7 +235,7 @@ module.exports = async function (fastify, opts) {
         }
         
         // Calculate skill level based on stats
-        const skillLevel = calculateSkillLevel(user.avg_level, user.games_played, user.best_score);
+        const skillLevel = calculateSkillLevel(user.avg_score, user.games_played, user.best_score);
         
         // Add to queue (database)
         await addToQueue(player_id, user.username, skillLevel, mode);
@@ -245,12 +289,14 @@ module.exports = async function (fastify, opts) {
   // Join an existing match from the queue
   fastify.post('/join-match', async (request, reply) => {
     try {
-        const { player_id, target_player_id } = request.body;
+        console.log('Join match request body:', request.body);
+        const { player_id, target_player_id, play_type = 'simultaneous' } = request.body;
+        console.log('Extracted parameters:', { player_id, target_player_id, play_type });
         
         // Get user info for the joining player
         const user = await getQuery(`
             SELECT p.username, 
-                   COALESCE(AVG(th.level), 1) as avg_level,
+                   COALESCE(AVG(th.score), 0) as avg_score,
                    COUNT(th.id) as games_played,
                    MAX(th.score) as best_score
             FROM players p
@@ -265,24 +311,23 @@ module.exports = async function (fastify, opts) {
         
         // Check if target player is still in queue
         const targetPlayer = await getQueuePlayer(target_player_id);
+        console.log('Target player in queue:', targetPlayer);
         if (!targetPlayer) {
+            console.log(`Target player ${target_player_id} not found in queue`);
             return reply.code(404).send({ error: 'Target player no longer in queue' });
         }
         
         // Check if joining player is already in queue or match
         const joiningPlayerInQueue = await getQueuePlayer(player_id);
-        if (joiningPlayerInQueue) {
-            return reply.code(400).send({ error: 'You are already in queue' });
-        }
+        console.log('Joining player already in queue:', joiningPlayerInQueue);
+        // Note: It's OK if the joining player is in queue, they can join another player's match
+        // We only need to check if they're already in an active match
         
-        // Check if user is already in an active match
-        const userActiveMatch = await getUserActiveMatch(player_id);
-        if (userActiveMatch) {
-            return reply.code(400).send({ error: 'You are already in a match' });
-        }
+        // For local multiplayer, users can have multiple matches since they play physically together
+        // No restrictions on active matches since gameplay is local, not remote
         
         // Calculate skill level for joining player
-        const skillLevel = calculateSkillLevel(user.avg_level, user.games_played, user.best_score);
+        const skillLevel = calculateSkillLevel(user.avg_score, user.games_played, user.best_score);
         
         // Create the joining player object
         const joiningPlayer = {
@@ -295,14 +340,19 @@ module.exports = async function (fastify, opts) {
         
         // Create match between the two players
         const matchId = generateMatchId();
-        await createActiveMatch(matchId, {
+        await createActiveMatchWithPlayType(matchId, {
             id: targetPlayer.user_id,
             username: targetPlayer.username,
             skillLevel: targetPlayer.skill_level
-        }, joiningPlayer, targetPlayer.mode);
+        }, joiningPlayer, targetPlayer.mode, play_type);
         
         // Remove target player from queue
         await removeFromQueue(target_player_id);
+        
+        // Remove joining player from queue if they were also in queue
+        if (joiningPlayerInQueue) {
+            await removeFromQueue(player_id);
+        }
         
         console.log(`Match created: ${targetPlayer.username} vs ${joiningPlayer.username} in ${targetPlayer.mode} mode`);
         
@@ -422,13 +472,14 @@ module.exports = async function (fastify, opts) {
   });
 
   // Helper Functions
-  function calculateSkillLevel(avgLevel, gamesPlayed, bestScore) {
-      // Simple skill calculation - can be made more sophisticated
-      const levelFactor = (avgLevel || 1) * 100;
-      const experienceFactor = Math.min(gamesPlayed * 10, 200);
-      const scoreFactor = (bestScore || 0) / 100;
+  function calculateSkillLevel(avgScore, gamesPlayed, bestScore) {
+      // Simple skill calculation based on average score and games played
+      const scoreFactor = (avgScore || 0) / 10;  // Divide by 10 to normalize score values
+      const experienceFactor = Math.min(gamesPlayed * 20, 200);  // Cap at 200 points
+      const bestScoreFactor = (bestScore || 0) / 100;  // Bonus for high scores
       
-      return Math.floor(levelFactor + experienceFactor + scoreFactor);
+      const skillLevel = Math.floor(scoreFactor + experienceFactor + bestScoreFactor);
+      return Math.max(skillLevel, 100);  // Minimum skill level of 100
   }
 
   function tryFindMatch(playerId, mode) {
@@ -530,6 +581,209 @@ module.exports = async function (fastify, opts) {
       // Clean up
       activeMatches.delete(matchId);
   }
+
+  // Verify opponent password for simultaneous play
+  fastify.post('/verify-password', async (request, reply) => {
+    try {
+        const { target_player_id, password } = request.body;
+        console.log('Password verification request:', { target_player_id, password: '***' });
+        
+        // Get the target player's password from database
+        const user = await getQuery(`
+            SELECT password FROM players WHERE id = ?
+        `, [target_player_id]);
+        
+        if (!user) {
+            console.log(`User ${target_player_id} not found`);
+            return reply.code(404).send({ error: 'User not found' });
+        }
+        
+        // Use bcrypt to verify password since passwords are hashed
+        const bcrypt = require('bcrypt');
+        const isValid = await bcrypt.compare(password, user.password);
+        
+        console.log(`Password verification for user ${target_player_id}: ${isValid ? 'SUCCESS' : 'FAILED'}`);
+        
+        reply.send({ 
+            valid: isValid,
+            message: isValid ? 'Password verified' : 'Invalid password'
+        });
+        
+    } catch (error) {
+        console.error('Error verifying password:', error);
+        reply.code(500).send({ error: 'Failed to verify password' });
+    }
+  });
+
+  // Get pending matches for a user
+  fastify.get('/pending-matches/:userId', async (request, reply) => {
+    try {
+        const userId = parseInt(request.params.userId);
+        
+        const matches = await allQuery(`
+            SELECT 
+                match_id,
+                player1_id,
+                player2_id,
+                CASE 
+                    WHEN player1_id = ? THEN player2_username
+                    ELSE player1_username 
+                END as opponent_name,
+                mode,
+                play_type,
+                current_turn,
+                status,
+                CASE 
+                    WHEN player1_id = ? THEN player1_turn_completed
+                    ELSE player2_turn_completed 
+                END as user_turn_completed,
+                CASE 
+                    WHEN player1_id = ? THEN player2_turn_completed
+                    ELSE player1_turn_completed 
+                END as opponent_turn_completed,
+                CASE 
+                    WHEN player1_id = ? THEN player2_score
+                    ELSE player1_score 
+                END as opponent_score,
+                CASE 
+                    WHEN player1_id = ? THEN player2_lines
+                    ELSE player1_lines 
+                END as opponent_lines,
+                CASE 
+                    WHEN player1_id = ? THEN player1_score
+                    ELSE player2_score 
+                END as user_score,
+                CASE 
+                    WHEN player1_id = ? THEN player1_lines
+                    ELSE player2_lines 
+                END as user_lines,
+                created_at
+            FROM tetris_active_matches 
+            WHERE (player1_id = ? OR player2_id = ?) 
+            AND status IN ('pending', 'in_progress', 'waiting_for_turn')
+            ORDER BY created_at DESC
+        `, [userId, userId, userId, userId, userId, userId, userId, userId, userId]);
+        
+        const pendingMatches = matches.map(match => {
+            let status = 'waiting_for_opponent';
+            
+            if (match.play_type === 'turn_based') {
+                // Determine if user is player1 or player2
+                const userIsPlayer1 = match.player1_id == userId;
+                
+                // Check if it's the user's turn
+                if ((match.current_turn === 'player1' && userIsPlayer1) ||
+                    (match.current_turn === 'player2' && !userIsPlayer1)) {
+                    // It's the user's turn
+                    if (!match.user_turn_completed) {
+                        status = 'waiting_for_you';
+                    }
+                } else {
+                    // It's the opponent's turn
+                    status = 'waiting_for_opponent';
+                }
+            } else if (match.play_type === 'simultaneous') {
+                // For simultaneous games
+                if (!match.user_turn_completed) {
+                    status = 'waiting_for_you';
+                } else if (!match.opponent_turn_completed) {
+                    status = 'waiting_for_opponent';
+                } else {
+                    status = 'both_completed';
+                }
+            }
+            
+            return {
+                id: match.match_id,
+                opponent: match.opponent_name,
+                mode: match.mode,
+                playType: match.play_type,
+                status: status,
+                opponentScore: match.opponent_score || 0,
+                opponentLines: match.opponent_lines || 0,
+                yourScore: match.user_score || 0,
+                yourLines: match.user_lines || 0,
+                created: new Date(match.created_at)
+            };
+        });
+        
+        reply.send({ matches: pendingMatches });
+        
+    } catch (error) {
+        console.error('Error getting pending matches:', error);
+        reply.code(500).send({ error: 'Failed to get pending matches' });
+    }
+  });
+
+  // Update match turn completion
+  fastify.post('/match/:matchId/complete-turn', async (request, reply) => {
+    try {
+        const { matchId } = request.params;
+        const { player_id, score, level, lines } = request.body;
+        
+        const match = await getActiveMatch(matchId);
+        if (!match) {
+            return reply.code(404).send({ error: 'Match not found' });
+        }
+        
+        if (match.play_type !== 'turn_based') {
+            return reply.code(400).send({ error: 'This match is not turn-based' });
+        }
+        
+        const isPlayer1 = match.player1_id === parseInt(player_id);
+        const playerPrefix = isPlayer1 ? 'player1_' : 'player2_';
+        
+        // Update player's results and mark turn as completed
+        await runQuery(`
+            UPDATE tetris_active_matches 
+            SET ${playerPrefix}score = ?, 
+                ${playerPrefix}level = ?, 
+                ${playerPrefix}lines = ?, 
+                ${playerPrefix}turn_completed = 1,
+                status = CASE 
+                    WHEN ${isPlayer1 ? 'player2_turn_completed' : 'player1_turn_completed'} = 1 
+                    THEN 'completed' 
+                    ELSE 'waiting_for_turn' 
+                END
+            WHERE match_id = ?
+        `, [score, level, lines, matchId]);
+        
+        // Check if both players have completed their turns
+        const updatedMatch = await getActiveMatch(matchId);
+        if (updatedMatch.player1_turn_completed && updatedMatch.player2_turn_completed) {
+            // Both turns completed, determine winner and finish match
+            const winner = updatedMatch.player1_score > updatedMatch.player2_score ? 'player1' : 
+                          updatedMatch.player2_score > updatedMatch.player1_score ? 'player2' : null;
+            
+            // Save to history
+            await runQuery(`
+                INSERT INTO tetris_tournament_matches (
+                    player1_id, player2_id, mode, winner_id,
+                    player1_score, player1_level, player1_lines,
+                    player2_score, player2_level, player2_lines
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+                updatedMatch.player1_id, updatedMatch.player2_id, updatedMatch.mode,
+                winner === 'player1' ? updatedMatch.player1_id : 
+                winner === 'player2' ? updatedMatch.player2_id : null,
+                updatedMatch.player1_score, updatedMatch.player1_level, updatedMatch.player1_lines,
+                updatedMatch.player2_score, updatedMatch.player2_level, updatedMatch.player2_lines
+            ]);
+            
+            // Remove from active matches
+            await deleteActiveMatch(matchId);
+        }
+        
+        reply.send({ 
+            success: true,
+            matchCompleted: updatedMatch.player1_turn_completed && updatedMatch.player2_turn_completed
+        });
+        
+    } catch (error) {
+        console.error('Error completing turn:', error);
+        reply.code(500).send({ error: 'Failed to complete turn' });
+    }
+  });
 
   function generateMatchId() {
       return Date.now().toString(36) + Math.random().toString(36).substr(2);
