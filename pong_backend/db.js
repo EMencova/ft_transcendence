@@ -235,6 +235,7 @@ function setupDb(fastify) {
         player1_level INTEGER DEFAULT 1,
         player1_lines INTEGER DEFAULT 0,
         player1_game_over BOOLEAN DEFAULT 0,
+        player1_turn_completed BOOLEAN DEFAULT 0,
         player2_id INTEGER NOT NULL,
         player2_username TEXT NOT NULL,
         player2_skill_level INTEGER NOT NULL,
@@ -243,8 +244,11 @@ function setupDb(fastify) {
         player2_level INTEGER DEFAULT 1,
         player2_lines INTEGER DEFAULT 0,
         player2_game_over BOOLEAN DEFAULT 0,
+        player2_turn_completed BOOLEAN DEFAULT 0,
         mode TEXT NOT NULL,
+        play_type TEXT DEFAULT 'simultaneous',
         status TEXT DEFAULT 'pending',
+        current_turn TEXT DEFAULT NULL,
         created_at INTEGER NOT NULL,
         FOREIGN KEY (player1_id) REFERENCES players(id),
         FOREIGN KEY (player2_id) REFERENCES players(id)
@@ -278,6 +282,43 @@ function setupDb(fastify) {
     (err) => {
       if (err && !err.message.includes("duplicate column name")) {
         console.error("Failed to alter table:", err.message);
+      }
+    }
+  );
+
+  // Add new columns for flexible play modes to tetris_active_matches
+  db.run(
+    `ALTER TABLE tetris_active_matches ADD COLUMN play_type TEXT DEFAULT 'simultaneous'`,
+    (err) => {
+      if (err && !err.message.includes("duplicate column name")) {
+        console.error("Failed to add play_type column:", err.message);
+      }
+    }
+  );
+
+  db.run(
+    `ALTER TABLE tetris_active_matches ADD COLUMN current_turn TEXT DEFAULT NULL`,
+    (err) => {
+      if (err && !err.message.includes("duplicate column name")) {
+        console.error("Failed to add current_turn column:", err.message);
+      }
+    }
+  );
+
+  db.run(
+    `ALTER TABLE tetris_active_matches ADD COLUMN player1_turn_completed BOOLEAN DEFAULT 0`,
+    (err) => {
+      if (err && !err.message.includes("duplicate column name")) {
+        console.error("Failed to add player1_turn_completed column:", err.message);
+      }
+    }
+  );
+
+  db.run(
+    `ALTER TABLE tetris_active_matches ADD COLUMN player2_turn_completed BOOLEAN DEFAULT 0`,
+    (err) => {
+      if (err && !err.message.includes("duplicate column name")) {
+        console.error("Failed to add player2_turn_completed column:", err.message);
       }
     }
   );
