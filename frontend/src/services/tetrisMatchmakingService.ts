@@ -94,51 +94,43 @@ class TetrisMatchmakingService {
 		}
 	}
 
-	async joinExistingMatch(opponentId: string, mode: string): Promise<{ success: boolean; matchId?: string }> {
+	async joinExistingMatch(opponentId: string, mode: string, playType: 'simultaneous' | 'turn_based' = 'simultaneous'): Promise<{ success: boolean; matchId?: string }> {
 		if (!currentUserId) {
 			throw new Error('User not logged in')
 		}
 
-		console.log('Joining existing match:', { opponentId, mode })
+		console.log('Joining existing match with:', {
+			player_id: currentUserId,
+			target_player_id: opponentId,
+			play_type: playType
+		})
 
 		try {
-			// First, check if we're currently in queue and leave if we are
-			try {
-				await this.leaveQueue()
-				console.log('Left existing queue before joining match')
-			} catch (error) {
-				// It's OK if we weren't in queue, just continue
-				console.log('Not in queue, continuing to join match')
-			}
-
 			const response = await apiService.post('/tetris-matchmaking/join-match', {
 				player_id: currentUserId,
-				target_player_id: parseInt(opponentId), // Ensure it's a number
-				mode: mode
+				target_player_id: opponentId,
+				play_type: playType
 			})
 
 			console.log('Join match response:', response)
 
-			if (response.success && response.matchId) {
+			if (response.success) {
 				this.currentMatchId = response.matchId
 
-				// Emit match found event immediately since we're joining an existing match
-				setTimeout(() => {
-					this.emit('match_found', {
-						matchId: response.matchId,
-						opponent: response.opponent || { username: 'Opponent' },
-						mode: response.mode || mode // Use the mode from response (which is the target player's mode)
-					})
-				}, 100)
-
-				// Then emit tournament start
-				setTimeout(() => {
-					this.emit('tournament_start', {
-						matchId: response.matchId,
-						opponent: response.opponent || { username: 'Opponent' },
-						mode: response.mode || mode // Use the mode from response
-					})
-				}, 500)
+				// For simultaneous play, start the tournament immediately
+				if (playType === 'simultaneous') {
+					setTimeout(() => {
+						this.emit('tournament_start', {
+							matchId: response.matchId,
+							opponent: response.opponent,
+							mode: mode
+						})
+					}, 500)
+				}
+				// For turn-based play, just confirm the match creation
+				else {
+					console.log('Turn-based match created, waiting for turns')
+				}
 			}
 
 			return {
@@ -147,6 +139,64 @@ class TetrisMatchmakingService {
 			}
 		} catch (error) {
 			console.error('Error joining existing match:', error)
+			throw error
+		}
+	}
+
+	async verifyOpponentPassword(opponentId: string, password: string): Promise<{ valid: boolean; message: string }> {
+		if (!currentUserId) {
+			throw new Error('User not logged in')
+		}
+
+		try {
+			const response = await apiService.post('/tetris-matchmaking/verify-password', {
+				target_player_id: opponentId,
+				password: password
+			})
+
+			return {
+				valid: response.valid,
+				message: response.message
+			}
+		} catch (error) {
+			console.error('Error verifying password:', error)
+			throw error
+		}
+	}
+
+	async getPendingMatches(): Promise<any[]> {
+		if (!currentUserId) {
+			throw new Error('User not logged in')
+		}
+
+		try {
+			const response = await apiService.get(`/tetris-matchmaking/pending-matches/${currentUserId}`)
+			return response.matches || []
+		} catch (error) {
+			console.error('Error getting pending matches:', error)
+			throw error
+		}
+	}
+
+	async completeTurn(matchId: string, score: number, level: number, lines: number): Promise<{ success: boolean; matchCompleted: boolean }> {
+		if (!currentUserId) {
+			throw new Error('User not logged in')
+		}
+
+		try {
+			const response = await apiService.post(`/tetris-matchmaking/match/${matchId}/complete-turn`, {
+				player_id: currentUserId,
+				score: score,
+				level: level,
+				lines: lines
+			})
+
+			return {
+				success: response.success,
+				matchCompleted: response.matchCompleted
+			}
+		} catch (error) {
+			console.error('Error completing turn:', error)
 			throw error
 		}
 	}
@@ -165,84 +215,72 @@ class TetrisMatchmakingService {
 
 	async getMatchmakingStatus(): Promise<any> {
 		if (!currentUserId) {
-			return { status: 'idle' }
+			throw new Error('User not logged in')
 		}
-
-		console.log('Getting matchmaking status for user:', currentUserId)
 
 		try {
 			const response = await apiService.get(`/tetris-matchmaking/status/${currentUserId}`)
-			console.log('Matchmaking status response:', response)
 			return response
 		} catch (error) {
 			console.error('Error getting matchmaking status:', error)
-			return { status: 'idle', skillLevel: 'unknown' }
+			throw error
 		}
 	}
 
-	async respondToMatch(matchId: string, response: 'accept' | 'decline'): Promise<void> {
-		if (!currentUserId) return
+	async respondToMatch(matchId: string, response: 'accept' | 'decline'): Promise<any> {
+		if (!currentUserId) {
+			throw new Error('User not logged in')
+		}
 
-		await apiService.post(`/tetris-matchmaking/match/${matchId}/response`, {
-			player_id: currentUserId,
-			response: response
-		})
+		try {
+			const result = await apiService.post(`/tetris-matchmaking/match/${matchId}/response`, {
+				player_id: currentUserId,
+				response: response
+			})
 
-		// For local multiplayer, automatically start the tournament after accepting
-		if (response === 'accept') {
-			// Emit tournament start event for local multiplayer
-			setTimeout(() => {
-				this.emit('tournament_start', {
-					matchId: matchId,
-					opponent: { username: 'Local Player 2' }, // Placeholder for local opponent
-					mode: 'local'
-				})
-			}, 500)
+			if (response === 'accept') {
+				this.currentMatchId = matchId
+			}
+
+			return result
+		} catch (error) {
+			console.error('Error responding to match:', error)
+			throw error
 		}
 	}
 
-	async updateMatchProgress(matchId: string, score: number, level: number, lines: number, isGameOver = false): Promise<void> {
-		if (!currentUserId) return
+	// Update match progress (used for local multiplayer)
+	async updateMatchProgress(matchId: string, progress: any): Promise<any> {
+		if (!currentUserId) {
+			throw new Error('User not logged in')
+		}
 
-		await apiService.post(`/tetris-matchmaking/match/${matchId}/progress`, {
-			player_id: currentUserId,
-			score: score,
-			level: level,
-			lines: lines,
-			isGameOver: isGameOver
-		})
+		try {
+			const response = await apiService.post(`/tetris-matchmaking/match/${matchId}/progress`, {
+				player_id: currentUserId,
+				...progress
+			})
+			return response
+		} catch (error) {
+			console.error('Error updating match progress:', error)
+			throw error
+		}
 	}
 
-	async getMatchStatus(matchId: string): Promise<any> {
-		const response = await apiService.get(`/tetris-matchmaking/match/${matchId}`)
-		return response
-	}
-
-	// Method to manually end a match (for local multiplayer)
-	endMatch(matchId: string, winnerId?: string, finalStats?: any) {
-		console.log(`Match ${matchId} ended`)
-		this.currentMatchId = null
-		this.stopPolling()
-
-		this.emit('tournament_end', {
-			winner: winnerId || null,
-			isWinner: winnerId === String(currentUserId),
-			finalStats: finalStats || { player: { score: 0, lines: 0 }, opponent: { score: 0, lines: 0 } }
-		})
-	}
-
-	// Cleanup
-	disconnect() {
-		this.stopPolling()
-		this.listeners.clear()
-		this.currentMatchId = null
+	// Get current match information
+	async getMatchInfo(matchId: string): Promise<any> {
+		try {
+			const response = await apiService.get(`/tetris-matchmaking/match/${matchId}`)
+			return response
+		} catch (error) {
+			console.error('Error getting match info:', error)
+			throw error
+		}
 	}
 }
 
-// Singleton instance
+// Create and export the singleton instance
 export const tetrisMatchmakingService = new TetrisMatchmakingService()
 
-// Clean up on page unload
-window.addEventListener('beforeunload', () => {
-	tetrisMatchmakingService.disconnect()
-})
+// Also export the class for potential future use
+export { TetrisMatchmakingService }
