@@ -73,7 +73,10 @@ module.exports = async function (fastify, opts) {
   }
 
   async function createActiveMatchWithPlayType(matchId, player1, player2, mode, playType) {
-    const currentTurn = playType === 'turn_based' ? `player${Math.random() < 0.5 ? '1' : '2'}` : null;
+    // For turn-based games, player2 (the joining player) goes first
+    const currentTurn = playType === 'turn_based' ? 'player2' : null;
+    console.log(`Creating ${playType} match ${matchId}: ${player1.username} vs ${player2.username}, current_turn: ${currentTurn}`);
+    
     const query = `
       INSERT INTO tetris_active_matches (
         match_id, player1_id, player1_username, player1_skill_level,
@@ -290,7 +293,10 @@ module.exports = async function (fastify, opts) {
   fastify.post('/join-match', async (request, reply) => {
     try {
         console.log('Join match request body:', request.body);
+        console.log('Raw play_type from body:', request.body.play_type);
+        console.log('play_type type:', typeof request.body.play_type);
         const { player_id, target_player_id, play_type = 'simultaneous' } = request.body;
+        console.log('After destructuring - play_type:', play_type);
         console.log('Extracted parameters:', { player_id, target_player_id, play_type });
         
         // Get user info for the joining player
@@ -715,6 +721,94 @@ module.exports = async function (fastify, opts) {
     }
   });
 
+  // Submit turn result (alias for complete-turn for frontend compatibility)
+  fastify.post('/match/:matchId/turn', async (request, reply) => {
+    try {
+        const { matchId } = request.params;
+        const { player_id, score, level, lines } = request.body;
+        
+        console.log('Turn submission received:', { matchId, player_id, score, level, lines });
+        
+        const match = await getActiveMatch(matchId);
+        if (!match) {
+            console.log(`Match ${matchId} not found`);
+            return reply.code(404).send({ error: 'Match not found' });
+        }
+        
+        if (match.play_type !== 'turn_based') {
+            console.log(`Match ${matchId} is not turn-based (type: ${match.play_type})`);
+            return reply.code(400).send({ error: 'This match is not turn-based' });
+        }
+        
+        const isPlayer1 = match.player1_id === parseInt(player_id);
+        const playerPrefix = isPlayer1 ? 'player1_' : 'player2_';
+        
+        console.log(`Updating match ${matchId} for ${isPlayer1 ? 'player1' : 'player2'}`);
+        
+        // Update player's results and mark turn as completed
+        await runQuery(`
+            UPDATE tetris_active_matches 
+            SET ${playerPrefix}score = ?, 
+                ${playerPrefix}level = ?, 
+                ${playerPrefix}lines = ?, 
+                ${playerPrefix}turn_completed = 1,
+                current_turn = CASE 
+                    WHEN ${isPlayer1 ? 'player2_turn_completed' : 'player1_turn_completed'} = 1 
+                    THEN current_turn
+                    ELSE '${isPlayer1 ? 'player2' : 'player1'}'
+                END,
+                status = CASE 
+                    WHEN ${isPlayer1 ? 'player2_turn_completed' : 'player1_turn_completed'} = 1 
+                    THEN 'completed' 
+                    ELSE 'waiting_for_turn' 
+                END
+            WHERE match_id = ?
+        `, [score, level, lines, matchId]);
+        
+        console.log(`Turn data saved for match ${matchId}`);
+        
+        // Check if both players have completed their turns
+        const updatedMatch = await getActiveMatch(matchId);
+        if (updatedMatch.player1_turn_completed && updatedMatch.player2_turn_completed) {
+            console.log(`Both players completed turns in match ${matchId}, finalizing...`);
+            
+            // Both turns completed, determine winner and finish match
+            const winner = updatedMatch.player1_score > updatedMatch.player2_score ? 'player1' : 
+                          updatedMatch.player2_score > updatedMatch.player1_score ? 'player2' : null;
+            
+            // Save to history
+            await runQuery(`
+                INSERT INTO tetris_tournament_matches (
+                    player1_id, player2_id, mode, winner_id,
+                    player1_score, player1_level, player1_lines,
+                    player2_score, player2_level, player2_lines
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+                updatedMatch.player1_id, updatedMatch.player2_id, updatedMatch.mode,
+                winner === 'player1' ? updatedMatch.player1_id : 
+                winner === 'player2' ? updatedMatch.player2_id : null,
+                updatedMatch.player1_score, updatedMatch.player1_level, updatedMatch.player1_lines,
+                updatedMatch.player2_score, updatedMatch.player2_level, updatedMatch.player2_lines
+            ]);
+            
+            console.log(`Match ${matchId} saved to history, removing from active matches`);
+            
+            // Remove from active matches
+            await deleteActiveMatch(matchId);
+        }
+        
+        reply.send({ 
+            success: true,
+            matchCompleted: updatedMatch.player1_turn_completed && updatedMatch.player2_turn_completed,
+            message: 'Turn submitted successfully'
+        });
+        
+    } catch (error) {
+        console.error('Error submitting turn:', error);
+        reply.code(500).send({ error: 'Failed to submit turn' });
+    }
+  });
+
   // Update match turn completion
   fastify.post('/match/:matchId/complete-turn', async (request, reply) => {
     try {
@@ -740,6 +834,11 @@ module.exports = async function (fastify, opts) {
                 ${playerPrefix}level = ?, 
                 ${playerPrefix}lines = ?, 
                 ${playerPrefix}turn_completed = 1,
+                current_turn = CASE 
+                    WHEN ${isPlayer1 ? 'player2_turn_completed' : 'player1_turn_completed'} = 1 
+                    THEN current_turn
+                    ELSE '${isPlayer1 ? 'player2' : 'player1'}'
+                END,
                 status = CASE 
                     WHEN ${isPlayer1 ? 'player2_turn_completed' : 'player1_turn_completed'} = 1 
                     THEN 'completed' 
@@ -782,6 +881,98 @@ module.exports = async function (fastify, opts) {
     } catch (error) {
         console.error('Error completing turn:', error);
         reply.code(500).send({ error: 'Failed to complete turn' });
+    }
+  });
+
+  // Get completed matches for a player (Recent Matches)
+  fastify.get('/completed-matches/:playerId', async (request, reply) => {
+    try {
+        const { playerId } = request.params;
+        console.log(`Getting completed matches for player ${playerId}`);
+        
+        // Query the tetris_tournament_matches table which contains completed matches
+        const query = `
+            SELECT 
+                ttm.player1_id,
+                ttm.player2_id,
+                ttm.mode,
+                ttm.created_at,
+                ttm.winner_id,
+                ttm.player1_score,
+                ttm.player2_score,
+                ttm.player1_level,
+                ttm.player2_level,
+                ttm.player1_lines,
+                ttm.player2_lines,
+                CASE 
+                    WHEN ttm.player1_id = ? THEN p2.username
+                    ELSE p1.username 
+                END as opponent,
+                CASE 
+                    WHEN ttm.player1_id = ? THEN ttm.player1_score
+                    ELSE ttm.player2_score 
+                END as user_score,
+                CASE 
+                    WHEN ttm.player1_id = ? THEN ttm.player2_score
+                    ELSE ttm.player1_score 
+                END as opponent_score,
+                CASE 
+                    WHEN ttm.player1_id = ? THEN ttm.player1_lines
+                    ELSE ttm.player2_lines 
+                END as user_lines,
+                CASE 
+                    WHEN ttm.player1_id = ? THEN ttm.player2_lines
+                    ELSE ttm.player1_lines 
+                END as opponent_lines,
+                CASE 
+                    WHEN ttm.player1_id = ? THEN ttm.player1_level
+                    ELSE ttm.player2_level 
+                END as user_level,
+                CASE 
+                    WHEN ttm.player1_id = ? THEN ttm.player2_level
+                    ELSE ttm.player1_level 
+                END as opponent_level,
+                CASE 
+                    WHEN ttm.winner_id = ? THEN 'won'
+                    WHEN ttm.winner_id IS NULL THEN 'tie'
+                    ELSE 'lost'
+                END as result
+            FROM tetris_tournament_matches ttm
+            JOIN players p1 ON ttm.player1_id = p1.id
+            JOIN players p2 ON ttm.player2_id = p2.id
+            WHERE (ttm.player1_id = ? OR ttm.player2_id = ?) 
+            ORDER BY ttm.created_at DESC 
+            LIMIT 10
+        `;
+        
+        const matches = await allQuery(query, [
+            playerId, playerId, playerId, playerId, playerId, playerId, playerId, 
+            playerId, playerId, playerId
+        ]);
+        
+        console.log(`Found ${matches.length} completed matches for player ${playerId}`);
+        
+        const formattedMatches = matches.map(match => ({
+            matchId: `${match.player1_id}_${match.player2_id}_${match.created_at}`, // Generate unique ID
+            opponent: match.opponent,
+            mode: match.mode,
+            playType: 'turn_based', // Most completed matches will be turn-based
+            result: match.result,
+            userScore: match.user_score || 0,
+            opponentScore: match.opponent_score || 0,
+            userLines: match.user_lines || 0,
+            opponentLines: match.opponent_lines || 0,
+            userLevel: match.user_level || 1,
+            opponentLevel: match.opponent_level || 1,
+            completedAt: match.created_at, // Use created_at as completion time
+            createdAt: match.created_at
+        }));
+        
+        reply.send({ matches: formattedMatches });
+        
+    } catch (error) {
+        console.error('Error getting completed matches:', error);
+        reply.code(500).send({ error: 'Failed to get completed matches' });
     }
   });
 
