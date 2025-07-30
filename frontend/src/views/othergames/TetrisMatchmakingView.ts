@@ -805,9 +805,35 @@ async function loadPendingMatches() {
 }
 
 function startPendingMatch(matchId: string) {
-	// TODO: Implement starting a pending match
-	console.log('Starting pending match:', matchId)
-	alert('Starting your turn in the match! (Implementation pending)')
+	// Find the match in the pending matches to get the data
+	tetrisMatchmakingService.getPendingMatches()
+		.then(pendingMatches => {
+			const match = pendingMatches.find(m => m.id === matchId)
+			if (match) {
+				const matchData = {
+					matchId: matchId,
+					opponent: match.opponent,
+					mode: match.mode,
+					isFirstPlayer: true, // This is your turn to play
+					opponentScore: match.opponentScore,
+					opponentLines: match.opponentLines
+				}
+
+				// Import and show the turn-based game view
+				import('./TurnBasedGameView').then(({ TurnBasedGameView }) => {
+					const mainContent = document.getElementById("mainContent")
+					if (mainContent) {
+						TurnBasedGameView(mainContent, matchData)
+					}
+				})
+			} else {
+				alert('Match not found. Please refresh and try again.')
+			}
+		})
+		.catch(error => {
+			console.error('Failed to load pending match:', error)
+			alert('Failed to load match details. Please try again.')
+		})
 }
 
 // Modal functions for joining matches
@@ -914,13 +940,34 @@ function hidePasswordConfirmModal(modal: HTMLElement) {
 
 async function joinMatchAsync(playerId: string, modal: HTMLElement, playType: 'turn_based' | 'simultaneous') {
 	try {
+		// Get opponent info from the modal before joining
+		const opponentName = document.getElementById('modalOpponentName')?.textContent || 'Unknown Player'
+
 		// Join match for asynchronous/turn-based play
-		await tetrisMatchmakingService.joinExistingMatch(playerId, selectedTournamentMode, playType)
+		const joinResult = await tetrisMatchmakingService.joinExistingMatch(playerId, selectedTournamentMode, playType)
 
 		hideJoinMatchModal(modal)
 
 		if (playType === 'turn_based') {
-			alert('Successfully joined the match! You can play when it\'s your turn.')
+			// Navigate to turn-based game view
+			const matchData = {
+				matchId: joinResult.matchId || playerId, // Use the returned match ID or fallback
+				opponent: opponentName,
+				mode: selectedTournamentMode,
+				isFirstPlayer: true, // Player joining is the one who plays first (player2 in database)
+				opponentScore: undefined, // Will be loaded if opponent already played
+				opponentLines: undefined
+			}
+
+			console.log('Navigating to turn-based game with data:', matchData)
+
+			// Import and show the turn-based game view
+			import('./TurnBasedGameView').then(({ TurnBasedGameView }) => {
+				const mainContent = document.getElementById("mainContent")
+				if (mainContent) {
+					TurnBasedGameView(mainContent, matchData)
+				}
+			})
 		} else {
 			alert('Successfully joined the match for simultaneous play!')
 		}

@@ -17,7 +17,9 @@ interface TetrisGameConfig {
 	}
 	saveScore?: boolean
 	tournamentMode?: boolean
+	showAlerts?: boolean
 	onScoreUpdate?: (score: number, level: number, lines: number) => void
+	onGameOver?: (finalScore: number, finalLevel: number, finalLines: number) => void
 }
 
 export function initTetrisGame(config: TetrisGameConfig = {}) {
@@ -37,7 +39,9 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
 		},
 		saveScore: true,
 		tournamentMode: false,
-		onScoreUpdate: undefined as ((score: number, level: number, lines: number) => void) | undefined
+		showAlerts: true,
+		onScoreUpdate: undefined as ((score: number, level: number, lines: number) => void) | undefined,
+		onGameOver: undefined as ((finalScore: number, finalLevel: number, finalLines: number) => void) | undefined
 	}
 
 	// Merge provided config with defaults
@@ -335,6 +339,11 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
         paused = false
         if (animationId) cancelAnimationFrame(animationId)
 
+		// Call onGameOver callback if provided (before any processing)
+		if (finalConfig.onGameOver) {
+			finalConfig.onGameOver(score, level, linesCleared)
+		}
+
 		// Handle tournament game over if in tournament mode
 		if (finalConfig.tournamentMode) {
 			handleTournamentGameOver()
@@ -353,7 +362,9 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
             }
         }
 
-        alert(`Game Over!${savedMessage}\nFinal Score: ${score}\nLevel Reached: ${level}\nLines Cleared: ${linesCleared}`)
+		if (finalConfig.showAlerts) {
+			alert(`Game Over!${savedMessage}\nFinal Score: ${score}\nLevel Reached: ${level}\nLines Cleared: ${linesCleared}`)
+		}
 
         // Reset the board
         for (let y = 0;y < BOARD_HEIGHT;y++) {

@@ -104,13 +104,18 @@ class TetrisMatchmakingService {
 			target_player_id: opponentId,
 			play_type: playType
 		})
+		console.log('DEBUG: playType parameter value:', playType)
+		console.log('DEBUG: playType type:', typeof playType)
 
 		try {
-			const response = await apiService.post('/tetris-matchmaking/join-match', {
+			const payload = {
 				player_id: currentUserId,
 				target_player_id: opponentId,
 				play_type: playType
-			})
+			}
+			console.log('DEBUG: Sending payload:', JSON.stringify(payload, null, 2))
+
+			const response = await apiService.post('/tetris-matchmaking/join-match', payload)
 
 			console.log('Join match response:', response)
 
@@ -274,6 +279,27 @@ class TetrisMatchmakingService {
 			return response
 		} catch (error) {
 			console.error('Error getting match info:', error)
+			throw error
+		}
+	}
+
+	// Submit turn result for turn-based matches
+	async submitTurnResult(matchId: string, results: { score: number; level: number; lines: number }): Promise<any> {
+		if (!currentUserId) {
+			throw new Error('User not logged in')
+		}
+
+		try {
+			const response = await apiService.post(`/tetris-matchmaking/match/${matchId}/turn`, {
+				player_id: currentUserId,
+				score: results.score,
+				level: results.level,
+				lines: results.lines,
+				completed_at: new Date().toISOString()
+			})
+			return response
+		} catch (error) {
+			console.error('Error submitting turn result:', error)
 			throw error
 		}
 	}
