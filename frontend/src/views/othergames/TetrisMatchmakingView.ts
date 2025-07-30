@@ -679,32 +679,53 @@ async function loadRecentMatches() {
 	if (!recentMatches) return
 
 	try {
-		// Simulate recent matches data
-		const mockMatches = [
-			{ opponent: 'TetrisPro', result: 'win', score: '850 - 720', date: new Date(Date.now() - 3600000) },
-			{ opponent: 'BlockMaster', result: 'loss', score: '640 - 890', date: new Date(Date.now() - 7200000) },
-			{ opponent: 'LineClearer', result: 'win', score: '920 - 650', date: new Date(Date.now() - 10800000) },
-		]
+		// Get real completed matches from the API
+		const completedMatches = await tetrisMatchmakingService.getCompletedMatches()
 
-		if (mockMatches.length === 0) {
-			return // Keep the default "No recent matches" message
+		if (completedMatches.length === 0) {
+			recentMatches.innerHTML = `
+				<div class="text-center py-4">
+					<p class="text-gray-400">No recent matches</p>
+					<p class="text-gray-500 text-sm mt-1">Play some matches to see your history here</p>
+				</div>
+			`
+			return
 		}
 
-		recentMatches.innerHTML = mockMatches.map(match => `
-            <div class="flex justify-between items-center p-3 bg-zinc-700 rounded">
-                <div>
-                    <p class="text-white font-medium">vs ${match.opponent}</p>
-                    <p class="text-gray-400 text-sm">${match.date.toLocaleDateString()}</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-${match.result === 'win' ? 'green' : 'red'}-400 font-semibold capitalize">${match.result}</p>
-                    <p class="text-gray-400 text-sm">${match.score}</p>
-                </div>
-            </div>
-        `).join('')
+		recentMatches.innerHTML = completedMatches.map(match => {
+			const matchDate = new Date(match.completedAt)
+			const resultColor = match.result === 'won' ? 'green' : match.result === 'lost' ? 'red' : 'gray'
+			const resultIcon = match.result === 'won' ? '🏆' : match.result === 'lost' ? '💔' : '⚖️'
+			const playTypeIcon = match.playType === 'turn_based' ? '⏰' : '⚡'
+
+			return `
+				<div class="flex justify-between items-center p-3 bg-zinc-700 rounded border-l-4 border-${resultColor}-500">
+					<div class="flex-1">
+						<div class="flex items-center gap-2">
+							<span class="text-lg">${resultIcon}</span>
+							<p class="text-white font-medium">vs ${match.opponent}</p>
+							<span class="text-xs text-gray-400">${playTypeIcon} ${match.playType === 'turn_based' ? 'Turn-based' : 'Simultaneous'}</span>
+						</div>
+						<p class="text-gray-400 text-sm">${matchDate.toLocaleDateString()} at ${matchDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+						<p class="text-gray-500 text-xs">${getModeDisplayName(match.mode)}</p>
+					</div>
+					<div class="text-right">
+						<p class="text-${resultColor}-400 font-semibold capitalize">${match.result === 'won' ? 'Victory' : match.result === 'lost' ? 'Defeat' : 'Tie'}</p>
+						<p class="text-white text-sm">${match.userScore} - ${match.opponentScore}</p>
+						<p class="text-gray-400 text-xs">${match.userLines} lines cleared</p>
+					</div>
+				</div>
+			`
+		}).join('')
 
 	} catch (error) {
 		console.error('Failed to load recent matches:', error)
+		recentMatches.innerHTML = `
+			<div class="text-center py-4 text-red-400">
+				<p>❌ Failed to load recent matches</p>
+				<p class="text-sm text-gray-500 mt-1">Please try refreshing</p>
+			</div>
+		`
 	}
 }
 
@@ -976,6 +997,8 @@ async function joinMatchAsync(playerId: string, modal: HTMLElement, playType: 't
 		loadQueue()
 		// Load pending matches for this user
 		loadPendingMatches()
+		// Load recent matches to show completed matches
+		loadRecentMatches()
 
 	} catch (error) {
 		console.error('Failed to join match:', error)
@@ -1001,6 +1024,8 @@ async function joinMatchSimultaneous(playerId: string, password: string, modal: 
 
 		// Refresh the queue to remove the joined match
 		loadQueue()
+		// Load recent matches to show completed matches
+		loadRecentMatches()
 
 	} catch (error) {
 		console.error('Failed to join match:', error)
