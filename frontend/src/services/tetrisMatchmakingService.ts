@@ -303,6 +303,21 @@ class TetrisMatchmakingService {
 			throw error
 		}
 	}
+
+	// Get completed matches (Recent Matches)
+	async getCompletedMatches(): Promise<any[]> {
+		if (!currentUserId) {
+			throw new Error('User not logged in')
+		}
+
+		try {
+			const response = await apiService.get(`/tetris-matchmaking/completed-matches/${currentUserId}`)
+			return response.matches || []
+		} catch (error) {
+			console.error('Error getting completed matches:', error)
+			throw error
+		}
+	}
 }
 
 // Create and export the singleton instance
