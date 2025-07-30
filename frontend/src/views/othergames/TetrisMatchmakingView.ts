@@ -977,25 +977,20 @@ export function cleanupMatchmaking() {
 function createTetrisInstance(container: HTMLElement, playerId: string, controls: any) {
 	// Create unique IDs for this player that match the display IDs (above the game area)
 	const canvasId = `tetrisCanvas_${playerId}`
-	const startBtnId = `startTetrisBtn_${playerId}`
 	const scoreId = `${playerId}Score`
 	const levelId = `${playerId}Level`
 	const linesId = `${playerId}Lines`
 
-	// Create the game HTML with unique IDs (only canvas and start button)
+	// Create the game HTML with unique IDs (no individual start button)
 	container.innerHTML = `
 		<div class="tetris-game-container flex flex-col items-center">
-			<button id="${startBtnId}" class="mb-4 w-32 bg-orange-500 text-white px-3 py-2 rounded hover:bg-orange-600 text-sm">
-				Start Game
-			</button>
 			<canvas id="${canvasId}" width="280" height="600" class="border border-gray-500 bg-black"></canvas>
 		</div>
 	`
 
 	// Initialize the Tetris game using the modularized function
-	initTetrisGame({
+	const gameInstance = initTetrisGame({
 		canvasId: canvasId,
-		startButtonId: startBtnId,
 		keyControls: {
 			left: controls.moveLeft === 'KeyA' ? 'a' : 'ArrowLeft',
 			right: controls.moveRight === 'KeyD' ? 'd' : 'ArrowRight',
@@ -1015,6 +1010,8 @@ function createTetrisInstance(container: HTMLElement, playerId: string, controls
 			if (linesEl) linesEl.textContent = lines.toString()
 		}
 	})
+
+	return gameInstance
 }
 // Function to start a real simultaneous match with both players
 function startSimultaneousMatch(config: { mode: string; opponent: string; winCondition: string }) {
@@ -1026,21 +1023,30 @@ function startSimultaneousMatch(config: { mode: string; opponent: string; winCon
             <!-- Match Header -->
             <div class="max-w-7xl mx-auto mb-6">
                 <div class="bg-[#1a1a1a] rounded-lg p-4 border border-gray-700">
-                    <div class="flex justify-between items-center">
-                        <div class="text-center">
-                            <h2 class="text-2xl font-bold text-white mb-2">🎮 Simultaneous Match</h2>
-                            <p class="text-gray-300">Mode: ${getModeDisplayName(config.mode)}</p>
-                            <p class="text-gray-400 text-sm">${config.winCondition}</p>
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <!-- Left Column: Match Info -->
+                        <div class="text-left">
+                            <h2 class="text-xl font-bold text-white mb-1">🎮 Simultaneous Match</h2>
+                            <p class="text-gray-300 text-sm">Mode: ${getModeDisplayName(config.mode)}</p>
+                            <p class="text-gray-400 text-xs">${config.winCondition}</p>
                         </div>
+                        
+                        <!-- Center Column: Timer & Controls -->
                         <div class="text-center">
                             <p class="text-green-400 font-bold text-lg">🟢 LIVE MATCH</p>
-                            <p class="text-gray-400 text-sm">Both players active</p>
-                            <div class="mt-2 bg-gray-800 rounded-lg px-4 py-2">
+                            <p class="text-gray-400 text-xs mb-2">Both players active</p>
+                            <div class="bg-gray-800 rounded-lg px-4 py-2 mb-3 inline-block">
                                 <p class="text-white text-2xl font-bold" id="matchTimer">00:00</p>
                                 <p class="text-gray-400 text-xs">Match Time</p>
                             </div>
+                            <br>
+                            <button id="startBothGamesBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold">
+                                🚀 Start Both Games
+                            </button>
                         </div>
-                        <div class="text-center">
+                        
+                        <!-- Right Column: Match Controls -->
+                        <div class="text-right">
                             <button id="endMatchBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
                                 🏳️ End Match
                             </button>
@@ -1106,41 +1112,35 @@ function startSimultaneousMatch(config: { mode: string; opponent: string; winCon
                             <p>🔵 A/D: Move Left/Right</p>
                             <p>🔵 W: Rotate</p>
                             <p>🔵 S: Soft Drop</p>
-                            <p>🔵 Space: Start/Pause/Hard Drop</p>
+                            <p>🔵 Space: Hard Drop</p>
                         </div>
                         <div>
                             <p class="text-orange-400 font-semibold">Player 2 Controls:</p>
                             <p>🟠 ←/→: Move Left/Right</p>
                             <p>🟠 ↑: Rotate</p>
                             <p>🟠 ↓: Soft Drop</p>
-                            <p>🟠 Enter: Start/Pause/Hard Drop</p>
+                            <p>🟠 Enter: Hard Drop</p>
                         </div>
                     </div>
-                    <p class="text-gray-400 mt-4">Both players start when either player hits their start key!</p>
+                    <p class="text-gray-400 mt-4">Both players start together when you click the "Start Both Games" button in the header!</p>
                 </div>
             </div>
         </div>
     `
 
+	// Variables to store game instances and timer
+	let gameInstance1: any = null
+	let gameInstance2: any = null
+	let timerInterval: any = null
+	let matchStartTime: number
+
 	// Start both games
 	const player1GameArea = document.getElementById("player1GameArea")
 	const player2GameArea = document.getElementById("player2GameArea")
 
-	// Start match timer
-	let matchStartTime = Date.now()
-	let timerInterval = setInterval(() => {
-		const elapsed = Date.now() - matchStartTime
-		const minutes = Math.floor(elapsed / 60000)
-		const seconds = Math.floor((elapsed % 60000) / 1000)
-		const timerEl = document.getElementById("matchTimer")
-		if (timerEl) {
-			timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-		}
-	}, 1000)
-
 	if (player1GameArea && player2GameArea) {
 		// Create unique game instances with different control schemes
-		createTetrisInstance(player1GameArea, 'player1', {
+		gameInstance1 = createTetrisInstance(player1GameArea, 'player1', {
 			moveLeft: 'KeyA',
 			moveRight: 'KeyD',
 			rotate: 'KeyW',
@@ -1149,7 +1149,7 @@ function startSimultaneousMatch(config: { mode: string; opponent: string; winCon
 			pause: 'Space'
 		})
 
-		createTetrisInstance(player2GameArea, 'player2', {
+		gameInstance2 = createTetrisInstance(player2GameArea, 'player2', {
 			moveLeft: 'ArrowLeft',
 			moveRight: 'ArrowRight',
 			rotate: 'ArrowUp',
@@ -1159,15 +1159,64 @@ function startSimultaneousMatch(config: { mode: string; opponent: string; winCon
 		})
 	}
 
+	// Setup start both games button
+	const startBothGamesBtn = document.getElementById("startBothGamesBtn") as HTMLButtonElement
+	if (startBothGamesBtn) {
+		startBothGamesBtn.addEventListener('click', () => {
+			// Start both games simultaneously
+			if (gameInstance1 && gameInstance1.startGame) {
+				gameInstance1.startGame()
+			}
+			if (gameInstance2 && gameInstance2.startGame) {
+				gameInstance2.startGame()
+			}
+
+			// Start match timer
+			matchStartTime = Date.now()
+			timerInterval = setInterval(() => {
+				const elapsed = Date.now() - matchStartTime
+				const minutes = Math.floor(elapsed / 60000)
+				const seconds = Math.floor((elapsed % 60000) / 1000)
+				const timerEl = document.getElementById("matchTimer")
+				if (timerEl) {
+					timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+				}
+			}, 1000)
+
+			// Update button text and disable
+			startBothGamesBtn.textContent = '🎮 Games Running...'
+			startBothGamesBtn.disabled = true
+			startBothGamesBtn.classList.add('opacity-50', 'cursor-not-allowed')
+		})
+	}
+
 	// Setup end match button
 	const endMatchBtn = document.getElementById("endMatchBtn")
 	if (endMatchBtn) {
 		endMatchBtn.addEventListener('click', () => {
 			if (confirm('Are you sure you want to end this match?')) {
+				// Stop and cleanup both games
+				if (gameInstance1 && gameInstance1.stopGame) {
+					gameInstance1.stopGame()
+				}
+				if (gameInstance2 && gameInstance2.stopGame) {
+					gameInstance2.stopGame()
+				}
+
 				// Clear timer
 				if (timerInterval) {
 					clearInterval(timerInterval)
+					timerInterval = null
 				}
+
+				// Clear any remaining game intervals/timeouts
+				// This helps prevent background Game Over alerts
+				const highestId = setTimeout(() => { }, 0)
+				for (let i = 0;i < highestId;i++) {
+					clearTimeout(i)
+					clearInterval(i)
+				}
+
 				// Go back to matchmaking
 				window.location.hash = '#othergames/matchmaking'
 			}

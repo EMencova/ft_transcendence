@@ -557,4 +557,55 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
     if (resetBtn) (resetBtn as HTMLButtonElement).disabled = true
 
     update()
+
+	// Return control methods for external use
+	return {
+		startGame: () => {
+			if (!started) {
+				started = true
+				paused = false
+				if (startBtn) startBtn.textContent = "Stop Game"
+				if (pauseBtn) {
+					(pauseBtn as HTMLButtonElement).disabled = false
+					pauseBtn.classList.remove("opacity-50", "cursor-not-allowed")
+				}
+				if (resetBtn) {
+					(resetBtn as HTMLButtonElement).disabled = false
+					resetBtn.classList.remove("opacity-50", "cursor-not-allowed")
+				}
+				canvas.focus()
+				canvas.tabIndex = 0
+				lastTime = performance.now()
+				animationId = window.requestAnimationFrame(update)
+			}
+		},
+		stopGame: () => {
+			if (started) {
+				started = false
+				paused = false
+				if (startBtn) startBtn.textContent = "Start Game"
+				if (animationId) cancelAnimationFrame(animationId)
+				animationId = null
+				// Reset scores
+				board = Array.from({ length: BOARD_HEIGHT }, () => Array(BOARD_WIDTH).fill(0))
+				score = 0
+				level = 1
+				linesCleared = 0
+				updateScore()
+				piece.shape = pieces[Math.floor(Math.random() * pieces.length)]
+				piece.position = { x: 5, y: 0 }
+				ctx.clearRect(0, 0, canvas.width, canvas.height)
+				if (pauseBtn) {
+					(pauseBtn as HTMLButtonElement).disabled = true
+					pauseBtn.classList.add("opacity-50", "cursor-not-allowed")
+					pauseBtn.textContent = "Pause"
+				}
+				if (resetBtn) {
+					(resetBtn as HTMLButtonElement).disabled = true
+					resetBtn.classList.add("opacity-50", "cursor-not-allowed")
+				}
+			}
+		},
+		isRunning: () => started && !paused
+	}
 }
