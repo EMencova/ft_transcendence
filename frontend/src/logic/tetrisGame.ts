@@ -1,10 +1,53 @@
-import { currentUser } from "./auth"
 import { saveTetrisScore } from "../views/othergames/TetrisHistoryView"
 import { handleTournamentGameOver, updateTournamentProgress } from "../views/othergames/TetrisTournamentView"
+import { currentUser } from "./auth"
 
-export function initTetrisGame() {
+interface TetrisGameConfig {
+	canvasId?: string
+	scoreId?: string
+	levelId?: string
+	startButtonId?: string
+	pauseButtonId?: string
+	resetButtonId?: string
+	keyControls?: {
+		left: string
+		right: string
+		down: string
+		rotate: string
+	}
+	saveScore?: boolean
+	tournamentMode?: boolean
+	onScoreUpdate?: (score: number, level: number, lines: number) => void
+}
+
+export function initTetrisGame(config: TetrisGameConfig = {}) {
+	// Default configuration
+	const defaultConfig = {
+		canvasId: "tetrisCanvas",
+		scoreId: "tetrisScore",
+		levelId: "tetrisLevel",
+		startButtonId: "startTetrisBtn",
+		pauseButtonId: "pauseBtn",
+		resetButtonId: "resetBtn",
+		keyControls: {
+			left: "ArrowLeft",
+			right: "ArrowRight",
+			down: "ArrowDown",
+			rotate: "ArrowUp"
+		},
+		saveScore: true,
+		tournamentMode: false,
+		onScoreUpdate: undefined as ((score: number, level: number, lines: number) => void) | undefined
+	}
+
+	// Merge provided config with defaults
+	const finalConfig = { ...defaultConfig, ...config }
+	if (config.keyControls) {
+		finalConfig.keyControls = { ...defaultConfig.keyControls, ...config.keyControls }
+	}
+
     // Initialize the Tetris game canvas
-    const canvas = document.getElementById("tetrisCanvas") as HTMLCanvasElement
+	const canvas = document.getElementById(finalConfig.canvasId) as HTMLCanvasElement
     if (!canvas) return
 
     const ctx = canvas.getContext("2d")
@@ -148,19 +191,19 @@ export function initTetrisGame() {
         if (!started) return
 
         // Prevent page scrolling when using arrow keys during gameplay
-        if (['ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp'].includes(e.key)) {
+		if (Object.values(finalConfig.keyControls).includes(e.key)) {
             e.preventDefault()
         }
 
-        if (e.key === "ArrowLeft") {
+		if (e.key === finalConfig.keyControls.left) {
             piece.position.x--
             if (checkCollision()) piece.position.x++ // Undo if collision
         }
-        else if (e.key === "ArrowRight") {
+		else if (e.key === finalConfig.keyControls.right) {
             piece.position.x++
             if (checkCollision()) piece.position.x-- // Undo if collision
         }
-        else if (e.key === "ArrowDown") {
+		else if (e.key === finalConfig.keyControls.down) {
             piece.position.y++
             if (checkCollision()) {
                 piece.position.y-- // Undo if collision
@@ -172,7 +215,7 @@ export function initTetrisGame() {
                 updateScore()
             }
         }
-        else if (e.key === "ArrowUp") {
+		else if (e.key === finalConfig.keyControls.rotate) {
             // Rotate the piece
             const rotatedShape = piece.shape[0].map((_, index) =>
                 piece.shape.map(row => row[index]).reverse()
@@ -226,13 +269,20 @@ export function initTetrisGame() {
     }
 
     function updateScore() {
-        const scoreElem = document.getElementById("tetrisScore")
-        const levelElem = document.getElementById("tetrisLevel")
+		const scoreElem = document.getElementById(finalConfig.scoreId)
+		const levelElem = document.getElementById(finalConfig.levelId)
         if (scoreElem) scoreElem.textContent = `Score: ${score}`
         if (levelElem) levelElem.textContent = `Level: ${level}`
 
         // Update tournament progress if in tournament mode
-        updateTournamentProgress(score, level, linesCleared)
+		if (finalConfig.tournamentMode) {
+			updateTournamentProgress(score, level, linesCleared)
+		}
+
+		// Call custom score update callback if provided
+		if (finalConfig.onScoreUpdate) {
+			finalConfig.onScoreUpdate(score, level, linesCleared)
+		}
     }
 
     function updateLevel() {
@@ -242,7 +292,7 @@ export function initTetrisGame() {
             updateScore() // Update the display
 
             // Visual feedback for level up
-            const levelElem = document.getElementById("tetrisLevel")
+			const levelElem = document.getElementById(finalConfig.levelId)
             if (levelElem) {
                 levelElem.classList.add("text-yellow-300")
                 setTimeout(() => {
@@ -285,12 +335,14 @@ export function initTetrisGame() {
         paused = false
         if (animationId) cancelAnimationFrame(animationId)
 
-        // Handle tournament game over
-        handleTournamentGameOver()
+		// Handle tournament game over if in tournament mode
+		if (finalConfig.tournamentMode) {
+			handleTournamentGameOver()
+		}
 
-        // Save score if user is logged in
+		// Save score if user is logged in and saving is enabled
         let savedMessage = ""
-        if (currentUser && score > 0) {
+		if (finalConfig.saveScore && currentUser && score > 0) {
             const saved = await saveTetrisScore(score, level, linesCleared)
             if (saved) {
                 savedMessage = "\nScore saved to your history!"
@@ -320,9 +372,9 @@ export function initTetrisGame() {
         updateScore()
 
         // Reset UI
-        const startBtn = document.getElementById("startTetrisBtn")
-        const pauseBtn = document.getElementById("pauseBtn")
-        const resetBtn = document.getElementById("resetBtn")
+		const startBtn = document.getElementById(finalConfig.startButtonId)
+		const pauseBtn = document.getElementById(finalConfig.pauseButtonId)
+		const resetBtn = document.getElementById(finalConfig.resetButtonId)
 
         if (startBtn) startBtn.textContent = "Start Game"
         if (pauseBtn) {
@@ -362,9 +414,9 @@ export function initTetrisGame() {
     }
 
     // Pause, Reset and Start button logic
-    const pauseBtn = document.getElementById("pauseBtn")
-    const resetBtn = document.getElementById("resetBtn")
-    const startBtn = document.getElementById("startTetrisBtn")
+	const pauseBtn = document.getElementById(finalConfig.pauseButtonId)
+	const resetBtn = document.getElementById(finalConfig.resetButtonId)
+	const startBtn = document.getElementById(finalConfig.startButtonId)
 
     if (pauseBtn) {
         pauseBtn.onclick = () => {

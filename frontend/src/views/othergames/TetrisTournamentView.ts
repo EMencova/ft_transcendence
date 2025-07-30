@@ -1,4 +1,4 @@
-import { TetrisView } from "./TetrisView"
+import { initTetrisGame } from "../../logic/tetrisGame"
 
 interface TournamentConfig {
 	mode: string
@@ -83,7 +83,20 @@ export function startTournamentMatch(config: TournamentConfig) {
                             </div>
                         </div>
                     </div>
-                    <div id="playerGameArea"></div>
+                    <div id="playerGameArea">
+                        <div class="flex flex-col items-center">
+                            <canvas id="playerTetrisCanvas" class="border border-gray-700 bg-gray-900"></canvas>
+                            <div class="flex justify-center text-center space-x-2 mt-2">
+                                <button id="playerStartBtn" class="w-16 bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600 text-xs">Start</button>
+                                <button id="playerPauseBtn" class="w-16 bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600 opacity-50 cursor-not-allowed text-xs" disabled>Pause</button>
+                                <button id="playerResetBtn" class="w-16 bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600 opacity-50 cursor-not-allowed text-xs" disabled>Reset</button>
+                            </div>
+                            <div class="mt-2 text-xs text-gray-400 text-center">
+                                <p class="font-semibold mb-1">Controls (P1):</p>
+                                <p>← → Move • ↓ Soft Drop • ↑ Rotate</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Opponent Side -->
@@ -105,14 +118,17 @@ export function startTournamentMatch(config: TournamentConfig) {
                             </div>
                         </div>
                     </div>
-                    <div id="opponentGameArea" class="relative">
-                        <!-- Simulated opponent game area -->
-                        <div class="w-full h-96 bg-gray-800 rounded border-2 border-gray-600 flex items-center justify-center">
-                            <div class="text-center">
-                                <div class="animate-pulse">
-                                    <div class="text-4xl mb-2">🤖</div>
-                                    <p class="text-gray-400">Opponent Playing...</p>
-                                </div>
+                    <div id="opponentGameArea">
+                        <div class="flex flex-col items-center">
+                            <canvas id="opponentTetrisCanvas" class="border border-gray-700 bg-gray-900"></canvas>
+                            <div class="flex justify-center text-center space-x-2 mt-2">
+                                <button id="opponentStartBtn" class="w-16 bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600 text-xs">Start</button>
+                                <button id="opponentPauseBtn" class="w-16 bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600 opacity-50 cursor-not-allowed text-xs" disabled>Pause</button>
+                                <button id="opponentResetBtn" class="w-16 bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600 opacity-50 cursor-not-allowed text-xs" disabled>Reset</button>
+                            </div>
+                            <div class="mt-2 text-xs text-gray-400 text-center">
+                                <p class="font-semibold mb-1">Controls (P2):</p>
+                                <p>A D Move • S Soft Drop • W Rotate</p>
                             </div>
                         </div>
                     </div>
@@ -130,15 +146,53 @@ export function startTournamentMatch(config: TournamentConfig) {
         </div>
     `
 
-	// Start the player's game
+	// Start both players' games
 	const playerGameArea = document.getElementById("playerGameArea")
+	const opponentGameArea = document.getElementById("opponentGameArea")
+
 	if (playerGameArea) {
-		TetrisView(false, playerGameArea)
+		// Player 1 - Traditional controls (Arrow keys)
+		initTetrisGame({
+			canvasId: "playerTetrisCanvas",
+			scoreId: "playerTournamentScore",
+			levelId: "playerTournamentLevel",
+			startButtonId: "playerStartBtn",
+			pauseButtonId: "playerPauseBtn",
+			resetButtonId: "playerResetBtn",
+			keyControls: {
+				left: "ArrowLeft",
+				right: "ArrowRight",
+				down: "ArrowDown",
+				rotate: "ArrowUp"
+			},
+			saveScore: false,
+			tournamentMode: true
+		})
+	}
+
+	if (opponentGameArea) {
+		// Player 2 - WASD controls
+		initTetrisGame({
+			canvasId: "opponentTetrisCanvas",
+			scoreId: "opponentTournamentScore",
+			levelId: "opponentTournamentLevel",
+			startButtonId: "opponentStartBtn",
+			pauseButtonId: "opponentPauseBtn",
+			resetButtonId: "opponentResetBtn",
+			keyControls: {
+				left: "a",
+				right: "d",
+				down: "s",
+				rotate: "w"
+			},
+			saveScore: false,
+			tournamentMode: false, // Only player 1 should update tournament progress
+			onScoreUpdate: updateOpponentTournamentProgress // Custom callback for opponent
+		})
 	}
 
 	// Start tournament mechanics
 	startTournamentTimer()
-	simulateOpponent()
 	setupTournamentControls()
 }
 
@@ -173,39 +227,6 @@ function startTournamentTimer() {
 	}
 
 	updateTimer()
-}
-
-function simulateOpponent() {
-	if (!tournamentState?.isActive) return
-
-	// Simulate opponent progress
-	setInterval(() => {
-		if (!tournamentState?.isActive) return
-
-		// Random opponent progress
-		const scoreInc = Math.floor(Math.random() * 100) + 50
-		const linesInc = Math.random() < 0.3 ? 1 : 0
-		const levelInc = Math.floor(tournamentState.opponentLines / 10) + 1
-
-		tournamentState.opponentScore += scoreInc
-		tournamentState.opponentLines += linesInc
-		tournamentState.opponentLevel = levelInc
-
-		updateOpponentDisplay()
-		checkWinConditions()
-	}, 2000)
-}
-
-function updateOpponentDisplay() {
-	if (!tournamentState) return
-
-	const scoreEl = document.getElementById("opponentTournamentScore")
-	const levelEl = document.getElementById("opponentTournamentLevel")
-	const linesEl = document.getElementById("opponentTournamentLines")
-
-	if (scoreEl) scoreEl.textContent = tournamentState.opponentScore.toString()
-	if (levelEl) levelEl.textContent = tournamentState.opponentLevel.toString()
-	if (linesEl) linesEl.textContent = tournamentState.opponentLines.toString()
 }
 
 function checkWinConditions() {
@@ -280,6 +301,26 @@ export function updateTournamentProgress(score: number, level: number, lines: nu
 	const scoreEl = document.getElementById("playerTournamentScore")
 	const levelEl = document.getElementById("playerTournamentLevel")
 	const linesEl = document.getElementById("playerTournamentLines")
+
+	if (scoreEl) scoreEl.textContent = score.toString()
+	if (levelEl) levelEl.textContent = level.toString()
+	if (linesEl) linesEl.textContent = lines.toString()
+
+	checkWinConditions()
+}
+
+// Export function to update opponent tournament state
+export function updateOpponentTournamentProgress(score: number, level: number, lines: number) {
+	if (!tournamentState?.isActive) return
+
+	tournamentState.opponentScore = score
+	tournamentState.opponentLevel = level
+	tournamentState.opponentLines = lines
+
+	// Update display
+	const scoreEl = document.getElementById("opponentTournamentScore")
+	const levelEl = document.getElementById("opponentTournamentLevel")
+	const linesEl = document.getElementById("opponentTournamentLines")
 
 	if (scoreEl) scoreEl.textContent = score.toString()
 	if (levelEl) levelEl.textContent = level.toString()

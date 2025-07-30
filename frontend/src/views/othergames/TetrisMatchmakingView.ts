@@ -1,6 +1,6 @@
 import { currentUser, currentUserId } from "../../logic/auth"
+import { initTetrisGame } from "../../logic/tetrisGame"
 import { tetrisMatchmakingService } from "../../services/tetrisMatchmakingService"
-import { startTournamentMatch as initTournament } from "./TetrisTournamentView"
 
 interface TournamentMode {
 	id: string
@@ -341,17 +341,15 @@ function setupWebSocketListeners() {
 
 	// Listen for tournament start events
 	tetrisMatchmakingService.on('tournament_start', (data: any) => {
-		console.log('Tournament starting:', data)
-		// Start the tournament with real opponent data directly without additional confirmation
+		console.log('Simultaneous match starting:', data)
+		// Start the real simultaneous match with both players
 		const selectedMode = TOURNAMENT_MODES.find(mode => mode.id === data.mode)
 		if (selectedMode) {
-			// Go directly to tournament view without any additional modal
-			initTournament({
+			// Use our new simultaneous match function instead of tournament
+			startSimultaneousMatch({
 				mode: selectedMode.id,
 				opponent: data.opponent.username,
-				winCondition: selectedMode.description,
-				timeLimit: selectedMode.id === 'ultra' ? 120 : undefined,
-				targetLines: selectedMode.id === 'sprint' ? 40 : undefined
+				winCondition: selectedMode.description
 			})
 		}
 	})
@@ -973,4 +971,215 @@ export function cleanupMatchmaking() {
 		clearInterval(queueRefreshInterval)
 		queueRefreshInterval = null
 	}
+}
+
+// Function to create a Tetris game instance with unique IDs and custom controls
+function createTetrisInstance(container: HTMLElement, playerId: string, controls: any) {
+	// Create unique IDs for this player that match the display IDs (above the game area)
+	const canvasId = `tetrisCanvas_${playerId}`
+	const startBtnId = `startTetrisBtn_${playerId}`
+	const scoreId = `${playerId}Score`
+	const levelId = `${playerId}Level`
+	const linesId = `${playerId}Lines`
+
+	// Create the game HTML with unique IDs (only canvas and start button)
+	container.innerHTML = `
+		<div class="tetris-game-container flex flex-col items-center">
+			<button id="${startBtnId}" class="mb-4 w-32 bg-orange-500 text-white px-3 py-2 rounded hover:bg-orange-600 text-sm">
+				Start Game
+			</button>
+			<canvas id="${canvasId}" width="280" height="600" class="border border-gray-500 bg-black"></canvas>
+		</div>
+	`
+
+	// Initialize the Tetris game using the modularized function
+	initTetrisGame({
+		canvasId: canvasId,
+		startButtonId: startBtnId,
+		keyControls: {
+			left: controls.moveLeft === 'KeyA' ? 'a' : 'ArrowLeft',
+			right: controls.moveRight === 'KeyD' ? 'd' : 'ArrowRight',
+			down: controls.softDrop === 'KeyS' ? 's' : 'ArrowDown',
+			rotate: controls.rotate === 'KeyW' ? 'w' : 'ArrowUp'
+		},
+		saveScore: false,
+		tournamentMode: false,
+		onScoreUpdate: (score: number, level: number, lines: number) => {
+			// Update the main display elements for this player (above the game area)
+			const scoreEl = document.getElementById(scoreId)
+			const levelEl = document.getElementById(levelId)
+			const linesEl = document.getElementById(linesId)
+
+			if (scoreEl) scoreEl.textContent = score.toString()
+			if (levelEl) levelEl.textContent = level.toString()
+			if (linesEl) linesEl.textContent = lines.toString()
+		}
+	})
+}
+// Function to start a real simultaneous match with both players
+function startSimultaneousMatch(config: { mode: string; opponent: string; winCondition: string }) {
+	const mainContent = document.getElementById("mainContent")
+	if (!mainContent) return
+
+	mainContent.innerHTML = `
+        <div class="min-h-screen bg-gray-900 p-4">
+            <!-- Match Header -->
+            <div class="max-w-7xl mx-auto mb-6">
+                <div class="bg-[#1a1a1a] rounded-lg p-4 border border-gray-700">
+                    <div class="flex justify-between items-center">
+                        <div class="text-center">
+                            <h2 class="text-2xl font-bold text-white mb-2">🎮 Simultaneous Match</h2>
+                            <p class="text-gray-300">Mode: ${getModeDisplayName(config.mode)}</p>
+                            <p class="text-gray-400 text-sm">${config.winCondition}</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-green-400 font-bold text-lg">🟢 LIVE MATCH</p>
+                            <p class="text-gray-400 text-sm">Both players active</p>
+                            <div class="mt-2 bg-gray-800 rounded-lg px-4 py-2">
+                                <p class="text-white text-2xl font-bold" id="matchTimer">00:00</p>
+                                <p class="text-gray-400 text-xs">Match Time</p>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button id="endMatchBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                                🏳️ End Match
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dual Game Area -->
+            <div class="max-w-7xl mx-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Player 1 Area -->
+                    <div class="bg-[#1a1a1a] rounded-lg p-4 border border-blue-500">
+                        <div class="text-center mb-4">
+                            <h3 class="text-xl font-bold text-blue-400">👤 You</h3>
+                            <div class="grid grid-cols-3 gap-2 mt-2 text-sm">
+                                <div class="bg-blue-900/20 p-2 rounded">
+                                    <p class="text-blue-300">Score</p>
+                                    <p id="player1Score" class="text-white font-bold">0</p>
+                                </div>
+                                <div class="bg-blue-900/20 p-2 rounded">
+                                    <p class="text-blue-300">Level</p>
+                                    <p id="player1Level" class="text-white font-bold">1</p>
+                                </div>
+                                <div class="bg-blue-900/20 p-2 rounded">
+                                    <p class="text-blue-300">Lines</p>
+                                    <p id="player1Lines" class="text-white font-bold">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="player1GameArea" class="flex justify-center"></div>
+                    </div>
+
+                    <!-- Player 2 Area -->
+                    <div class="bg-[#1a1a1a] rounded-lg p-4 border border-orange-500">
+                        <div class="text-center mb-4">
+                            <h3 class="text-xl font-bold text-orange-400">👥 ${config.opponent}</h3>
+                            <div class="grid grid-cols-3 gap-2 mt-2 text-sm">
+                                <div class="bg-orange-900/20 p-2 rounded">
+                                    <p class="text-orange-300">Score</p>
+                                    <p id="player2Score" class="text-white font-bold">0</p>
+                                </div>
+                                <div class="bg-orange-900/20 p-2 rounded">
+                                    <p class="text-orange-300">Level</p>
+                                    <p id="player2Level" class="text-white font-bold">1</p>
+                                </div>
+                                <div class="bg-orange-900/20 p-2 rounded">
+                                    <p class="text-orange-300">Lines</p>
+                                    <p id="player2Lines" class="text-white font-bold">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="player2GameArea" class="flex justify-center"></div>
+                    </div>
+                </div>
+
+                <!-- Match Instructions -->
+                <div class="mt-6 bg-[#1a1a1a] rounded-lg p-4 border border-gray-700 text-center">
+                    <p class="text-white font-semibold mb-2">🎮 How to Play Simultaneous Mode</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
+                        <div>
+                            <p class="text-blue-400 font-semibold">Player 1 Controls:</p>
+                            <p>🔵 A/D: Move Left/Right</p>
+                            <p>🔵 W: Rotate</p>
+                            <p>🔵 S: Soft Drop</p>
+                            <p>🔵 Space: Start/Pause/Hard Drop</p>
+                        </div>
+                        <div>
+                            <p class="text-orange-400 font-semibold">Player 2 Controls:</p>
+                            <p>🟠 ←/→: Move Left/Right</p>
+                            <p>🟠 ↑: Rotate</p>
+                            <p>🟠 ↓: Soft Drop</p>
+                            <p>🟠 Enter: Start/Pause/Hard Drop</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 mt-4">Both players start when either player hits their start key!</p>
+                </div>
+            </div>
+        </div>
+    `
+
+	// Start both games
+	const player1GameArea = document.getElementById("player1GameArea")
+	const player2GameArea = document.getElementById("player2GameArea")
+
+	// Start match timer
+	let matchStartTime = Date.now()
+	let timerInterval = setInterval(() => {
+		const elapsed = Date.now() - matchStartTime
+		const minutes = Math.floor(elapsed / 60000)
+		const seconds = Math.floor((elapsed % 60000) / 1000)
+		const timerEl = document.getElementById("matchTimer")
+		if (timerEl) {
+			timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+		}
+	}, 1000)
+
+	if (player1GameArea && player2GameArea) {
+		// Create unique game instances with different control schemes
+		createTetrisInstance(player1GameArea, 'player1', {
+			moveLeft: 'KeyA',
+			moveRight: 'KeyD',
+			rotate: 'KeyW',
+			softDrop: 'KeyS',
+			hardDrop: 'Space',
+			pause: 'Space'
+		})
+
+		createTetrisInstance(player2GameArea, 'player2', {
+			moveLeft: 'ArrowLeft',
+			moveRight: 'ArrowRight',
+			rotate: 'ArrowUp',
+			softDrop: 'ArrowDown',
+			hardDrop: 'Enter',
+			pause: 'Enter'
+		})
+	}
+
+	// Setup end match button
+	const endMatchBtn = document.getElementById("endMatchBtn")
+	if (endMatchBtn) {
+		endMatchBtn.addEventListener('click', () => {
+			if (confirm('Are you sure you want to end this match?')) {
+				// Clear timer
+				if (timerInterval) {
+					clearInterval(timerInterval)
+				}
+				// Go back to matchmaking
+				window.location.hash = '#othergames/matchmaking'
+			}
+		})
+	}
+}
+
+// Expose function globally for testing (temporary)
+; (window as any).testSimultaneousMatch = () => {
+	startSimultaneousMatch({
+		mode: 'sprint',
+		opponent: 'TestPlayer',
+		winCondition: 'First to clear 40 lines'
+	})
 }
