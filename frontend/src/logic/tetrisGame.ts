@@ -3,55 +3,55 @@ import { handleTournamentGameOver, updateTournamentProgress } from "../views/oth
 import { currentUser } from "./auth"
 
 interface TetrisGameConfig {
-	canvasId?: string
-	scoreId?: string
-	levelId?: string
-	startButtonId?: string
-	pauseButtonId?: string
-	resetButtonId?: string
-	keyControls?: {
-		left: string
-		right: string
-		down: string
-		rotate: string
-	}
-	saveScore?: boolean
-	tournamentMode?: boolean
-	showAlerts?: boolean
-	onScoreUpdate?: (score: number, level: number, lines: number) => void
-	onGameOver?: (finalScore: number, finalLevel: number, finalLines: number) => void
+    canvasId?: string
+    scoreId?: string
+    levelId?: string
+    startButtonId?: string
+    pauseButtonId?: string
+    resetButtonId?: string
+    keyControls?: {
+        left: string
+        right: string
+        down: string
+        rotate: string
+    }
+    saveScore?: boolean
+    tournamentMode?: boolean
+    showAlerts?: boolean
+    onScoreUpdate?: (score: number, level: number, lines: number) => void
+    onGameOver?: (finalScore: number, finalLevel: number, finalLines: number) => void
 }
 
 export function initTetrisGame(config: TetrisGameConfig = {}) {
-	// Default configuration
-	const defaultConfig = {
-		canvasId: "tetrisCanvas",
-		scoreId: "tetrisScore",
-		levelId: "tetrisLevel",
-		startButtonId: "startTetrisBtn",
-		pauseButtonId: "pauseBtn",
-		resetButtonId: "resetBtn",
-		keyControls: {
-			left: "ArrowLeft",
-			right: "ArrowRight",
-			down: "ArrowDown",
-			rotate: "ArrowUp"
-		},
-		saveScore: true,
-		tournamentMode: false,
-		showAlerts: true,
-		onScoreUpdate: undefined as ((score: number, level: number, lines: number) => void) | undefined,
-		onGameOver: undefined as ((finalScore: number, finalLevel: number, finalLines: number) => void) | undefined
-	}
+    // Default configuration
+    const defaultConfig = {
+        canvasId: "tetrisCanvas",
+        scoreId: "tetrisScore",
+        levelId: "tetrisLevel",
+        startButtonId: "startTetrisBtn",
+        pauseButtonId: "pauseBtn",
+        resetButtonId: "resetBtn",
+        keyControls: {
+            left: "ArrowLeft",
+            right: "ArrowRight",
+            down: "ArrowDown",
+            rotate: "ArrowUp"
+        },
+        saveScore: true,
+        tournamentMode: false,
+        showAlerts: true,
+        onScoreUpdate: undefined as ((score: number, level: number, lines: number) => void) | undefined,
+        onGameOver: undefined as ((finalScore: number, finalLevel: number, finalLines: number) => void) | undefined
+    }
 
-	// Merge provided config with defaults
-	const finalConfig = { ...defaultConfig, ...config }
-	if (config.keyControls) {
-		finalConfig.keyControls = { ...defaultConfig.keyControls, ...config.keyControls }
-	}
+    // Merge provided config with defaults
+    const finalConfig = { ...defaultConfig, ...config }
+    if (config.keyControls) {
+        finalConfig.keyControls = { ...defaultConfig.keyControls, ...config.keyControls }
+    }
 
     // Initialize the Tetris game canvas
-	const canvas = document.getElementById(finalConfig.canvasId) as HTMLCanvasElement
+    const canvas = document.getElementById(finalConfig.canvasId) as HTMLCanvasElement
     if (!canvas) return
 
     const ctx = canvas.getContext("2d")
@@ -125,9 +125,12 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
     let dropInterval = 0
     let lastTime = 0
 
-    // Calculate drop speed based on level (starts at 1000ms, decreases by 50ms per level, minimum 100ms)
+    // // Calculate drop speed based on level (starts at 1000ms, decreases by 50ms per level, minimum 100ms)
+    // function getDropSpeed() {
+    //     return Math.max(100, 1000 - (level - 1) * 50)
+    // }
     function getDropSpeed() {
-        return Math.max(100, 1000 - (level - 1) * 50)
+        return Math.max(100, 1000 * Math.pow(0.85, level - 1))
     }
 
     function update(time = 0) {
@@ -195,19 +198,19 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
         if (!started) return
 
         // Prevent page scrolling when using arrow keys during gameplay
-		if (Object.values(finalConfig.keyControls).includes(e.key)) {
+        if (Object.values(finalConfig.keyControls).includes(e.key)) {
             e.preventDefault()
         }
 
-		if (e.key === finalConfig.keyControls.left) {
+        if (e.key === finalConfig.keyControls.left) {
             piece.position.x--
             if (checkCollision()) piece.position.x++ // Undo if collision
         }
-		else if (e.key === finalConfig.keyControls.right) {
+        else if (e.key === finalConfig.keyControls.right) {
             piece.position.x++
             if (checkCollision()) piece.position.x-- // Undo if collision
         }
-		else if (e.key === finalConfig.keyControls.down) {
+        else if (e.key === finalConfig.keyControls.down) {
             piece.position.y++
             if (checkCollision()) {
                 piece.position.y-- // Undo if collision
@@ -219,7 +222,7 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
                 updateScore()
             }
         }
-		else if (e.key === finalConfig.keyControls.rotate) {
+        else if (e.key === finalConfig.keyControls.rotate) {
             // Rotate the piece
             const rotatedShape = piece.shape[0].map((_, index) =>
                 piece.shape.map(row => row[index]).reverse()
@@ -273,20 +276,20 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
     }
 
     function updateScore() {
-		const scoreElem = document.getElementById(finalConfig.scoreId)
-		const levelElem = document.getElementById(finalConfig.levelId)
+        const scoreElem = document.getElementById(finalConfig.scoreId)
+        const levelElem = document.getElementById(finalConfig.levelId)
         if (scoreElem) scoreElem.textContent = `Score: ${score}`
         if (levelElem) levelElem.textContent = `Level: ${level}`
 
         // Update tournament progress if in tournament mode
-		if (finalConfig.tournamentMode) {
-			updateTournamentProgress(score, level, linesCleared)
-		}
+        if (finalConfig.tournamentMode) {
+            updateTournamentProgress(score, level, linesCleared)
+        }
 
-		// Call custom score update callback if provided
-		if (finalConfig.onScoreUpdate) {
-			finalConfig.onScoreUpdate(score, level, linesCleared)
-		}
+        // Call custom score update callback if provided
+        if (finalConfig.onScoreUpdate) {
+            finalConfig.onScoreUpdate(score, level, linesCleared)
+        }
     }
 
     function updateLevel() {
@@ -295,8 +298,11 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
             level = newLevel
             updateScore() // Update the display
 
+            // Debug logging for speed progression
+            console.log(`Level increased to ${level}, new drop speed: ${getDropSpeed()}ms`)
+
             // Visual feedback for level up
-			const levelElem = document.getElementById(finalConfig.levelId)
+            const levelElem = document.getElementById(finalConfig.levelId)
             if (levelElem) {
                 levelElem.classList.add("text-yellow-300")
                 setTimeout(() => {
@@ -339,19 +345,19 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
         paused = false
         if (animationId) cancelAnimationFrame(animationId)
 
-		// Call onGameOver callback if provided (before any processing)
-		if (finalConfig.onGameOver) {
-			finalConfig.onGameOver(score, level, linesCleared)
-		}
+        // Call onGameOver callback if provided (before any processing)
+        if (finalConfig.onGameOver) {
+            finalConfig.onGameOver(score, level, linesCleared)
+        }
 
-		// Handle tournament game over if in tournament mode
-		if (finalConfig.tournamentMode) {
-			handleTournamentGameOver()
-		}
+        // Handle tournament game over if in tournament mode
+        if (finalConfig.tournamentMode) {
+            handleTournamentGameOver()
+        }
 
-		// Save score if user is logged in and saving is enabled
+        // Save score if user is logged in and saving is enabled
         let savedMessage = ""
-		if (finalConfig.saveScore && currentUser && score > 0) {
+        if (finalConfig.saveScore && currentUser && score > 0) {
             const saved = await saveTetrisScore(score, level, linesCleared)
             if (saved) {
                 savedMessage = "\nScore saved to your history!"
@@ -362,9 +368,9 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
             }
         }
 
-		if (finalConfig.showAlerts) {
-			alert(`Game Over!${savedMessage}\nFinal Score: ${score}\nLevel Reached: ${level}\nLines Cleared: ${linesCleared}`)
-		}
+        if (finalConfig.showAlerts) {
+            alert(`Game Over!${savedMessage}\nFinal Score: ${score}\nLevel Reached: ${level}\nLines Cleared: ${linesCleared}`)
+        }
 
         // Reset the board
         for (let y = 0;y < BOARD_HEIGHT;y++) {
@@ -383,9 +389,9 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
         updateScore()
 
         // Reset UI
-		const startBtn = document.getElementById(finalConfig.startButtonId)
-		const pauseBtn = document.getElementById(finalConfig.pauseButtonId)
-		const resetBtn = document.getElementById(finalConfig.resetButtonId)
+        const startBtn = document.getElementById(finalConfig.startButtonId)
+        const pauseBtn = document.getElementById(finalConfig.pauseButtonId)
+        const resetBtn = document.getElementById(finalConfig.resetButtonId)
 
         if (startBtn) startBtn.textContent = "Start Game"
         if (pauseBtn) {
@@ -425,9 +431,9 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
     }
 
     // Pause, Reset and Start button logic
-	const pauseBtn = document.getElementById(finalConfig.pauseButtonId)
-	const resetBtn = document.getElementById(finalConfig.resetButtonId)
-	const startBtn = document.getElementById(finalConfig.startButtonId)
+    const pauseBtn = document.getElementById(finalConfig.pauseButtonId)
+    const resetBtn = document.getElementById(finalConfig.resetButtonId)
+    const startBtn = document.getElementById(finalConfig.startButtonId)
 
     if (pauseBtn) {
         pauseBtn.onclick = () => {
@@ -569,54 +575,54 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
 
     update()
 
-	// Return control methods for external use
-	return {
-		startGame: () => {
-			if (!started) {
-				started = true
-				paused = false
-				if (startBtn) startBtn.textContent = "Stop Game"
-				if (pauseBtn) {
-					(pauseBtn as HTMLButtonElement).disabled = false
-					pauseBtn.classList.remove("opacity-50", "cursor-not-allowed")
-				}
-				if (resetBtn) {
-					(resetBtn as HTMLButtonElement).disabled = false
-					resetBtn.classList.remove("opacity-50", "cursor-not-allowed")
-				}
-				canvas.focus()
-				canvas.tabIndex = 0
-				lastTime = performance.now()
-				animationId = window.requestAnimationFrame(update)
-			}
-		},
-		stopGame: () => {
-			if (started) {
-				started = false
-				paused = false
-				if (startBtn) startBtn.textContent = "Start Game"
-				if (animationId) cancelAnimationFrame(animationId)
-				animationId = null
-				// Reset scores
-				board = Array.from({ length: BOARD_HEIGHT }, () => Array(BOARD_WIDTH).fill(0))
-				score = 0
-				level = 1
-				linesCleared = 0
-				updateScore()
-				piece.shape = pieces[Math.floor(Math.random() * pieces.length)]
-				piece.position = { x: 5, y: 0 }
-				ctx.clearRect(0, 0, canvas.width, canvas.height)
-				if (pauseBtn) {
-					(pauseBtn as HTMLButtonElement).disabled = true
-					pauseBtn.classList.add("opacity-50", "cursor-not-allowed")
-					pauseBtn.textContent = "Pause"
-				}
-				if (resetBtn) {
-					(resetBtn as HTMLButtonElement).disabled = true
-					resetBtn.classList.add("opacity-50", "cursor-not-allowed")
-				}
-			}
-		},
-		isRunning: () => started && !paused
-	}
+    // Return control methods for external use
+    return {
+        startGame: () => {
+            if (!started) {
+                started = true
+                paused = false
+                if (startBtn) startBtn.textContent = "Stop Game"
+                if (pauseBtn) {
+                    (pauseBtn as HTMLButtonElement).disabled = false
+                    pauseBtn.classList.remove("opacity-50", "cursor-not-allowed")
+                }
+                if (resetBtn) {
+                    (resetBtn as HTMLButtonElement).disabled = false
+                    resetBtn.classList.remove("opacity-50", "cursor-not-allowed")
+                }
+                canvas.focus()
+                canvas.tabIndex = 0
+                lastTime = performance.now()
+                animationId = window.requestAnimationFrame(update)
+            }
+        },
+        stopGame: () => {
+            if (started) {
+                started = false
+                paused = false
+                if (startBtn) startBtn.textContent = "Start Game"
+                if (animationId) cancelAnimationFrame(animationId)
+                animationId = null
+                // Reset scores
+                board = Array.from({ length: BOARD_HEIGHT }, () => Array(BOARD_WIDTH).fill(0))
+                score = 0
+                level = 1
+                linesCleared = 0
+                updateScore()
+                piece.shape = pieces[Math.floor(Math.random() * pieces.length)]
+                piece.position = { x: 5, y: 0 }
+                ctx.clearRect(0, 0, canvas.width, canvas.height)
+                if (pauseBtn) {
+                    (pauseBtn as HTMLButtonElement).disabled = true
+                    pauseBtn.classList.add("opacity-50", "cursor-not-allowed")
+                    pauseBtn.textContent = "Pause"
+                }
+                if (resetBtn) {
+                    (resetBtn as HTMLButtonElement).disabled = true
+                    resetBtn.classList.add("opacity-50", "cursor-not-allowed")
+                }
+            }
+        },
+        isRunning: () => started && !paused
+    }
 }
