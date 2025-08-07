@@ -563,10 +563,10 @@ module.exports = async function (fastify, opts) {
       
       // Save match result to database
       const insertMatch = `
-          INSERT INTO tetris_tournament_matches (player1_id, player2_id, mode, winner_id, 
+          INSERT INTO tetris_tournament_matches (player1_id, player2_id, mode, play_type, winner_id, 
                                          player1_score, player1_level, player1_lines,
                                          player2_score, player2_level, player2_lines)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
       const p1 = match.player1.progress || { score: 0, level: 1, lines: 0 };
@@ -574,7 +574,7 @@ module.exports = async function (fastify, opts) {
       
       try {
           await runQuery(insertMatch, [
-              match.player1.id, match.player2.id, match.mode, winner?.id || null,
+              match.player1.id, match.player2.id, match.mode, 'simultaneous', winner?.id || null,
               p1.score, p1.level, p1.lines,
               p2.score, p2.level, p2.lines
           ]);
@@ -779,12 +779,12 @@ module.exports = async function (fastify, opts) {
             // Save to history
             await runQuery(`
                 INSERT INTO tetris_tournament_matches (
-                    player1_id, player2_id, mode, winner_id,
+                    player1_id, player2_id, mode, play_type, winner_id,
                     player1_score, player1_level, player1_lines,
                     player2_score, player2_level, player2_lines
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `, [
-                updatedMatch.player1_id, updatedMatch.player2_id, updatedMatch.mode,
+                updatedMatch.player1_id, updatedMatch.player2_id, updatedMatch.mode, 'turn_based',
                 winner === 'player1' ? updatedMatch.player1_id : 
                 winner === 'player2' ? updatedMatch.player2_id : null,
                 updatedMatch.player1_score, updatedMatch.player1_level, updatedMatch.player1_lines,
@@ -857,12 +857,12 @@ module.exports = async function (fastify, opts) {
             // Save to history
             await runQuery(`
                 INSERT INTO tetris_tournament_matches (
-                    player1_id, player2_id, mode, winner_id,
+                    player1_id, player2_id, mode, play_type, winner_id,
                     player1_score, player1_level, player1_lines,
                     player2_score, player2_level, player2_lines
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `, [
-                updatedMatch.player1_id, updatedMatch.player2_id, updatedMatch.mode,
+                updatedMatch.player1_id, updatedMatch.player2_id, updatedMatch.mode, 'turn_based',
                 winner === 'player1' ? updatedMatch.player1_id : 
                 winner === 'player2' ? updatedMatch.player2_id : null,
                 updatedMatch.player1_score, updatedMatch.player1_level, updatedMatch.player1_lines,
@@ -896,6 +896,7 @@ module.exports = async function (fastify, opts) {
                 ttm.player1_id,
                 ttm.player2_id,
                 ttm.mode,
+                ttm.play_type,
                 ttm.created_at,
                 ttm.winner_id,
                 ttm.player1_score,
@@ -956,7 +957,7 @@ module.exports = async function (fastify, opts) {
             matchId: `${match.player1_id}_${match.player2_id}_${match.created_at}`, // Generate unique ID
             opponent: match.opponent,
             mode: match.mode,
-            playType: 'turn_based', // Most completed matches will be turn-based
+            playType: match.play_type || 'simultaneous', // Use actual play_type from database
             result: match.result,
             userScore: match.user_score || 0,
             opponentScore: match.opponent_score || 0,
@@ -973,6 +974,90 @@ module.exports = async function (fastify, opts) {
     } catch (error) {
         console.error('Error getting completed matches:', error);
         reply.code(500).send({ error: 'Failed to get completed matches' });
+    }
+  });
+
+  // Submit simultaneous match result
+  fastify.post('/simultaneous-result', async (request, reply) => {
+    try {
+        const { 
+            player_id, mode, opponent, 
+            player1_score, player1_level, player1_lines,
+            player2_score, player2_level, player2_lines,
+            winner, completed_at 
+        } = request.body;
+        
+        console.log('Simultaneous match result received:', { 
+            player_id, mode, opponent, 
+            player1_score, player1_level, player1_lines,
+            player2_score, player2_level, player2_lines,
+            winner 
+        });
+
+        // Get player info for player 1 (current user)
+        const player1 = await getQuery('SELECT id, username FROM players WHERE id = ?', [player_id]);
+        if (!player1) {
+            return reply.code(404).send({ error: 'Player not found' });
+        }
+
+        // For simultaneous games, we need to find the opponent by username
+        // In a real implementation, you might want to pass opponent_id instead
+        const player2 = await getQuery('SELECT id, username FROM players WHERE username = ?', [opponent]);
+        if (!player2) {
+            console.log(`Creating simultaneous match without opponent player ID for: ${opponent}`);
+            // For now, we'll save with null player2_id to indicate local/test match
+        }
+
+        // Determine winner_id based on winner field
+        let winner_id = null;
+        if (winner === 'player1') {
+            winner_id = player1.id;
+        } else if (winner === 'player2' && player2) {
+            winner_id = player2.id;
+        }
+
+        // Save the match to tetris_tournament_matches table
+        await runQuery(`
+            INSERT INTO tetris_tournament_matches (
+                player1_id, player2_id, mode, play_type, winner_id,
+                player1_score, player1_level, player1_lines,
+                player2_score, player2_level, player2_lines,
+                created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+            player1.id, 
+            player2 ? player2.id : null, 
+            mode, 
+            'simultaneous',
+            winner_id,
+            player1_score, player1_level, player1_lines,
+            player2_score, player2_level, player2_lines,
+            Date.now()
+        ]);
+
+        // Remove any active matches for these players in simultaneous mode
+        // This prevents the match from appearing in "Your turn" list
+        if (player2) {
+            await runQuery(`
+                DELETE FROM tetris_active_matches 
+                WHERE ((player1_id = ? AND player2_id = ?) OR (player1_id = ? AND player2_id = ?))
+                AND play_type = 'simultaneous'
+                AND mode = ?
+            `, [player1.id, player2.id, player2.id, player1.id, mode]);
+            
+            console.log(`Cleaned up active matches for simultaneous game: ${player1.username} vs ${player2.username}`);
+        }
+
+        console.log(`Simultaneous match saved: ${player1.username} vs ${opponent} in ${mode} mode`);
+        
+        reply.send({ 
+            success: true, 
+            message: 'Simultaneous match result saved successfully' 
+        });
+        
+    } catch (error) {
+        console.error('Error saving simultaneous match result:', error);
+        reply.code(500).send({ error: 'Failed to save simultaneous match result' });
     }
   });
 
