@@ -323,6 +323,16 @@ function setupDb(fastify) {
     }
   );
 
+  // Add play_type column to tetris_tournament_matches for proper match type tracking
+  db.run(
+    `ALTER TABLE tetris_tournament_matches ADD COLUMN play_type TEXT DEFAULT 'simultaneous'`,
+    (err) => {
+      if (err && !err.message.includes("duplicate column name")) {
+        console.error("Failed to add play_type column to tetris_tournament_matches:", err.message);
+      }
+    }
+  );
+
   db.run(`
     INSERT OR IGNORE INTO tournament (name, date, status)
     VALUES
