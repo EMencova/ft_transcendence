@@ -1046,7 +1046,7 @@ export function cleanupMatchmaking() {
 }
 
 // Function to create a Tetris game instance with unique IDs and custom controls
-function createTetrisInstance(container: HTMLElement, playerId: string, controls: any) {
+function createTetrisInstance(container: HTMLElement, playerId: string, controls: any, matchConfig?: any) {
 	// Create unique IDs for this player that match the display IDs (above the game area)
 	const canvasId = `tetrisCanvas_${playerId}`
 	const scoreId = `${playerId}Score`
@@ -1060,6 +1060,12 @@ function createTetrisInstance(container: HTMLElement, playerId: string, controls
 		</div>
 	`
 
+	// Track game state for match monitoring
+	let currentScore = 0
+	let currentLevel = 1
+	let currentLines = 0
+	let gameEnded = false
+
 	// Initialize the Tetris game using the modularized function
 	const gameInstance = initTetrisGame({
 		canvasId: canvasId,
@@ -1071,6 +1077,7 @@ function createTetrisInstance(container: HTMLElement, playerId: string, controls
 		},
 		saveScore: false,
 		tournamentMode: false,
+		showAlerts: false, // Disable individual alerts for simultaneous mode
 		onScoreUpdate: (score: number, level: number, lines: number) => {
 			// Update the main display elements for this player (above the game area)
 			const scoreEl = document.getElementById(scoreId)
@@ -1080,13 +1087,84 @@ function createTetrisInstance(container: HTMLElement, playerId: string, controls
 			if (scoreEl) scoreEl.textContent = score.toString()
 			if (levelEl) levelEl.textContent = level.toString()
 			if (linesEl) linesEl.textContent = lines.toString()
+
+			// Update local tracking variables
+			currentScore = score
+			currentLevel = level
+			currentLines = lines
+
+			// Debug logging for speed progression
+			console.log(`${playerId} - Score: ${score}, Level: ${level}, Lines: ${lines}`)
+
+			// Check win condition for Sprint Mode
+			if (matchConfig && matchConfig.mode === 'sprint' && lines >= 40 && !gameEnded) {
+				gameEnded = true
+				console.log(`🏆 ${playerId} won Sprint Mode with ${lines} lines!`)
+
+				// Capture winner stats IMMEDIATELY before anything else
+				const winnerStats = {
+					score: score,
+					level: level,
+					lines: lines
+				}
+				console.log(`Capturing ${playerId} winner stats:`, winnerStats)
+
+				// Stop this game immediately
+				if (gameInstance && gameInstance.stopGame) {
+					gameInstance.stopGame()
+				}
+
+				// End the match and show results with winner stats
+				endSimultaneousMatch(playerId, matchConfig, winnerStats)
+			}
+		},
+		onGameOver: (finalScore: number, finalLevel: number, finalLines: number) => {
+			if (!gameEnded) {
+				gameEnded = true
+				// Update final stats
+				currentScore = finalScore
+				currentLevel = finalLevel
+				currentLines = finalLines
+
+				// Update display one last time
+				const scoreEl = document.getElementById(scoreId)
+				const levelEl = document.getElementById(levelId)
+				const linesEl = document.getElementById(linesId)
+
+				if (scoreEl) scoreEl.textContent = finalScore.toString()
+				if (levelEl) levelEl.textContent = finalLevel.toString()
+				if (linesEl) linesEl.textContent = finalLines.toString()
+
+				// Determine winner based on mode
+				if (matchConfig) {
+					if (matchConfig.mode === 'survival') {
+						// First to game over loses, so the other player wins
+						const winner = playerId === 'player1' ? 'player2' : 'player1'
+						// In survival mode, we don't have winner stats immediately, let the function get them
+						endSimultaneousMatch(winner, matchConfig)
+					}
+				}
+			}
 		}
 	})
+
+	// Add method to get current stats
+	if (gameInstance) {
+		(gameInstance as any).getCurrentStats = () => ({
+			score: currentScore,
+			level: currentLevel,
+			lines: currentLines,
+			gameEnded: gameEnded
+		})
+	}
 
 	return gameInstance
 }
 // Function to start a real simultaneous match with both players
 function startSimultaneousMatch(config: { mode: string; opponent: string; winCondition: string }) {
+	// Reset match ended flag for new match
+	matchEnded = false
+
 	const mainContent = document.getElementById("mainContent")
 	if (!mainContent) return
 
@@ -1219,7 +1297,7 @@ function startSimultaneousMatch(config: { mode: string; opponent: string; winCon
 			softDrop: 'KeyS',
 			hardDrop: 'Space',
 			pause: 'Space'
-		})
+		}, config)
 
 		gameInstance2 = createTetrisInstance(player2GameArea, 'player2', {
 			moveLeft: 'ArrowLeft',
@@ -1228,7 +1306,13 @@ function startSimultaneousMatch(config: { mode: string; opponent: string; winCon
 			softDrop: 'ArrowDown',
 			hardDrop: 'Enter',
 			pause: 'Enter'
-		})
+		}, config)
+
+			// Store game instances globally for access by endSimultaneousMatch
+			; (window as any).simultaneousGameInstances = {
+				player1: gameInstance1,
+				player2: gameInstance2
+			}
 	}
 
 	// Setup start both games button
@@ -1289,10 +1373,220 @@ function startSimultaneousMatch(config: { mode: string; opponent: string; winCon
 					clearInterval(i)
 				}
 
+				// Clean up global references
+				; (window as any).simultaneousGameInstances = null
+
 				// Go back to matchmaking
 				window.location.hash = '#othergames/matchmaking'
 			}
 		})
+	}
+}
+
+// Global flag to prevent multiple match endings
+let matchEnded = false
+
+// Function to end simultaneous match and show results
+function endSimultaneousMatch(winner: string, matchConfig: any, winnerStats?: any) {
+	// Prevent multiple calls
+	if (matchEnded) {
+		console.log('Match already ended, ignoring subsequent call')
+		return
+	}
+	matchEnded = true
+
+	console.log('endSimultaneousMatch called with:', { winner, winnerStats })
+
+	// Get final scores from both players BEFORE stopping the games
+	const gameInstances = (window as any).simultaneousGameInstances
+	let player1Stats = { score: 0, level: 1, lines: 0 }
+	let player2Stats = { score: 0, level: 1, lines: 0 }
+
+	// If winner stats are provided (from victory condition), use them directly
+	if (winnerStats) {
+		if (winner === 'player1') {
+			player1Stats = winnerStats
+			console.log('Using provided winner stats for player1:', player1Stats)
+		} else {
+			player2Stats = winnerStats
+			console.log('Using provided winner stats for player2:', player2Stats)
+		}
+	}
+
+	// Get stats from game instances for the other player
+	if (gameInstances) {
+		console.log('Game instances found:', gameInstances)
+		if (gameInstances.player1 && gameInstances.player1.getCurrentStats && (!winnerStats || winner !== 'player1')) {
+			const stats = gameInstances.player1.getCurrentStats()
+			if (winner !== 'player1' || !winnerStats) {
+				player1Stats = stats
+			}
+			console.log('Player1 stats from game instance:', stats)
+		}
+		if (gameInstances.player2 && gameInstances.player2.getCurrentStats && (!winnerStats || winner !== 'player2')) {
+			const stats = gameInstances.player2.getCurrentStats()
+			if (winner !== 'player2' || !winnerStats) {
+				player2Stats = stats
+			}
+			console.log('Player2 stats from game instance:', stats)
+		}
+	} else {
+		console.log('No game instances found')
+	}
+
+	// Fallback to DOM elements if game instances don't have stats
+	if (player1Stats.score === 0 && player1Stats.lines === 0) {
+		player1Stats = getPlayerStats('player1')
+		console.log('Player1 stats from DOM fallback:', player1Stats)
+	}
+	if (player2Stats.score === 0 && player2Stats.lines === 0) {
+		player2Stats = getPlayerStats('player2')
+		console.log('Player2 stats from DOM fallback:', player2Stats)
+	}
+
+	console.log('Final stats before saving:', { player1Stats, player2Stats, winner })
+
+	// Stop both games AFTER getting the stats
+	if (gameInstances) {
+		if (gameInstances.player1 && gameInstances.player1.stopGame) {
+			gameInstances.player1.stopGame()
+		}
+		if (gameInstances.player2 && gameInstances.player2.stopGame) {
+			gameInstances.player2.stopGame()
+		}
+	}
+
+	// Show modal with results
+	showSimultaneousGameOverModal(matchConfig, winner, player1Stats, player2Stats)
+
+	// Save results to backend
+	saveSimultaneousMatchResults(matchConfig, winner, player1Stats, player2Stats)
+}
+
+// Function to get current player stats
+function getPlayerStats(playerId: string) {
+	const scoreEl = document.getElementById(`${playerId}Score`)
+	const levelEl = document.getElementById(`${playerId}Level`)
+	const linesEl = document.getElementById(`${playerId}Lines`)
+
+	return {
+		score: parseInt(scoreEl?.textContent || '0'),
+		level: parseInt(levelEl?.textContent || '1'),
+		lines: parseInt(linesEl?.textContent || '0')
+	}
+}
+
+// Function to show simultaneous game over modal
+function showSimultaneousGameOverModal(matchConfig: any, winner: string, player1Stats: any, player2Stats: any) {
+	const modal = document.createElement('div')
+	modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50'
+
+	const isPlayer1Winner = winner === 'player1'
+
+	modal.innerHTML = `
+		<div class="bg-[#1a1a1a] rounded-lg p-8 max-w-lg w-full mx-4 border border-gray-700 text-center">
+			<div class="mb-6">
+				<span class="text-6xl">${isPlayer1Winner ? '🏆' : '💔'}</span>
+				<h2 class="text-2xl font-bold text-white mt-4">
+					${isPlayer1Winner ? 'Victory!' : 'Defeat!'}
+				</h2>
+				<p class="text-gray-400 mt-2">${matchConfig.mode.toUpperCase()} Mode</p>
+			</div>
+			
+			<div class="grid grid-cols-2 gap-4 mb-6">
+				<div class="bg-${isPlayer1Winner ? 'green' : 'red'}-900/20 rounded-lg p-4 border border-${isPlayer1Winner ? 'green' : 'red'}-500/30">
+					<h3 class="text-${isPlayer1Winner ? 'green' : 'red'}-400 font-semibold mb-2">👤 You</h3>
+					<div class="space-y-1">
+						<p class="text-white"><span class="text-blue-400">Score:</span> ${player1Stats.score}</p>
+						<p class="text-white"><span class="text-blue-400">Level:</span> ${player1Stats.level}</p>
+						<p class="text-white"><span class="text-blue-400">Lines:</span> ${player1Stats.lines}</p>
+					</div>
+				</div>
+				
+				<div class="bg-${!isPlayer1Winner ? 'green' : 'red'}-900/20 rounded-lg p-4 border border-${!isPlayer1Winner ? 'green' : 'red'}-500/30">
+					<h3 class="text-${!isPlayer1Winner ? 'green' : 'red'}-400 font-semibold mb-2">👥 ${matchConfig.opponent}</h3>
+					<div class="space-y-1">
+						<p class="text-white"><span class="text-orange-400">Score:</span> ${player2Stats.score}</p>
+						<p class="text-white"><span class="text-orange-400">Level:</span> ${player2Stats.level}</p>
+						<p class="text-white"><span class="text-orange-400">Lines:</span> ${player2Stats.lines}</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="bg-gray-800 rounded-lg p-4 mb-6">
+				<h3 class="text-white font-semibold mb-2">Match Result</h3>
+				<p class="text-${isPlayer1Winner ? 'green' : 'red'}-400 font-bold">
+					${isPlayer1Winner ? 'You won!' : `${matchConfig.opponent} won!`}
+				</p>
+				<p class="text-gray-400 text-sm mt-1">
+					${matchConfig.mode === 'sprint' ?
+			`First to reach 40 lines` :
+			matchConfig.mode === 'survival' ?
+				'Last player standing' :
+				'Higher score wins'
+		}
+				</p>
+			</div>
+			
+			<div class="space-y-3">
+				<button id="viewMatchmakingBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded font-semibold">
+					📋 View Matchmaking
+				</button>
+				<button id="playAgainBtn" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded font-semibold">
+					🎮 Play Another Match
+				</button>
+			</div>
+		</div>
+	`
+
+	document.body.appendChild(modal)
+
+	// Add event listeners
+	const viewMatchmakingBtn = modal.querySelector('#viewMatchmakingBtn')
+	const playAgainBtn = modal.querySelector('#playAgainBtn')
+
+	viewMatchmakingBtn?.addEventListener('click', () => {
+		modal.remove()
+		window.location.hash = '#othergames/matchmaking'
+	})
+
+	playAgainBtn?.addEventListener('click', () => {
+		modal.remove()
+		window.location.hash = '#othergames/matchmaking'
+	})
+
+	// Auto-close after 30 seconds
+	setTimeout(() => {
+		if (modal.parentNode) {
+			modal.remove()
+			window.location.hash = '#othergames/matchmaking'
+		}
+	}, 30000)
+}
+
+// Function to save simultaneous match results
+async function saveSimultaneousMatchResults(matchConfig: any, winner: string, player1Stats: any, player2Stats: any) {
+	try {
+		console.log('Saving simultaneous match results:', {
+			matchConfig, winner, player1Stats, player2Stats
+		})
+
+		await tetrisMatchmakingService.submitSimultaneousResult({
+			mode: matchConfig.mode,
+			opponent: matchConfig.opponent,
+			player1Score: player1Stats.score,
+			player1Level: player1Stats.level,
+			player1Lines: player1Stats.lines,
+			player2Score: player2Stats.score,
+			player2Level: player2Stats.level,
+			player2Lines: player2Stats.lines,
+			winner: winner as 'player1' | 'player2' | null
+		})
+
+		console.log('Simultaneous match results saved successfully')
+	} catch (error) {
+		console.error('Failed to save simultaneous match results:', error)
+		// Don't show error to user as modal is more important
 	}
 }
 
@@ -1304,3 +1598,28 @@ function startSimultaneousMatch(config: { mode: string; opponent: string; winCon
 		winCondition: 'First to clear 40 lines'
 	})
 }
+
+	// Debug function to test the end match directly
+	; (window as any).testEndMatch = () => {
+		console.log('Testing end match directly...')
+
+		// Reset match ended flag
+		matchEnded = false
+
+			// Set up mock game instances with stats
+			; (window as any).simultaneousGameInstances = {
+				player1: {
+					getCurrentStats: () => ({ score: 1500, level: 3, lines: 25 })
+				},
+				player2: {
+					getCurrentStats: () => ({ score: 2000, level: 4, lines: 30 })
+				}
+			}
+
+		// Test with winner stats provided (like in Sprint mode)
+		const winnerStats = { score: 7500, level: 4, lines: 42 }
+		endSimultaneousMatch('player1', {
+			mode: 'sprint',
+			opponent: 'TestPlayer'
+		}, winnerStats)
+	}

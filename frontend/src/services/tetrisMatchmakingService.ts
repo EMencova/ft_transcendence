@@ -304,6 +304,43 @@ class TetrisMatchmakingService {
 		}
 	}
 
+	// Submit simultaneous match result
+	async submitSimultaneousResult(matchData: {
+		mode: string,
+		opponent: string,
+		player1Score: number,
+		player1Level: number,
+		player1Lines: number,
+		player2Score: number,
+		player2Level: number,
+		player2Lines: number,
+		winner: 'player1' | 'player2' | null
+	}): Promise<any> {
+		if (!currentUserId) {
+			throw new Error('User not logged in')
+		}
+
+		try {
+			const response = await apiService.post('/tetris-matchmaking/simultaneous-result', {
+				player_id: currentUserId,
+				mode: matchData.mode,
+				opponent: matchData.opponent,
+				player1_score: matchData.player1Score,
+				player1_level: matchData.player1Level,
+				player1_lines: matchData.player1Lines,
+				player2_score: matchData.player2Score,
+				player2_level: matchData.player2Level,
+				player2_lines: matchData.player2Lines,
+				winner: matchData.winner,
+				completed_at: new Date().toISOString()
+			})
+			return response
+		} catch (error) {
+			console.error('Error submitting simultaneous result:', error)
+			throw error
+		}
+	}
+
 	// Get completed matches (Recent Matches)
 	async getCompletedMatches(): Promise<any[]> {
 		if (!currentUserId) {
