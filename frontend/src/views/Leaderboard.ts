@@ -4,13 +4,13 @@ export function LeaderboardView(push = true) {
 	const main = document.getElementById("mainContent")
 	if (main) {
 		if (!currentUser) {
-			main.innerHTML = `<p class="text-red-500">You must log in to view the leaderboard.</p>`
+			main.innerHTML = `<p class="text-red-500" data-translate="leaderboard_login_required"></p>`
 			return
 		}
 
 		main.innerHTML = `
-			<h2 class="text-2xl font-bold mb-4 mt-6" data-translate="leaderboard_title">📊 LeaderBoard</h2>
-			<div data-translate="leaderboard_desc" id="leaderboardTable"></div>
+			<h2 class="text-2xl font-bold mb-4 mt-6" data-translate="leaderboard_title"></h2>
+			<div id="leaderboardTable"></div>
 		`
 
 		// Fetch leaderboard data from server
@@ -27,14 +27,14 @@ export function LeaderboardView(push = true) {
 				} else {
 					const leaderboardTable = document.getElementById("leaderboardTable")
 					if (leaderboardTable) {
-						leaderboardTable.innerHTML = `<p class="text-red-500">Unexpected leaderboard data format.</p>`
+						leaderboardTable.innerHTML = `<p class="text-red-500" data-translate="leaderboard_error_format"></p>`
 					}
 				}
 			})
-			.catch(err => {
+			.catch(() => {
 				const leaderboardTable = document.getElementById("leaderboardTable")
 				if (leaderboardTable) {
-					leaderboardTable.innerHTML = `<p class="text-red-500">Error loading leaderboard: ${err}</p>`
+					leaderboardTable.innerHTML = `<p class="text-red-500" data-translate="leaderboard_error_loading"></p>`
 				}
 			})
 
@@ -46,7 +46,7 @@ function renderLeaderboard(data: Array<{ username: string; score: number; rank?:
 	const container = document.getElementById("leaderboardTable")
 	if (!data.length) {
 		if (container) {
-			container.innerHTML = `<p>No leaderboard data available yet.</p>`
+			container.innerHTML = `<p data-translate="leaderboard_no_data"></p>`
 		}
 		return
 	}
@@ -55,11 +55,11 @@ function renderLeaderboard(data: Array<{ username: string; score: number; rank?:
 		<table class="min-w-full border-collapse border border-gray-500">
 			<thead>
 				<tr class="bg-gray-800 text-white">
-					<th class="border p-2">#</th>
-					<th class="border p-2">Player</th>
-					<th class="border p-2">Score</th>
-					<th class="border p-2">Rank</th>
-					<th class="border p-2">Updated</th>
+					<th class="border p-2" data-translate="leaderboard_column_number"></th>
+					<th class="border p-2" data-translate="leaderboard_column_player"></th>
+					<th class="border p-2" data-translate="leaderboard_column_score"></th>
+					<th class="border p-2" data-translate="leaderboard_column_rank"></th>
+					<th class="border p-2" data-translate="leaderboard_column_updated"></th>
 				</tr>
 			</thead>
 			<tbody>
