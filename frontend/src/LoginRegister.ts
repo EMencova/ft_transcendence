@@ -3,10 +3,10 @@ export function LoginRegister(onLoginSuccess: () => void): HTMLElement {
 	let mode: 'login' | 'register' = 'login'
   
 	const container = document.createElement('div')
-	container.className = 'flex items-center justify-center h-screen w-full bg-[#242424] text-white'
+	container.className = 'flex items-center justify-center h-screen w-full bg-gray-900 text-white'
   
 	const form = document.createElement('form')
-	form.className = 'bg-[#1a1a1a] p-8 rounded-lg shadow-md w-80 flex flex-col gap-4 border border-[#646cff]'
+	form.className = 'bg-zinc-900 p-8 rounded-lg shadow-lg w-80 flex flex-col gap-4 border border-gray-700'
   
 	const modeSwitch = document.createElement('div')
 	modeSwitch.className = 'flex justify-between text-sm mb-2 text-gray-400'
@@ -14,43 +14,40 @@ export function LoginRegister(onLoginSuccess: () => void): HTMLElement {
 	const loginTab = document.createElement('button')
 	loginTab.type = 'button'
 	loginTab.innerText = 'Login'
-	loginTab.className = 'hover:text-[#646cff] transition-colors'
+	loginTab.className = 'hover:text-orange-500 transition-colors'
   
 	const registerTab = document.createElement('button')
 	registerTab.type = 'button'
 	registerTab.innerText = 'Register'
-	registerTab.className = 'hover:text-[#646cff] transition-colors'
+	registerTab.className = 'hover:text-orange-500 transition-colors'
   
 	modeSwitch.appendChild(loginTab)
 	modeSwitch.appendChild(registerTab)
   
 	const title = document.createElement('h2')
-	title.className = 'text-2xl font-bold text-center text-[#646cff]'
+	title.className = 'text-2xl font-bold text-center text-orange-500'
 	title.innerText = 'PONG LOGIN'
   
 	const usernameInput = document.createElement('input')
 	usernameInput.type = 'text'
 	usernameInput.placeholder = 'Username'
-	usernameInput.className =
-	  'bg-[#242424] border border-[#646cff] text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#646cff] placeholder-gray-400'
-  
+	usernameInput.className = inputClassName
+
 	const emailInput = document.createElement('input')
 	emailInput.type = 'email'
 	emailInput.placeholder = 'Email'
-	emailInput.className =
-	  'bg-[#242424] border border-[#646cff] text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#646cff] placeholder-gray-400'
+	emailInput.className = inputClassName
   
 	const passwordInput = document.createElement('input')
 	passwordInput.type = 'password'
 	passwordInput.placeholder = 'Password'
-	passwordInput.className =
-	  'bg-[#242424] border border-[#646cff] text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#646cff] placeholder-gray-400'
+	passwordInput.className = inputClassName
   
 	const button = document.createElement('button')
 	button.type = 'submit'
 	button.innerText = 'START'
 	button.className =
-	  'bg-[#1a1a1a] border border-[#646cff] text-white py-2 rounded hover:bg-[#323232] transition-colors'
+		'bg-orange-600 border border-orange-500 text-white py-2 rounded hover:bg-orange-700 transition-colors font-medium'
   
 	// Mode switching
 	function updateMode(newMode: 'login' | 'register') {
@@ -58,8 +55,8 @@ export function LoginRegister(onLoginSuccess: () => void): HTMLElement {
 	  title.innerText = newMode === 'login' ? 'PONG LOGIN' : 'PONG REGISTER'
 	  button.innerText = newMode === 'login' ? 'LOGIN' : 'REGISTER'
   
-	  loginTab.classList.toggle('text-[#646cff]', mode === 'login')
-	  registerTab.classList.toggle('text-[#646cff]', mode === 'register')
+		loginTab.classList.toggle('text-orange-500', mode === 'login')
+		registerTab.classList.toggle('text-orange-500', mode === 'register')
   
 	  emailInput.style.display = mode === 'register' ? 'block' : 'none'
 	}
@@ -116,205 +113,6 @@ export function LoginRegister(onLoginSuccess: () => void): HTMLElement {
 	updateMode(mode)
   
 	return container
-  }
-  
-
-/*export function LoginRegister(onLoginSuccess: () => void): HTMLElement {
-	let mode: 'login' | 'register' = 'login'
-
-	const container = document.createElement('div')
-	container.className = 'flex items-center justify-center h-screen w-full bg-[#242424] text-white'
-
-	const form = document.createElement('form')
-	form.className = 'bg-[#1a1a1a] p-8 rounded-lg shadow-md w-80 flex flex-col gap-4 border border-[#646cff]'
-
-	const modeSwitch = document.createElement('div')
-	modeSwitch.className = 'flex justify-between text-sm mb-2 text-gray-400'
-
-	const loginTab = document.createElement('button')
-	loginTab.type = 'button'
-	loginTab.innerText = 'Login'
-	loginTab.className = 'hover:text-[#646cff] transition-colors'
-
-	const registerTab = document.createElement('button')
-	registerTab.type = 'button'
-	registerTab.innerText = 'Register'
-	registerTab.className = 'hover:text-[#646cff] transition-colors'
-
-	modeSwitch.appendChild(loginTab)
-	modeSwitch.appendChild(registerTab)
-
-	const title = document.createElement('h2')
-	title.className = 'text-2xl font-bold text-center text-[#646cff]'
-	title.innerText = 'PONG LOGIN'
-
-	const usernameInput = document.createElement('input')
-	usernameInput.type = 'text'
-	usernameInput.placeholder = 'Username'
-	usernameInput.className =
-		'bg-[#242424] border border-[#646cff] text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#646cff] placeholder-gray-400'
-
-	const emailInput = document.createElement('input')
-	emailInput.type = 'email'
-	emailInput.placeholder = 'Email'
-	emailInput.className =
-		'bg-[#242424] border border-[#646cff] text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#646cff] placeholder-gray-400'
-
-	const button = document.createElement('button')
-	button.type = 'submit'
-	button.innerText = 'START'
-	button.className =
-		'bg-[#1a1a1a] border border-[#646cff] text-white py-2 rounded hover:bg-[#323232] transition-colors'
-
-	// Mode switching
-	function updateMode(newMode: 'login' | 'register') {
-		mode = newMode
-		title.innerText = newMode === 'login' ? 'PONG LOGIN' : 'PONG REGISTER'
-		button.innerText = newMode === 'login' ? 'LOGIN' : 'REGISTER'
-
-		loginTab.classList.toggle('text-[#646cff]', mode === 'login')
-		registerTab.classList.toggle('text-[#646cff]', mode === 'register')
-
-		emailInput.style.display = mode === 'register' ? 'block' : 'none'
-	}
-
-	loginTab.onclick = () => updateMode('login')
-	registerTab.onclick = () => updateMode('register')
-
-	form.appendChild(modeSwitch)
-	form.appendChild(title)
-	form.appendChild(usernameInput)
-	form.appendChild(emailInput)
-	form.appendChild(button)
-
-	form.onsubmit = async (e) => {
-		e.preventDefault()
-
-		const username = usernameInput.value.trim()
-		const email = emailInput.value.trim()
-
-		if (!username || (mode === 'register' && !email)) {
-			alert('Please fill in all required fields.')
-			return
-		}
-
-		try {
-			const res = await fetch(`http://localhost:3000/${mode}`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					username,
-					...(mode === 'register' ? { email } : {})
-				})
-			})
-
-			const data = await res.json()
-
-			if (!res.ok) {
-				alert(data.error || 'Something went wrong.')
-				return
-			}
-
-			alert(`${mode.toUpperCase()} successful.`)
-			onLoginSuccess()
-		} catch (err) {
-			console.error(err)
-			alert('Network error. Please try again.')
-		}
-	}
-
-	container.appendChild(form)
-	updateMode(mode)
-
-	return container
 }
 
-
-
-
-
-export function LoginRegister(onLoginSuccess: () => void): HTMLElement {
-	let mode: 'login' | 'register' = 'login'
-
-	const container = document.createElement('div')
-	container.className = 'flex items-center justify-center h-screen w-full bg-[#242424] text-white'
-
-	const form = document.createElement('form')
-	form.className = 'bg-[#1a1a1a] p-8 rounded-lg shadow-md w-80 flex flex-col gap-4 border border-[#646cff]'
-
-	const modeSwitch = document.createElement('div')
-	modeSwitch.className = 'flex justify-between text-sm mb-2 text-gray-400'
-
-	const loginTab = document.createElement('button')
-	loginTab.type = 'button'
-	loginTab.innerText = 'Login'
-	loginTab.className = 'hover:text-[#646cff] transition-colors'
-
-	const registerTab = document.createElement('button')
-	registerTab.type = 'button'
-	registerTab.innerText = 'Register'
-	registerTab.className = 'hover:text-[#646cff] transition-colors'
-
-	modeSwitch.appendChild(loginTab)
-	modeSwitch.appendChild(registerTab)
-
-	const title = document.createElement('h2')
-	title.className = 'text-2xl font-bold text-center text-[#646cff]'
-	title.innerText = 'PONG LOGIN'
-
-	const usernameInput = document.createElement('input')
-	usernameInput.type = 'text'
-	usernameInput.placeholder = 'Username'
-	usernameInput.className =
-		'bg-[#242424] border border-[#646cff] text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#646cff] placeholder-gray-400'
-
-	const emailInput = document.createElement('input')
-	emailInput.type = 'email'
-	emailInput.placeholder = 'Email'
-	emailInput.className =
-		'bg-[#242424] border border-[#646cff] text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#646cff] placeholder-gray-400'
-
-	const button = document.createElement('button')
-	button.type = 'submit'
-	button.innerText = 'START'
-	button.className =
-		'bg-[#1a1a1a] border border-[#646cff] text-white py-2 rounded hover:bg-[#323232] transition-colors'
-
-	// Cambiar modo
-	function updateMode(newMode: 'login' | 'register') {
-		mode = newMode
-		title.innerText = newMode === 'login' ? 'PONG LOGIN' : 'PONG REGISTER'
-		button.innerText = newMode === 'login' ? 'LOGIN' : 'REGISTER'
-
-		// Visual tab feedback
-		loginTab.classList.toggle('text-[#646cff]', mode === 'login')
-		registerTab.classList.toggle('text-[#646cff]', mode === 'register')
-	}
-
-	loginTab.onclick = () => updateMode('login')
-	registerTab.onclick = () => updateMode('register')
-
-	form.appendChild(modeSwitch)
-	form.appendChild(title)
-	form.appendChild(usernameInput)
-	form.appendChild(emailInput)
-	form.appendChild(button)
-
-	form.onsubmit = (e) => {
-		e.preventDefault()
-		const username = usernameInput.value.trim()
-		const email = emailInput.value.trim()
-
-		if (username && email) {
-			// Aquí lógica de login/register real
-			console.log(`${mode.toUpperCase()}: ${username} - ${email}`)
-			onLoginSuccess()
-		}
-	}
-
-	container.appendChild(form)
-	updateMode(mode) // iniciar con modo login
-
-	return container
-}
-*/
+const inputClassName = "bg-gray-700 border border-gray-600 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"
