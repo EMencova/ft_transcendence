@@ -637,6 +637,7 @@ function createMatchCard(match: any, players: any[]) {
         "mt-3 w-full py-1 bg-orange-500 text-white rounded hover:bg-orange-600",
       textContent: "Start Match",
     });
+    startBtn.id="cardStartBtn"
     startBtn.addEventListener("click", () =>
       startTournamentPongMatch(match, players)
     );
@@ -655,6 +656,7 @@ function createMatchCard(match: any, players: any[]) {
         className: "w-full py-1 bg-blue-500 text-white rounded hover:bg-blue-600",
         textContent: "Continue Match",
       });
+      continueBtn.id="cardContBtn"
       continueBtn.addEventListener("click", () => continueTournamentPongMatch(match, players ));
       resultForm.appendChild(continueBtn);
       matchCard.appendChild(resultForm);
@@ -664,13 +666,27 @@ function createMatchCard(match: any, players: any[]) {
 
 async function startTournamentPongMatch(match: any, players: any[]) {
   try {
-      //TODO: once clicked from the previous step, disable the button on other cards
+      // once clicked from the previous step, disable the button on other cards
+    // const cardBtns = (document.getElementById("cardContBtn") 
+    //                   || document.getElementById("cardStartBtn")) as HTMLButtonElement | null;
+    
+    // if (cardBtns) {
+    //   cardBtns.style.backgroundColor = "gray";
+    //   cardBtns.disabled = true;
+    // }
+
+    const cardBtns = document.querySelectorAll<HTMLButtonElement>("#cardContBtn, #cardStartBtn");
+    cardBtns.forEach(btn => {
+        btn.disabled = true
+        btn.style.backgroundColor = "gray";
+      });
 
     const matchid = match.id;
     if (!matchid) {
       alert("Invalid match ID");
       return;
     }
+     
     const respnse = await fetch(`/api/tournaments/matches/${matchid}/start`, {
       method: "POST",
     });
@@ -685,7 +701,13 @@ async function startTournamentPongMatch(match: any, players: any[]) {
 
 async function continueTournamentPongMatch(match: any, players:any[] ){
 	try {
-      //TODO: once clicked from the previous step, disable the button on other cards 
+      // once clicked from the previous step, disable the button on other cards 
+    const cardBtns = document.querySelectorAll<HTMLButtonElement>("#cardContBtn, #cardStartBtn");
+    cardBtns.forEach(btn => {
+        btn.disabled = true
+        btn.style.backgroundColor = "gray";
+      });
+
 
 		const matchid = match.id;
 		if (!matchid) {
@@ -703,11 +725,11 @@ async function continueTournamentPongMatch(match: any, players:any[] ){
   }
 };
 
-
-
-
-
 async function createPongGameDiv(match: any, players: any[]) {
+
+  console.log(`match time from createPongGameDiv is ${match.time_remaining}`);
+
+
   const bracketContainer = document.getElementById("tournament-bracket");
   if (!bracketContainer) return;
 
@@ -810,7 +832,7 @@ async function createPongGameDiv(match: any, players: any[]) {
   stopButton.className = "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600";
   stopButton.textContent = "End Game";
   stopButton.style.display = "none";
-  stopButton.hidden = true;
+  // stopButton.hidden = true;
 
   controls.appendChild(startButton);
   controls.appendChild(pauseButton);
