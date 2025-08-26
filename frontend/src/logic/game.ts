@@ -67,8 +67,22 @@ export function startGame(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext
     }
   }
 
-  document.addEventListener("keydown", (e) => (keysPressed[e.key] = true))
-  document.addEventListener("keyup", (e) => (keysPressed[e.key] = false))
+    document.addEventListener("keydown", (e) => {
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+      e.preventDefault();
+    }
+    keysPressed[e.key] = true;
+  });
+
+  document.addEventListener("keyup", (e) => {
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+      e.preventDefault();
+    }
+    keysPressed[e.key] = false;
+  });
+  
+  // document.addEventListener("keydown", (e) => (keysPressed[e.key] = true))
+  // document.addEventListener("keyup", (e) => (keysPressed[e.key] = false))
   window.addEventListener('pauseStateChanged', (e: any) => {
     gamePaused = e.detail.paused
   })

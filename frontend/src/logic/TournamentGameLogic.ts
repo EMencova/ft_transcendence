@@ -175,8 +175,20 @@ export function startPongGame(
     score2: match.score2 || 0,
   };
 
-  document.addEventListener("keydown", (e) => (keysPressed[e.key] = true));
-  document.addEventListener("keyup", (e) => (keysPressed[e.key] = false));
+  document.addEventListener("keydown", (e) => {
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+      e.preventDefault();
+    }
+    keysPressed[e.key] = true;
+  });
+
+  document.addEventListener("keyup", (e) => {
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+      e.preventDefault();
+    }
+    keysPressed[e.key] = false;
+  });
+
   window.addEventListener("pauseStateChanged", (e: any) => {
     gamePaused = e.detail.paused;
   });
@@ -285,7 +297,7 @@ export function startPongGame(
   }
 
   // Start the game loop
-  if (match.status === "in_progress") {
+  if (match.status === "in_progress" || match.status === "scheduled") {
     // If continuing a match, start paused so user can choose when to resume
     gamePaused = true;
     console.log("Continuing match - started in paused state");
@@ -296,6 +308,7 @@ export function startPongGame(
     if (pauseBtn) {
       pauseBtn.textContent = "Resume";
       pauseBtn.style.display = "block";
+      gamePaused = true
       window.dispatchEvent(new CustomEvent('pauseStateChanged', {
         detail: { paused: gamePaused }
       }));
@@ -312,9 +325,14 @@ export function startPongGame(
   loop();
 }
 
+
+// stop game and cancel animation frame
+
 export function stopGame() {
   cancelAnimationFrame(animationId);
 }
+
+//Record Game Scorees
 
 export async function recordMatchScore(matchId: number, score1: number, score2: number) {
 	try {
@@ -341,9 +359,11 @@ export async function recordMatchScore(matchId: number, score1: number, score2: 
 	} catch (error) {
 	  console.error("Error updating match score:", error);
 	}
-  }
+}
 
-  export function initializePongGameUI(match: any) {
+
+// Initial Pong Game UI
+export function initializePongGameUI(match: any) {
   const canvas = document.getElementById(
     `pong-game-${match.id}`
   ) as HTMLCanvasElement;
@@ -414,7 +434,6 @@ export async function recordMatchScore(matchId: number, score1: number, score2: 
 
 
 
-// Add this function to handle cleanup
 export function cleanupActiveGame() {
   console.log("Cleaning up active game");
   

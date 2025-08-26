@@ -358,7 +358,8 @@ async function createTournament() {
 
     const result = await response.json();
     alert(`Tournament created successfully! ID: ${result.tournamentId}`);
-    viewTournament(result.tournamentId);
+    // viewTournament(result.tournamentId);
+    TournamentView();
   } catch (error) {
     console.error("Error creating tournament:", error);
     alert("Error creating tournament");
@@ -479,7 +480,7 @@ async function loadTournamentDetails(tournamentId: number) {
 
     bracketContainer.innerHTML = "Welcome to the Tournament Stage!";
 
-    // Group matches by round
+    // Group matches by round // could also use map instead of records
     const rounds: Record<number, any[]> = {};
     matches.forEach((match: any) => {
       if (!rounds[match.round]) rounds[match.round] = [];
@@ -639,25 +640,53 @@ function createMatchCard(match: any, players: any[]) {
     startBtn.addEventListener("click", () =>
       startTournamentPongMatch(match, players)
     );
+
+    if (player1.username == "Unknown Player" || player2.username == "Unknown Player"){
+      startBtn.disabled = true;
+      startBtn.style.backgroundColor = "gray"
+    }
     matchCard.appendChild(startBtn);
   } else if (match.status === "in_progress") {
-    const resultForm = createElement("div", { className: "mt-3" });
-	resultForm.innerHTML = `
-		<p class="text-sm text-gray-400 mb-2">Match in progress...</p>
-	`;
-	const continueBtn = createElement("button", {
-		className: "w-full py-1 bg-blue-500 text-white rounded hover:bg-blue-600",
-		textContent: "Continue Match",
-	});
-	continueBtn.addEventListener("click", () => continueTournamentPongMatch(match, players ));
-	resultForm.appendChild(continueBtn);
-	matchCard.appendChild(resultForm);
+      const resultForm = createElement("div", { className: "mt-3" });
+      resultForm.innerHTML = `
+        <p class="text-sm text-gray-400 mb-2">Match in progress...</p>
+      `;
+      const continueBtn = createElement("button", {
+        className: "w-full py-1 bg-blue-500 text-white rounded hover:bg-blue-600",
+        textContent: "Continue Match",
+      });
+      continueBtn.addEventListener("click", () => continueTournamentPongMatch(match, players ));
+      resultForm.appendChild(continueBtn);
+      matchCard.appendChild(resultForm);
 	  }
   return matchCard;
 }
 
+async function startTournamentPongMatch(match: any, players: any[]) {
+  try {
+      //TODO: once clicked from the previous step, disable the button on other cards
+
+    const matchid = match.id;
+    if (!matchid) {
+      alert("Invalid match ID");
+      return;
+    }
+    const respnse = await fetch(`/api/tournaments/matches/${matchid}/start`, {
+      method: "POST",
+    });
+    if (!respnse.ok) throw new Error("Failed to start match");
+
+    createPongGameDiv(match, players);
+  } catch (error) {
+    console.error("Error starting match:", error);
+    alert("Error starting match");
+  }
+}
+
 async function continueTournamentPongMatch(match: any, players:any[] ){
 	try {
+      //TODO: once clicked from the previous step, disable the button on other cards 
+
 		const matchid = match.id;
 		if (!matchid) {
 			alert("continueTournamentPongMatch: ID of this Match not found");
@@ -676,24 +705,7 @@ async function continueTournamentPongMatch(match: any, players:any[] ){
 
 
 
-async function startTournamentPongMatch(match: any, players: any[]) {
-  try {
-    const matchid = match.id;
-    if (!matchid) {
-      alert("Invalid match ID");
-      return;
-    }
-    const respnse = await fetch(`/api/tournaments/matches/${matchid}/start`, {
-      method: "POST",
-    });
-    if (!respnse.ok) throw new Error("Failed to start match");
 
-    createPongGameDiv(match, players);
-  } catch (error) {
-    console.error("Error starting match:", error);
-    alert("Error starting match");
-  }
-}
 
 async function createPongGameDiv(match: any, players: any[]) {
   const bracketContainer = document.getElementById("tournament-bracket");
@@ -782,6 +794,7 @@ async function createPongGameDiv(match: any, players: any[]) {
   startButton.id = "startBtn";
   startButton.className = "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600";
   startButton.textContent = match.status === "in_progress" ? "Resume Game" : "Start Game";
+  // startButton.addEventListener()
 
   const pauseButton = document.createElement("button");
   pauseButton.id = "pauseBtn";
@@ -797,6 +810,7 @@ async function createPongGameDiv(match: any, players: any[]) {
   stopButton.className = "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600";
   stopButton.textContent = "End Game";
   stopButton.style.display = "none";
+  stopButton.hidden = true;
 
   controls.appendChild(startButton);
   controls.appendChild(pauseButton);
