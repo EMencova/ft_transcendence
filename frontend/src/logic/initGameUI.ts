@@ -55,12 +55,21 @@ export function initializeGameUI() {
 				<div>Player 2: <span class="bg-gray-700 px-2 py-1 rounded">↑</span> / <span class="bg-gray-700 px-2 py-1 rounded">↓</span></div>
 			`,
 			'Pong4': `
-				<div class="font-medium text-white mb-1">4 Player Mode:</div>
-				<div class="grid grid-cols-2 gap-2 text-xs">
-					<div>Player 1 (Left): <span class="bg-gray-700 px-1 py-0.5 rounded">W</span>/<span class="bg-gray-700 px-1 py-0.5 rounded">S</span></div>
-					<div>Player 2 (Right): <span class="bg-gray-700 px-1 py-0.5 rounded">↑</span>/<span class="bg-gray-700 px-1 py-0.5 rounded">↓</span></div>
-					<div>Player 3 (Top): <span class="bg-gray-700 px-1 py-0.5 rounded">Z</span>/<span class="bg-gray-700 px-1 py-0.5 rounded">X</span></div>
-					<div>Player 4 (Bottom): <span class="bg-gray-700 px-1 py-0.5 rounded">N</span>/<span class="bg-gray-700 px-1 py-0.5 rounded">M</span></div>
+				<div class="font-medium text-white mb-1">4 Player Team Mode (2v2):</div>
+				<div class="grid grid-cols-2 gap-3 text-xs">
+					<div class="bg-blue-900/30 p-2 rounded">
+						<div class="font-medium text-blue-300 mb-1">Left Team:</div>
+						<div>Player 1 (Top): <span class="bg-gray-700 px-1 py-0.5 rounded">W</span>/<span class="bg-gray-700 px-1 py-0.5 rounded">S</span></div>
+						<div>Player 3 (Bottom): <span class="bg-gray-700 px-1 py-0.5 rounded">Z</span>/<span class="bg-gray-700 px-1 py-0.5 rounded">X</span></div>
+					</div>
+					<div class="bg-red-900/30 p-2 rounded">
+						<div class="font-medium text-red-300 mb-1">Right Team:</div>
+						<div>Player 2 (Top): <span class="bg-gray-700 px-1 py-0.5 rounded">↑</span>/<span class="bg-gray-700 px-1 py-0.5 rounded">↓</span></div>
+						<div>Player 4 (Bottom): <span class="bg-gray-700 px-1 py-0.5 rounded">N</span>/<span class="bg-gray-700 px-1 py-0.5 rounded">M</span></div>
+					</div>
+				</div>
+				<div class="text-xs text-yellow-400 mt-2">
+					<strong>Team Play:</strong> 2 paddles per side, shared team score! Like 4-player table tennis.
 				</div>
 			`
 		}
@@ -76,7 +85,7 @@ export function initializeGameUI() {
 		const controlsText = {
 			'Pong1': `Player 1: W/S keys | AI plays as Player 2 | First to ${selectedWinScore} points wins!`,
 			'Pong2': `Player 1: W/S keys | Player 2: Arrow Up/Down keys | First to ${selectedWinScore} points wins!`, 
-			'Pong4': `P1: W/S | P2: ↑/↓ | P3: Z/X | P4: N/M | First to ${selectedWinScore} points wins!`
+			'Pong4': `Left Team (P1: W/S, P3: Z/X) vs Right Team (P2: ↑/↓, P4: N/M) | First team to ${selectedWinScore} wins!`
 		}
 		
 		currentControls.textContent = controlsText[mode as keyof typeof controlsText] || controlsText['Pong1']

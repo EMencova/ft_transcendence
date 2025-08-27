@@ -58,17 +58,21 @@ export function startGame(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext
       score2: 0,
     }
   } else {
+    // 4-player team mode: 2v2 like table tennis
+    // Left team: Player 1 (top quarter) + Player 3 (bottom quarter)  
+    // Right team: Player 2 (top quarter) + Player 4 (bottom quarter)
+    const quarterHeight = canvas.height / 4
     state = {
       gameType: "Pong4",
-      player1: { x: 0, y: canvas.height / 2 - paddleHeight / 2, width: paddleWidth, height: paddleHeight, speed: 7 },
-      player2: { x: canvas.width - paddleWidth, y: canvas.height / 2 - paddleHeight / 2, width: paddleWidth, height: paddleHeight, speed: 7 },
-      player3: { x: canvas.width / 2 - 50, y: 0, width: 100, height: 10, speed: 7 },
-      player4: { x: canvas.width / 2 - 50, y: canvas.height - 10, width: 100, height: 10, speed: 7 },
+      // Left side paddles
+      player1: { x: 0, y: quarterHeight - paddleHeight / 2, width: paddleWidth, height: paddleHeight, speed: 7 }, // Left top
+      player3: { x: 0, y: 3 * quarterHeight - paddleHeight / 2, width: paddleWidth, height: paddleHeight, speed: 7 }, // Left bottom
+      // Right side paddles  
+      player2: { x: canvas.width - paddleWidth, y: quarterHeight - paddleHeight / 2, width: paddleWidth, height: paddleHeight, speed: 7 }, // Right top
+      player4: { x: canvas.width - paddleWidth, y: 3 * quarterHeight - paddleHeight / 2, width: paddleWidth, height: paddleHeight, speed: 7 }, // Right bottom
       ball: { x: canvas.width / 2, y: canvas.height / 2, radius: ballRadius, velocityX: 4, velocityY: 4, speed: 5 },
-      score1: 0,
-      score2: 0,
-      score3: 0,
-      score4: 0,
+      teamLeftScore: 0,  // Team 1: Players 1 & 3
+      teamRightScore: 0, // Team 2: Players 2 & 4
     }
   }
 
@@ -113,17 +117,22 @@ export function startGame(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext
 
     if (state.gameType === "Pong4") {
       const s = state as GameState4
-      // Player 2 (right side) - Arrow keys
+      
+      // Player 1 (left side, top quarter) - W/S keys
+      if (keysPressed["w"] && s.player1.y > 0) s.player1.y -= s.player1.speed
+      if (keysPressed["s"] && s.player1.y < canvas.height / 2 - s.player1.height) s.player1.y += s.player1.speed
+      
+      // Player 2 (right side, top quarter) - Arrow Up/Down keys
       if (keysPressed["ArrowUp"] && s.player2.y > 0) s.player2.y -= s.player2.speed
-      if (keysPressed["ArrowDown"] && s.player2.y < canvas.height - s.player2.height) s.player2.y += s.player2.speed
+      if (keysPressed["ArrowDown"] && s.player2.y < canvas.height / 2 - s.player2.height) s.player2.y += s.player2.speed
       
-      // Player 3 (top) - Z/X keys
-      if (keysPressed["z"] && s.player3.x > 0) s.player3.x -= s.player3.speed
-      if (keysPressed["x"] && s.player3.x < canvas.width - s.player3.width) s.player3.x += s.player3.speed
+      // Player 3 (left side, bottom quarter) - Z/X keys  
+      if (keysPressed["z"] && s.player3.y > canvas.height / 2) s.player3.y -= s.player3.speed
+      if (keysPressed["x"] && s.player3.y < canvas.height - s.player3.height) s.player3.y += s.player3.speed
       
-      // Player 4 (bottom) - N/M keys  
-      if (keysPressed["n"] && s.player4.x > 0) s.player4.x -= s.player4.speed
-      if (keysPressed["m"] && s.player4.x < canvas.width - s.player4.width) s.player4.x += s.player4.speed
+      // Player 4 (right side, bottom quarter) - N/M keys
+      if (keysPressed["n"] && s.player4.y > canvas.height / 2) s.player4.y -= s.player4.speed
+      if (keysPressed["m"] && s.player4.y < canvas.height - s.player4.height) s.player4.y += s.player4.speed
     }
 
     if (state.gameType === "Pong1") {
@@ -142,26 +151,21 @@ export function startGame(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext
 
   function checkWinCondition() {
     if (state.gameType === "Pong1" || state.gameType === "Pong2") {
-      if (state.score1 >= WIN_SCORE) {
+      const s = state as GameState1 | GameState2
+      if (s.score1 >= WIN_SCORE) {
         endGame("Player 1 Wins!")
         return true
-      } else if (state.score2 >= WIN_SCORE) {
+      } else if (s.score2 >= WIN_SCORE) {
         endGame(state.gameType === "Pong1" ? "AI Wins!" : "Player 2 Wins!")
         return true
       }
     } else if (state.gameType === "Pong4") {
       const s = state as GameState4
-      if (s.score1 >= WIN_SCORE) {
-        endGame("Player 1 Wins!")
+      if (s.teamLeftScore >= WIN_SCORE) {
+        endGame("Left Team Wins! (Players 1 & 3)")
         return true
-      } else if (s.score2 >= WIN_SCORE) {
-        endGame("Player 2 Wins!")
-        return true
-      } else if (s.score3 >= WIN_SCORE) {
-        endGame("Player 3 Wins!")
-        return true
-      } else if (s.score4 >= WIN_SCORE) {
-        endGame("Player 4 Wins!")
+      } else if (s.teamRightScore >= WIN_SCORE) {
+        endGame("Right Team Wins! (Players 2 & 4)")
         return true
       }
     }
@@ -202,39 +206,54 @@ export function startGame(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext
       state.ball.velocityX = -Math.abs(state.ball.velocityX)
     }
     
-    // 4-player specific collisions
+    // 4-player team mode collisions
     if (state.gameType === "Pong4") {
       const s = state as GameState4
       if (detectCollision(s.player3, state.ball)) {
-        state.ball.velocityY = Math.abs(state.ball.velocityY)
+        state.ball.velocityX = Math.abs(state.ball.velocityX)
       } else if (detectCollision(s.player4, state.ball)) {
-        state.ball.velocityY = -Math.abs(state.ball.velocityY)
+        state.ball.velocityX = -Math.abs(state.ball.velocityX)
       }
     }
     
-    // Scoring
-    if (state.ball.x < 0) {
-      state.score2++
-      if (!checkWinCondition()) {
-        resetBall()
-      }
-    } else if (state.ball.x > canvas.width) {
-      state.score1++
-      if (!checkWinCondition()) {
-        resetBall()
-      }
-    }
-    
-    // 4-player scoring
+    // Team-based scoring for 4-player mode
     if (state.gameType === "Pong4") {
       const s = state as GameState4
-      if (state.ball.y < 0) {
-        s.score4++ // Bottom player gets point when ball hits top
+      
+      // Ball bounces off top and bottom walls
+      if (state.ball.y < 0 || state.ball.y > canvas.height) {
+        state.ball.velocityY *= -1
+      }
+      
+      // Team scoring when ball goes past left or right walls
+      if (state.ball.x < 0) {
+        // Ball went past left team, right team scores
+        s.teamRightScore++
         if (!checkWinCondition()) {
           resetBall()
         }
-      } else if (state.ball.y > canvas.height) {
-        s.score3++ // Top player gets point when ball hits bottom
+      } else if (state.ball.x > canvas.width) {
+        // Ball went past right team, left team scores  
+        s.teamLeftScore++
+        if (!checkWinCondition()) {
+          resetBall()
+        }
+      }
+    } else {
+      // Original scoring for 1P/2P modes
+      if (state.ball.x < 0) {
+        if (state.gameType === "Pong1" || state.gameType === "Pong2") {
+          const s = state as GameState1 | GameState2
+          s.score2++
+        }
+        if (!checkWinCondition()) {
+          resetBall()
+        }
+      } else if (state.ball.x > canvas.width) {
+        if (state.gameType === "Pong1" || state.gameType === "Pong2") {
+          const s = state as GameState1 | GameState2
+          s.score1++
+        }
         if (!checkWinCondition()) {
           resetBall()
         }
@@ -282,15 +301,20 @@ export function startGame(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext
     
     if (state.gameType === "Pong4") {
       const s = state as GameState4
-      // 4-player score layout
-      ctx.fillText(`${state.score1}`, canvas.width / 4, 50)           // Left
-      ctx.fillText(`${state.score2}`, (3 * canvas.width) / 4, 50)    // Right
-      ctx.fillText(`${s.score3}`, canvas.width / 2, 30)              // Top
-      ctx.fillText(`${s.score4}`, canvas.width / 2, canvas.height - 10) // Bottom
+      // Team-based score layout for 4-player mode
+      ctx.fillText(`Left Team: ${s.teamLeftScore}`, canvas.width / 4, 50)
+      ctx.fillText(`Right Team: ${s.teamRightScore}`, (3 * canvas.width) / 4, 50)
+      
+      // Show player assignments
+      ctx.font = "14px Arial"
+      ctx.fillStyle = "rgba(255, 255, 255, 0.7)"
+      ctx.fillText(`Players 1 & 3`, canvas.width / 4, 75)
+      ctx.fillText(`Players 2 & 4`, (3 * canvas.width) / 4, 75)
     } else {
-      // 2-player score layout
-      ctx.fillText(`${state.score1}`, canvas.width / 4, 50)
-      ctx.fillText(`${state.score2}`, (3 * canvas.width) / 4, 50)
+      // Individual score layout for 1P/2P modes
+      const s = state as GameState1 | GameState2
+      ctx.fillText(`${s.score1}`, canvas.width / 4, 50)
+      ctx.fillText(`${s.score2}`, (3 * canvas.width) / 4, 50)
     }
     
     // Draw target score indicator
@@ -298,6 +322,17 @@ export function startGame(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)"
     ctx.textAlign = "center"
     ctx.fillText(`First to ${WIN_SCORE}`, canvas.width / 2, canvas.height - 20)
+    
+    // Show team controls in 4-player mode
+    if (state.gameType === "Pong4") {
+      ctx.font = "12px Arial"
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)"
+      ctx.textAlign = "left"
+      ctx.fillText("Left Team: Player 1 (W/S), Player 3 (Z/X)", 10, canvas.height - 40)
+      ctx.textAlign = "right"
+      ctx.fillText("Right Team: Player 2 (↑/↓), Player 4 (N/M)", canvas.width - 10, canvas.height - 40)
+      ctx.textAlign = "center"
+    }
     
     // Reset line dash for other drawings
     ctx.setLineDash([])

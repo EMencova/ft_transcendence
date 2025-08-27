@@ -44,15 +44,13 @@ type GameState2 = {
 
 type GameState4 = {
     gameType: string;
-    player1: Paddle;
-    player2: Paddle;
-    player3: Paddle;
-    player4: Paddle;
+    player1: Paddle; // Left side, top quarter
+    player2: Paddle; // Right side, top quarter  
+    player3: Paddle; // Left side, bottom quarter
+    player4: Paddle; // Right side, bottom quarter
     ball: Ball;
-    score1: number;
-    score2: number;
-    score3: number;
-    score4: number;
+    teamLeftScore: number;  // Team 1 (players 1 & 3)
+    teamRightScore: number; // Team 2 (players 2 & 4)
 };
 
 export type { Paddle, Ball, AI, GameState1, GameState2, GameState4 };
