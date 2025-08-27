@@ -107,15 +107,19 @@ export function startGame(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext
   window.addEventListener('pauseStateChanged', pauseStateListener)
 
   function movePaddles() {
-    if (keysPressed["w"] && state.player1.y > 0) state.player1.y -= state.player1.speed
-    if (keysPressed["s"] && state.player1.y < canvas.height - state.player1.height) state.player1.y += state.player1.speed
-
-    if (state.gameType === "Pong2") {
+    if (state.gameType === "Pong1") {
+      // 1-player mode: only Player 1 controlled by human
+      if (keysPressed["w"] && state.player1.y > 0) state.player1.y -= state.player1.speed
+      if (keysPressed["s"] && state.player1.y < canvas.height - state.player1.height) state.player1.y += state.player1.speed
+    } else if (state.gameType === "Pong2") {
+      // 2-player mode: both players controlled by humans
+      if (keysPressed["w"] && state.player1.y > 0) state.player1.y -= state.player1.speed
+      if (keysPressed["s"] && state.player1.y < canvas.height - state.player1.height) state.player1.y += state.player1.speed
+      
       if (keysPressed["ArrowUp"] && state.player2.y > 0) state.player2.y -= state.player2.speed
       if (keysPressed["ArrowDown"] && state.player2.y < canvas.height - state.player2.height) state.player2.y += state.player2.speed
-    }
-
-    if (state.gameType === "Pong4") {
+    } else if (state.gameType === "Pong4") {
+      // 4-player team mode: constrained movement for each quarter
       const s = state as GameState4
       
       // Player 1 (left side, top quarter) - W/S keys

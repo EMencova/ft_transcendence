@@ -64,12 +64,12 @@ export function initializeGameUI() {
 					</div>
 					<div class="bg-red-900/30 p-2 rounded">
 						<div class="font-medium text-red-300 mb-1">Right Team:</div>
-						<div>Player 2 (Top): <span class="bg-gray-700 px-1 py-0.5 rounded">↑</span>/<span class="bg-gray-700 px-1 py-0.5 rounded">↓</span></div>
+						<div>Player 2 (Top):<br><span class="bg-gray-700 px-1 py-0.5 rounded">↑</span>/<span class="bg-gray-700 px-1 py-0.5 rounded">↓</span></div>
 						<div>Player 4 (Bottom): <span class="bg-gray-700 px-1 py-0.5 rounded">N</span>/<span class="bg-gray-700 px-1 py-0.5 rounded">M</span></div>
 					</div>
 				</div>
 				<div class="text-xs text-yellow-400 mt-2">
-					<strong>Team Play:</strong> 2 paddles per side, shared team score! Like 4-player table tennis.
+					<strong>Team Play:</strong> 2 paddles per side, shared team score!
 				</div>
 			`
 		}
