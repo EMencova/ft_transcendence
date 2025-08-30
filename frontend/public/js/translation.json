@@ -29,7 +29,6 @@
     "leaderboard_desc": "The player leaderboard table will go here.",
     "tournament_title": "🏆 Tournament",
     "tournament_desc": "The tournament logic and list will go here.",
-
     "app_title": "🏓 ft_transcendence",
     "nav_game": "🎮 Game",
     "nav_other_games": "🕹️ Other Games",
@@ -38,14 +37,32 @@
     "nav_login": "Login",
     "nav_signup": "Signup",
     "nav_logout": "Logout",
-
     "other_games_title": "🕹️ Other Games",
     "back_to_pong": "Back to Pong",
     "game_tetris": "Tetris",
     "game_arcanoid": "Arcanoid",
-    "game_arcanoid_content": "Here the Arcanoid game will be displayed."
-
-
+    "game_arcanoid_content": "Here the Arcanoid game will be displayed.",
+    "counter_text": "count is",
+    "counter_button": "Counter",
+    "friends_title": "Friends",
+    "loading_friends": "Loading friends...",
+    "error_loading_friends": "Error loading friends. Please try again.",
+    "tetris_title": "🕹️ Tetris",
+    "start_game": "Start Game",
+    "score": "Score: 0",
+    "pause": "Pause",
+    "reset": "Reset",
+    "login_to_save": "If you want to save your record, please log in.",
+    "login_tab": "Login",
+    "register_tab": "Register",
+    "pong_login": "PONG LOGIN",
+    "pong_register": "PONG REGISTER",
+    "username_placeholder": "Username",
+    "email_placeholder": "Email",
+    "password_placeholder": "Password",
+    "start_button": "START",
+    "login_button": "LOGIN",
+    "register_button": "REGISTER"
   },
   "es": {
     "profile_button": "Perfil",
@@ -77,8 +94,6 @@
     "leaderboard_desc": "La tabla de clasificación de jugadores irá aquí.",
     "tournament_title": "🏆 Torneo",
     "tournament_desc": "La lógica y lista del torneo irán aquí.",
-
-
     "nav_game": "🎮 Juego",
     "nav_other_games": "🕹️ Otros Juegos",
     "nav_tournament": "🏆 Torneo",
@@ -86,12 +101,32 @@
     "nav_login": "Iniciar sesión",
     "nav_signup": "Registrarse",
     "nav_logout": "Cerrar sesión",
-
     "other_games_title": "🕹️ Otros Juegos",
     "back_to_pong": "Volver a Pong",
     "game_tetris": "Tetris",
     "game_arcanoid": "Arcanoid",
-    "game_arcanoid_content": "Aquí se mostrará el juego Arcanoid."
+    "game_arcanoid_content": "Aquí se mostrará el juego Arcanoid.",
+    "counter_text": "el contador es",
+    "counter_button": "Contador",
+    "friends_title": "Amigos",
+    "loading_friends": "Cargando amigos...",
+    "error_loading_friends": "Error al cargar amigos. Inténtalo de nuevo.",
+    "tetris_title": "🕹️ Tetris",
+    "start_game": "Iniciar juego",
+    "score": "Puntuación: 0",
+    "pause": "Pausa",
+    "reset": "Reiniciar",
+    "login_to_save": "Si quieres guardar tu récord, por favor inicia sesión.",
+    "login_tab": "Přihlášení",
+    "register_tab": "Registrace",
+    "pong_login": "PONG PŘIHLÁŠENÍ",
+    "pong_register": "PONG REGISTRACE",
+    "username_placeholder": "Uživatelské jméno",
+    "email_placeholder": "Email",
+    "password_placeholder": "Heslo",
+    "start_button": "START",
+    "login_button": "PŘIHLÁSIT",
+    "register_button": "REGISTROVAT"
   },
   "cz": {
     "profile_button": "Profil",
@@ -130,12 +165,33 @@
     "nav_login": "Přihlásit se",
     "nav_signup": "Registrovat",
     "nav_logout": "Odhlásit se",
-
     "other_games_title": "🕹️ Ostatní hry",
     "back_to_pong": "Zpět k Pongu",
     "game_tetris": "Tetris",
     "game_arcanoid": "Arkanoid",
-    "game_arcanoid_content": "Zde se zobrazí hra Arkanoid."
+    "game_arcanoid_content": "Zde se zobrazí hra Arkanoid.",
+    "counter_text": "počet je",
+    "counter_button": "Počítadlo",
+    "friends_title": "Přátelé",
+    "loading_friends": "Načítání přátel...",
+    "error_loading_friends": "Chyba při načítání přátel. Zkuste to znovu.",
+    
+    "tetris_title": "🕹️ Tetris",
+    "start_game": "Spustit hru",
+    "score": "Skóre: 0",
+    "pause": "Pauza",
+    "reset": "Resetovat",
+    "login_to_save": "Pokud chcete uložit svůj rekord, přihlaste se prosím.",
+    "login_tab": "Iniciar sesión",
+    "register_tab": "Registrarse",
+    "pong_login": "PONG INICIO DE SESIÓN",
+    "pong_register": "PONG REGISTRO",
+    "username_placeholder": "Nombre de usuario",
+    "email_placeholder": "Correo electrónico",
+    "password_placeholder": "Contraseña",
+    "start_button": "INICIAR",
+    "login_button": "INICIAR SESIÓN",
+    "register_button": "REGISTRARSE"
   }
 }
 

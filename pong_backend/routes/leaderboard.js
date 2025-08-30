@@ -1,7 +1,17 @@
 module.exports = async function (fastify, opts) {
   const db = fastify.sqliteDb;
 
-fastify.get('/leaderboard', async (request, reply) => {
+  // Escape function to prevent XSS
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  fastify.get('/leaderboard', async (request, reply) => {
     try {
       const rows = await new Promise((resolve, reject) => {
         db.all(`
@@ -15,10 +25,17 @@ fastify.get('/leaderboard', async (request, reply) => {
         });
       });
 
-      reply.send(rows);
+      // Escape user-generated fields (like username) to prevent XSS
+      const escapedRows = rows.map(r => ({
+        ...r,
+        username: escapeHtml(r.username)
+      }));
+
+      reply.send(escapedRows);
     } catch (err) {
       console.error('Error fetching leaderboard:', err);
       reply.code(500).send({ error: 'Database error' });
     }
   });
 }
+

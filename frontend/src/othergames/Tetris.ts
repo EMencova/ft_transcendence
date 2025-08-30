@@ -5,26 +5,28 @@ export function TetrisView(push = true, container?: HTMLElement) {
     if (!target) return
 
     const recordHtml = currentUser
-        ? `<span id="tetrisRecord" class="text-white mt-4">Record: 0</span>`
-        : `<span id="tetrisRecord" class="text-white mt-4 text-sm italic">If you want to save your record, please log in.</span>`
+    ? `<span id="tetrisRecord" class="text-white mt-4" data-translate="record">Record: 0</span>`
+    : `<span id="tetrisRecord" class="text-white mt-4 text-sm italic" data-translate="login_to_save">If you want to save your record, please log in.</span>`;
 
-    target.innerHTML = `
-        <h2 class="text-2xl font-bold mb-4 mt-6">🕹️ Tetris</h2>
-       <div id="tetrisGame" class="border border-gray-500 p-4 flex flex-col items-center mx-auto max-w-4xl">
-            <button id="startTetrisBtn" class="mb-6 w-48 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 text-lg">Start Game</button>
+
+        target.innerHTML = `
+        <h2 class="text-2xl font-bold mb-4 mt-6" data-translate="tetris_title">🕹️ Tetris</h2>
+        <div id="tetrisGame" class="border border-gray-500 p-4 flex flex-col items-center mx-auto max-w-4xl">
+            <button id="startTetrisBtn" class="mb-6 w-48 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 text-lg" data-translate="start_game">Start Game</button>
             <div class="flex justify-center w-full">
                 <canvas id="tetrisCanvas" class="border border-gray-700 bg-gray-900"></canvas>
                 <div id="tetrisScoreboard" class="flex flex-col items-start ml-4">
-                    <span id="tetrisScore" class="text-white mt-4">Score: 0</span>
+                    <span id="tetrisScore" class="text-white mt-4" data-translate="score">Score: 0</span>
                     ${recordHtml}
                     <div class="flex justify-center text-center space-x-4 mt-4">
-                        <button id="pauseBtn" class="w-24 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 opacity-50 cursor-not-allowed" disabled>Pause</button>
-                        <button id="resetBtn" class="w-24 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 opacity-50 cursor-not-allowed" disabled>Reset</button>
+                        <button id="pauseBtn" class="w-24 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 opacity-50 cursor-not-allowed" disabled data-translate="pause">Pause</button>
+                        <button id="resetBtn" class="w-24 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 opacity-50 cursor-not-allowed" disabled data-translate="reset">Reset</button>
                     </div>
                 </div>
             </div>
         </div>
     `
+    
     initTetrisGame()
     if (push && !container) history.pushState({ page: "tetris" }, "", "/tetris")
 }

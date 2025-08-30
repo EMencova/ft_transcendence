@@ -2,353 +2,144 @@ const path = require('path');
 const fs = require('fs');
 const pump = require('util').promisify(require('stream').pipeline);
 
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 async function userProfile(fastify, options) {
   const db = fastify.sqliteDb;
 
-  // Get user profile information
+  // Get user profile
   fastify.get('/profile/:userId', async (request, reply) => {
-    const { userId } = request.params;
+    const userId = parseInt(request.params.userId, 10);
+    if (!userId) return reply.code(400).send({ error: 'Invalid user ID.' });
 
-    if (!userId) {
-      return reply.status(400).send({ error: 'User ID is required.' });
+    try {
+      const row = await new Promise((resolve, reject) => {
+        db.get(
+          `SELECT id, username, email, avatar, wins, losses FROM players WHERE id = ?`,
+          [userId],
+          (err, row) => (err ? reject(err) : resolve(row))
+        );
+      });
+
+      if (!row) return reply.code(404).send({ error: 'User not found.' });
+
+      resolve(reply.send({
+        id: row.id,
+        username: escapeHtml(row.username),
+        email: escapeHtml(row.email),
+        avatar: escapeHtml(row.avatar),
+        wins: row.wins || 0,
+        losses: row.losses || 0
+      }));
+    } catch (err) {
+      console.error('Profile fetch error:', err);
+      reply.code(500).send({ error: 'Database error' });
     }
-
-    return new Promise((resolve, reject) => {
-      db.get(
-        `SELECT id, username, email, avatar, wins, losses FROM players WHERE id = ?`,
-        [userId],
-        function (err, row) {
-          if (err) {
-            console.error('Profile fetch error:', err.message);
-            return reject(reply.status(500).send({ error: 'Database error' }));
-          }
-
-          if (!row) {
-            return reject(reply.status(404).send({ error: 'User not found.' }));
-          }
-
-          console.log('Profile fetched successfully for user:', userId);
-          resolve(reply.send({
-            id: row.id,
-            username: row.username,
-            email: row.email,
-            avatar: row.avatar,
-            wins: row.wins || 0,
-            losses: row.losses || 0
-          }));
-        }
-      );
-    });
   });
 
-  // Update user profile information
+  // Update user profile
   fastify.put('/updateProfile', async (request, reply) => {
     const { username, email, userId } = request.body;
-    const playerId = userId || request.user?.id || 1; // Use userId from request body
+    const playerId = parseInt(userId, 10);
+    if (!username || !email || !playerId) return reply.code(400).send({ error: 'Invalid input.' });
 
-    if (!username || !email) {
-      return reply.status(400).send({ error: 'Username and email are required.' });
-    }
-
-    if (!userId) {
-      return reply.status(400).send({ error: 'User ID is required.' });
-    }
-
-    return new Promise((resolve, reject) => {
-      const stmt = db.prepare(`
-        UPDATE players 
-        SET username = ?, email = ? 
-        WHERE id = ?
-      `);
-
-      stmt.run(username, email, playerId, function(err) {
-        if (err) {
-          console.error('Profile update error:', err.message);
-          return reject(reply.status(500).send({ error: 'Database error' }));
-        }
-
-        if (this.changes === 0) {
-          return reject(reply.status(404).send({ error: 'Player not found.' }));
-        }
-
-        resolve(reply.send({ message: 'Profile updated successfully.' }));
+    try {
+      const result = await new Promise((resolve, reject) => {
+        const stmt = db.prepare(`
+          UPDATE players SET username = ?, email = ? WHERE id = ?
+        `);
+        stmt.run(username, email, playerId, function (err) {
+          if (err) reject(err);
+          else resolve(this);
+        });
       });
-    });
+
+      if (result.changes === 0) return reply.code(404).send({ error: 'Player not found.' });
+      reply.send({ message: 'Profile updated successfully.' });
+    } catch (err) {
+      console.error('Profile update error:', err);
+      reply.code(500).send({ error: 'Database error' });
+    }
   });
 
-  // Change user password
+  // Change password
   fastify.put('/profile/password', async (request, reply) => {
     const { currentPassword, newPassword, userId } = request.body;
+    const playerId = parseInt(userId, 10);
+    if (!currentPassword || !newPassword || !playerId) return reply.code(400).send({ error: 'Invalid input.' });
+    if (newPassword.length < 6) return reply.code(400).send({ error: 'Password must be at least 6 chars.' });
 
-    if (!currentPassword || !newPassword) {
-      return reply.status(400).send({ error: 'Current password and new password are required.' });
-    }
-
-    if (!userId) {
-      return reply.status(400).send({ error: 'User ID is required.' });
-    }
-
-    if (newPassword.length < 6) {
-      return reply.status(400).send({ error: 'New password must be at least 6 characters.' });
-    }
-
-    return new Promise((resolve, reject) => {
-      // First, get the current password hash
-      db.get(`SELECT password FROM players WHERE id = ?`, [userId], async function(err, row) {
-        if (err) {
-          console.error('Password fetch error:', err.message);
-          return reject(reply.status(500).send({ error: 'Database error' }));
-        }
-
-        if (!row) {
-          return reject(reply.status(404).send({ error: 'User not found.' }));
-        }
-
-        try {
-          // Verify current password
-          const bcrypt = require('bcrypt');
-          const passwordMatch = await bcrypt.compare(currentPassword, row.password);
-          
-          if (!passwordMatch) {
-            return reject(reply.status(400).send({ error: 'Current password is incorrect.' }));
-          }
-
-          // Hash new password
-          const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
-          // Update password
-          db.run(`UPDATE players SET password = ? WHERE id = ?`, [hashedNewPassword, userId], function(updateErr) {
-            if (updateErr) {
-              console.error('Password update error:', updateErr.message);
-              return reject(reply.status(500).send({ error: 'Database error' }));
-            }
-
-            if (this.changes === 0) {
-              return reject(reply.status(404).send({ error: 'User not found.' }));
-            }
-
-            console.log('Password updated successfully for user:', userId);
-            resolve(reply.send({ message: 'Password changed successfully.' }));
-          });
-
-        } catch (bcryptError) {
-          console.error('Bcrypt error:', bcryptError);
-          return reject(reply.status(500).send({ error: 'Password processing error' }));
-        }
+    try {
+      const row = await new Promise((resolve, reject) => {
+        db.get(`SELECT password FROM players WHERE id = ?`, [playerId], (err, row) => (err ? reject(err) : resolve(row)));
       });
-    });
-  });
 
-  // Get user game history
-  fastify.get('/profile/:userId/games', async (request, reply) => {
-    const { userId } = request.params;
+      if (!row) return reply.code(404).send({ error: 'User not found.' });
 
-    if (!userId) {
-      return reply.status(400).send({ error: 'User ID is required.' });
-    }
+      const bcrypt = require('bcrypt');
+      const passwordMatch = await bcrypt.compare(currentPassword, row.password);
+      if (!passwordMatch) return reply.code(400).send({ error: 'Current password is incorrect.' });
 
-    console.log('Getting game history for userId:', userId);
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-    return new Promise((resolve, reject) => {
-      // First, let's check if there are any games at all
-      db.all(`SELECT COUNT(*) as total FROM games`, [], function (err, countResult) {
-        if (err) {
-          console.error('Count games error:', err.message);
-          return reject(reply.status(500).send({ error: 'Database error' }));
-        }
-
-        console.log('Total games in database:', countResult[0]?.total || 0);
-
-        // Query to get game history for the user
-        db.all(`
-          SELECT 
-            g.id,
-            g.player1_id,
-            g.player2_id,
-            g.player1_score,
-            g.player2_score,
-            g.winner_id,
-            g.created_at,
-            g.game_type,
-            p1.username as player1_username,
-            p2.username as player2_username,
-            CASE 
-              WHEN g.winner_id = ? THEN 'win'
-              WHEN g.winner_id IS NOT NULL AND g.winner_id != ? THEN 'loss'
-              ELSE 'draw'
-            END as result
-          FROM games g
-          JOIN players p1 ON g.player1_id = p1.id
-          JOIN players p2 ON g.player2_id = p2.id
-          WHERE g.player1_id = ? OR g.player2_id = ?
-          ORDER BY g.created_at DESC
-          LIMIT 50
-        `, [userId, userId, userId, userId], function (err, rows) {
-          if (err) {
-            console.error('Game history fetch error:', err.message);
-            return reject(reply.status(500).send({ error: 'Database error: ' + err.message }));
-          }
-
-          console.log('Games found for user', userId, ':', rows?.length || 0);
-          console.log('Sample game data:', rows?.[0] || 'No games found');
-
-          resolve(reply.send({
-            games: rows || [],
-            debug: {
-              userId: userId,
-              totalGamesInDB: countResult[0]?.total || 0,
-              userGamesFound: rows?.length || 0
-            }
-          }));
+      await new Promise((resolve, reject) => {
+        db.run(`UPDATE players SET password = ? WHERE id = ?`, [hashedNewPassword, playerId], function (err) {
+          if (err) reject(err);
+          else resolve(this);
         });
       });
-    });
-  });
 
-  // TEMPORARY: Add sample game data for testing
-  fastify.post('/profile/:userId/games/sample', async (request, reply) => {
-    const { userId } = request.params;
-
-    if (!userId) {
-      return reply.status(400).send({ error: 'User ID is required.' });
+      reply.send({ message: 'Password changed successfully.' });
+    } catch (err) {
+      console.error('Password change error:', err);
+      reply.code(500).send({ error: 'Database error' });
     }
-
-    // Sample games data
-    const sampleGames = [
-      { player1_id: userId, player2_id: 1, player1_score: 5, player2_score: 3, winner_id: userId, game_type: 'pong' },
-      { player1_id: 2, player2_id: userId, player1_score: 2, player2_score: 5, winner_id: userId, game_type: 'pong' },
-      { player1_id: userId, player2_id: 3, player1_score: 3, player2_score: 5, winner_id: 3, game_type: 'pong' },
-      { player1_id: userId, player2_id: 1, player1_score: 4, player2_score: 5, winner_id: 1, game_type: 'tetris' },
-    ];
-
-    return new Promise((resolve, reject) => {
-      let completed = 0;
-      const total = sampleGames.length;
-
-      sampleGames.forEach(game => {
-        db.run(`
-          INSERT INTO games (player1_id, player2_id, player1_score, player2_score, winner_id, game_type)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `, [game.player1_id, game.player2_id, game.player1_score, game.player2_score, game.winner_id, game.game_type], function(err) {
-          if (err) {
-            console.error('Sample game insert error:', err.message);
-          }
-          
-          completed++;
-          if (completed === total) {
-            resolve(reply.send({ message: 'Sample games added successfully' }));
-          }
-        });
-      });
-    });
   });
 
-  // TEMPORARY: Debug endpoint to check database content
-  fastify.get('/debug/tables', async (request, reply) => {
-    return new Promise((resolve, reject) => {
-      // Check if games table exists and get all games
-      db.all(`SELECT * FROM games LIMIT 10`, [], function (err, games) {
-        if (err) {
-          console.error('Debug games query error:', err.message);
-          return reject(reply.status(500).send({ error: 'Database error checking games: ' + err.message }));
-        }
-
-        // Get all players
-        db.all(`SELECT id, username FROM players LIMIT 10`, [], function (err2, players) {
-          if (err2) {
-            console.error('Debug players query error:', err2.message);
-            return reject(reply.status(500).send({ error: 'Database error checking players: ' + err2.message }));
-          }
-
-          // Get table info for games
-          db.all(`PRAGMA table_info(games)`, [], function (err3, gamesSchema) {
-            if (err3) {
-              console.error('Debug schema query error:', err3.message);
-              return reject(reply.status(500).send({ error: 'Database error checking schema: ' + err3.message }));
-            }
-
-            resolve(reply.send({
-              games: games || [],
-              players: players || [],
-              gamesSchema: gamesSchema || [],
-              message: 'Debug info retrieved successfully'
-            }));
-          });
-        });
-      });
-    });
-  });
-
-  // Update user avatar
+  // File upload avatar
   fastify.register(require('@fastify/multipart'));
   fastify.put('/profile/avatar', async (request, reply) => {
-    console.log('Avatar update request received');
-    
-    if (!request.isMultipart()) {
-      console.log('Request is not multipart');
-      return reply.status(400).send({ error: 'Avatar upload must be multipart/form-data.' });
-    }
+    if (!request.isMultipart()) return reply.code(400).send({ error: 'Must be multipart/form-data' });
 
     const parts = request.parts();
     let avatarFilename = null;
     let userId = null;
 
-    console.log('Processing multipart data...');
     for await (const part of parts) {
-      console.log('Processing part:', part.fieldname, 'type:', part.type);
-      
       if (part.type === 'file' && part.fieldname === 'avatar') {
         const uploadDir = path.join(__dirname, '../public/avatars');
         if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-        avatarFilename = `${Date.now()}_${part.filename}`;
+        avatarFilename = `${Date.now()}_${path.basename(part.filename)}`;
         const filePath = path.join(uploadDir, avatarFilename);
-        console.log('Saving avatar to:', filePath);
-        try {
-          await pump(part.file, fs.createWriteStream(filePath));
-          console.log('Avatar saved successfully');
-        } catch (e) {
-          console.error('Error saving avatar:', e);
-          return reply.status(500).send({ error: 'Error saving avatar.' });
-        }
+        await pump(part.file, fs.createWriteStream(filePath));
       } else if (part.fieldname === 'userId') {
-        userId = part.value;
-        console.log('Received userId:', userId);
+        userId = parseInt(part.value, 10);
       }
     }
 
-    if (!userId) {
-      console.log('No userId provided');
-      return reply.status(400).send({ error: 'User ID is required.' });
+    if (!userId || !avatarFilename) return reply.code(400).send({ error: 'Missing userId or avatar file.' });
+
+    try {
+      const result = await new Promise((resolve, reject) => {
+        db.run(`UPDATE players SET avatar = ? WHERE id = ?`, [`/avatars/${avatarFilename}`, userId], function (err) {
+          if (err) reject(err);
+          else resolve(this);
+        });
+      });
+
+      if (result.changes === 0) return reply.code(404).send({ error: 'Player not found.' });
+      reply.send({ message: 'Avatar updated successfully.', avatar: `/avatars/${avatarFilename}` });
+    } catch (err) {
+      console.error('Avatar update error:', err);
+      reply.code(500).send({ error: 'Database error' });
     }
-
-    if (!avatarFilename) {
-      console.log('No avatar file uploaded');
-      return reply.status(400).send({ error: 'No avatar file uploaded.' });
-    }
-
-    const playerId = userId;
-
-    return new Promise((resolve, reject) => {
-      db.run(
-        `UPDATE players SET avatar = ? WHERE id = ?`,
-        [`/avatars/${avatarFilename}`, playerId],
-        function (err) {
-          if (err) {
-            console.error('Avatar update error:', err.message);
-            return reject(reply.status(500).send({ error: 'Database error' }));
-          }
-          if (this.changes === 0) {
-            return reject(reply.status(404).send({ error: 'Player not found.' }));
-          }
-          
-          console.log('Avatar updated successfully for user:', playerId);
-          resolve(reply.send({ 
-            message: 'Avatar updated successfully.', 
-            avatar: `/avatars/${avatarFilename}` 
-          }));
-        }
-      );
-    });
   });
 }
 
