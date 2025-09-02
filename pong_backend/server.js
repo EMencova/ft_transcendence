@@ -6,11 +6,13 @@ const fastify = Fastify({
   logger: true,
 });
 
+
 setupDb(fastify);
 
 // Import routes
 const authRoutes = require('./routes/auth');
 const playersRoutes = require('./routes/players');
+const matchmakingRoutes = require('./routes/tetrisMatchmakingRoutes');
 
 fastify.register(require('./routes/friendsRoutes'), { prefix: '/api' });
 fastify.register(require('./routes/leaderboard'), { prefix: '/api' });
@@ -19,6 +21,7 @@ fastify.register(require('./routes/userProfile'), { prefix: '/api' });
 fastify.register(require('./routes/tournamentsRoutes'), { prefix: '/api' });
 const tetrisRoutes = require('./routes/tetrisRoutes');
 fastify.register(tetrisRoutes, { prefix: '/api' });
+fastify.register(matchmakingRoutes, { prefix: '/api/tetris-matchmaking' });
 
 
 // Serve avatars from public/avatars directory
