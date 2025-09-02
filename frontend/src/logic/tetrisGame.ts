@@ -6,6 +6,7 @@ interface TetrisGameConfig {
     canvasId?: string
     scoreId?: string
     levelId?: string
+    linesId?: string
     startButtonId?: string
     pauseButtonId?: string
     resetButtonId?: string
@@ -28,6 +29,7 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
         canvasId: "tetrisCanvas",
         scoreId: "tetrisScore",
         levelId: "tetrisLevel",
+        linesId: "tetrisLines",
         startButtonId: "startTetrisBtn",
         pauseButtonId: "pauseBtn",
         resetButtonId: "resetBtn",
@@ -278,8 +280,10 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
     function updateScore() {
         const scoreElem = document.getElementById(finalConfig.scoreId)
         const levelElem = document.getElementById(finalConfig.levelId)
-        if (scoreElem) scoreElem.textContent = `Score: ${score}`
-        if (levelElem) levelElem.textContent = `Level: ${level}`
+        const linesElem = document.getElementById(finalConfig.linesId)
+        if (scoreElem) scoreElem.textContent = score.toString()
+        if (levelElem) levelElem.textContent = level.toString()
+        if (linesElem) linesElem.textContent = linesCleared.toString()
 
         // Update tournament progress if in tournament mode
         if (finalConfig.tournamentMode) {
