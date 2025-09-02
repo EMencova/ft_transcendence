@@ -1135,14 +1135,13 @@ function createTetrisInstance(container: HTMLElement, playerId: string, controls
 				if (levelEl) levelEl.textContent = finalLevel.toString()
 				if (linesEl) linesEl.textContent = finalLines.toString()
 
-				// Determine winner based on mode
+				// Handle game over for all modes
 				if (matchConfig) {
-					if (matchConfig.mode === 'survival') {
-						// First to game over loses, so the other player wins
-						const winner = playerId === 'player1' ? 'player2' : 'player1'
-						// In survival mode, we don't have winner stats immediately, let the function get them
-						endSimultaneousMatch(winner, matchConfig)
-					}
+					// The player who loses is the loser, so the other player wins
+					const winner = playerId === 'player1' ? 'player2' : 'player1'
+					console.log(`Game over for ${playerId}, winner is ${winner}`)
+					// End the simultaneous match with the winner
+					endSimultaneousMatch(winner, matchConfig)
 				}
 			}
 		}
