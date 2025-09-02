@@ -1046,6 +1046,17 @@ module.exports = async function (fastify, opts) {
             `, [player1.id, player2.id, player2.id, player1.id, mode]);
             
             console.log(`Cleaned up active matches for simultaneous game: ${player1.username} vs ${player2.username}`);
+        } else {
+            // Fallback: Remove any active simultaneous matches for player1 in this mode
+            // This handles cases where the opponent wasn't found by username
+            await runQuery(`
+                DELETE FROM tetris_active_matches 
+                WHERE (player1_id = ? OR player2_id = ?)
+                AND play_type = 'simultaneous'
+                AND mode = ?
+            `, [player1.id, player1.id, mode]);
+            
+            console.log(`Cleaned up active matches for player ${player1.username} in ${mode} mode (opponent not found by username)`);
         }
 
         console.log(`Simultaneous match saved: ${player1.username} vs ${opponent} in ${mode} mode`);
