@@ -1349,7 +1349,30 @@ function startSimultaneousMatch(config: { mode: string; opponent: string; winCon
 	const endMatchBtn = document.getElementById("endMatchBtn")
 	if (endMatchBtn) {
 		endMatchBtn.addEventListener('click', () => {
-			if (confirm('Are you sure you want to end this match?')) {
+			if (confirm('Are you sure you want to end this match? This will count as a forfeit.')) {
+				// Get current stats before stopping the games
+				let player1Stats = { score: 0, level: 1, lines: 0 }
+				let player2Stats = { score: 0, level: 1, lines: 0 }
+
+				// Get stats from game instances if available
+				const gameInstances = (window as any).simultaneousGameInstances
+				if (gameInstances) {
+					if (gameInstances.player1 && gameInstances.player1.getCurrentStats) {
+						player1Stats = gameInstances.player1.getCurrentStats()
+					}
+					if (gameInstances.player2 && gameInstances.player2.getCurrentStats) {
+						player2Stats = gameInstances.player2.getCurrentStats()
+					}
+				}
+
+				// Fallback to DOM elements if game instances don't have stats
+				if (player1Stats.score === 0 && player1Stats.lines === 0) {
+					player1Stats = getPlayerStats('player1')
+				}
+				if (player2Stats.score === 0 && player2Stats.lines === 0) {
+					player2Stats = getPlayerStats('player2')
+				}
+
 				// Stop and cleanup both games
 				if (gameInstance1 && gameInstance1.stopGame) {
 					gameInstance1.stopGame()
@@ -1372,11 +1395,19 @@ function startSimultaneousMatch(config: { mode: string; opponent: string; winCon
 					clearInterval(i)
 				}
 
+				// Save match as forfeit - player1 forfeits, so player2 wins
+				const matchConfig = { mode: config.mode, opponent: config.opponent }
+				console.log('Match ended manually (forfeit), saving results:', { player1Stats, player2Stats })
+				saveSimultaneousMatchResults(matchConfig, 'player2', player1Stats, player2Stats)
+
 				// Clean up global references
 				; (window as any).simultaneousGameInstances = null
 
-				// Go back to matchmaking
-				window.location.hash = '#othergames/matchmaking'
+				// Show forfeit message and go back to matchmaking
+				alert('Match forfeited. Results have been saved.')
+				setTimeout(() => {
+					window.location.hash = '#othergames/matchmaking'
+				}, 1000)
 			}
 		})
 	}
