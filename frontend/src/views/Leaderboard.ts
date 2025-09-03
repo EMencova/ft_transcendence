@@ -3,6 +3,11 @@ import { currentUser } from '../logic/auth'
 export function LeaderboardView(push = true) {
 	const main = document.getElementById("mainContent")
 	if (main) {
+		// Update URL if push is true
+		if (push) {
+			window.history.pushState({ page: "leaderboard" }, "", "/leaderboard")
+		}
+
 		if (!currentUser) {
 			main.innerHTML = `<p class="text-red-500">You must log in to view the leaderboard.</p>`
 			return

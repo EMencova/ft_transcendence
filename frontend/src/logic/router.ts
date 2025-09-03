@@ -5,6 +5,9 @@ import { ProfileView } from '../views/Profile'
 import { TournamentView } from '../views/Tournament'
 import { cleanupActiveGame } from './TournamentGameLogic'
 
+// Flag to prevent multiple popstate listeners
+let popstateListenerAdded = false
+
 export function setupNavLinks() {
 	const tournamentLink = document.getElementById("tournamentLink")
 	const leaderboardLink = document.getElementById("leaderboardLink")
@@ -38,16 +41,17 @@ export function setupNavLinks() {
 		})
 	}
 
-	//added
-	// To handle back/forward navigation
-	window.addEventListener("popstate", async () => {
-		const path = window.location.pathname
-		if (path === "/tournament") TournamentView(false)
-		else if (path === "/leaderboard") LeaderboardView(false)
-		else if (path === "/other-games") OtherGamesView(false)
-		else if (path === "/tournament") TournamentView(false)
-		else if (path === "/profile") await ProfileView(false)
-		else GameView(false)
-		cleanupActiveGame()
-	})
+	// To handle back/forward navigation - only add once
+	if (!popstateListenerAdded) {
+		window.addEventListener("popstate", async () => {
+			const path = window.location.pathname
+			if (path === "/tournament") TournamentView(false)
+			else if (path === "/leaderboard") LeaderboardView(false)
+			else if (path === "/other-games") OtherGamesView(false)
+			else if (path === "/profile") await ProfileView(false)
+			else GameView(false)
+			cleanupActiveGame()
+		})
+		popstateListenerAdded = true
+	}
 }
