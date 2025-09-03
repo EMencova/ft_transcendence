@@ -1,3 +1,4 @@
+import { updateText } from '../public/js/translation'
 import { Footer } from './Footer.ts'
 import { initializeAuth } from './logic/auth.ts'
 import { setupNavLinks } from './logic/router.ts'
@@ -49,6 +50,11 @@ export function App(): HTMLElement {
       } else {
         GameView(false)
       }
+
+      // Apply translations after initial view is loaded
+      setTimeout(() => {
+        updateText()
+      }, 20)
     }, 0)
 
     const footer = Footer()

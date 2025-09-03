@@ -1,3 +1,4 @@
+import { updateText } from '../../public/js/translation'
 import { createPasswordInput } from "../PasswordInput"
 import { GameView } from '../views/GameView'
 import { OtherGamesView } from '../views/OtherGames'
@@ -132,6 +133,10 @@ function updateNav() {
 				e.preventDefault()
 				await ProfileView()
 				menu.classList.add("hidden")
+				// Apply translations after navigation
+				setTimeout(() => {
+					updateText()
+				}, 10)
 			})
 		}
 

@@ -1,4 +1,5 @@
 // Correct the import path if the file exists elsewhere, for example:
+import { updateText } from '../../public/js/translation'
 import { GameView } from './GameView.ts'
 import { TetrisHistoryView } from './othergames/TetrisHistoryView.ts'
 import { TetrisMatchmakingView } from './othergames/TetrisMatchmakingView.ts'
@@ -66,6 +67,10 @@ export function OtherGamesView(push = true) {
 		backBtn.addEventListener('click', (e) => {
 			e.preventDefault()
 			GameView()
+			// Apply translations after navigation
+			setTimeout(() => {
+				updateText()
+			}, 10)
 		})
 	}
 }

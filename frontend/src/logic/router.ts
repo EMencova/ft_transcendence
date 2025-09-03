@@ -1,3 +1,4 @@
+import { updateText } from '../../public/js/translation'
 import { GameView } from '../views/GameView'
 import { LeaderboardView } from '../views/Leaderboard'
 import { OtherGamesView } from '../views/OtherGames'
@@ -7,6 +8,14 @@ import { cleanupActiveGame } from './TournamentGameLogic'
 
 // Flag to prevent multiple popstate listeners
 let popstateListenerAdded = false
+
+// Helper function to apply translations after view change
+function applyTranslationsAfterNavigation() {
+	// Use setTimeout to ensure DOM is updated before applying translations
+	setTimeout(() => {
+		updateText()
+	}, 10)
+}
 
 export function setupNavLinks() {
 	const tournamentLink = document.getElementById("tournamentLink")
@@ -18,12 +27,14 @@ export function setupNavLinks() {
 		tournamentLink.addEventListener("click", (e) => {
 			e.preventDefault()
 			TournamentView()
+			applyTranslationsAfterNavigation()
 		})
 	}
 	if (leaderboardLink) {
 		leaderboardLink.addEventListener("click", (e) => {
 			e.preventDefault()
 			LeaderboardView()
+			applyTranslationsAfterNavigation()
 		})
 	}
 
@@ -31,6 +42,7 @@ export function setupNavLinks() {
 		otherGamesLink.addEventListener("click", (e) => {
 			e.preventDefault()
 			OtherGamesView()
+			applyTranslationsAfterNavigation()
 		})
 	}
 
@@ -38,6 +50,7 @@ export function setupNavLinks() {
 		gameLink.addEventListener("click", (e) => {
 			e.preventDefault()
 			GameView()
+			applyTranslationsAfterNavigation()
 		})
 	}
 
@@ -51,6 +64,7 @@ export function setupNavLinks() {
 			else if (path === "/profile") await ProfileView(false)
 			else GameView(false)
 			cleanupActiveGame()
+			applyTranslationsAfterNavigation()
 		})
 		popstateListenerAdded = true
 	}
