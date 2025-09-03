@@ -18,27 +18,27 @@ export function createNav(): HTMLElement {
 
 	const gameLink = document.createElement("a")
 	gameLink.id = "gameLink"
-	gameLink.href = "/"
+	gameLink.href = "#"
 	gameLink.textContent = "🎮 Game"
 	gameLink.className = linkClass
 
 	// Add OtherGames link
 	const otherGamesLink = document.createElement("a")
 	otherGamesLink.id = "otherGamesLink"
-	otherGamesLink.href = "/other-games"
+	otherGamesLink.href = "#"
 	otherGamesLink.textContent = "🕹️ Other Games"
 	otherGamesLink.className = linkClass
 
 	// Add Game, Tournament and LeaderBoard links
 	const tournamentLink = document.createElement("a")
 	tournamentLink.id = "tournamentLink"
-	tournamentLink.href = "/tournament"
+	tournamentLink.href = "#"
 	tournamentLink.textContent = "🏆 Tournament"
 	tournamentLink.className = linkClass
 
 	const leaderboardLink = document.createElement("a")
 	leaderboardLink.id = "leaderboardLink"
-	leaderboardLink.href = "/leaderboard"
+	leaderboardLink.href = "#"
 	leaderboardLink.textContent = "📊 LeaderBoard"
 	leaderboardLink.className = linkClass
 

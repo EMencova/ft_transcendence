@@ -33,6 +33,27 @@ export function updateText() {
       console.warn(`⚠️ Missing translation for [${key}] in [${currentLang}]`);
     }
   });
+
+  // Also update the visual state of language flags
+  updateLanguageFlags()
+}
+
+// Update the visual state of language flags
+function updateLanguageFlags() {
+  const flags = document.querySelectorAll('.lang-flag')
+  flags.forEach(flag => {
+    const lang = flag.getAttribute('data-lang')
+    if (lang === currentLang) {
+      flag.classList.add('border-2', 'border-white', 'active')
+    } else {
+      flag.classList.remove('border-2', 'border-white', 'active')
+    }
+  })
+}
+
+// Get current language
+export function getCurrentLanguage(): string {
+  return currentLang
 }
 
 // Set up the language switcher buttons

@@ -1,3 +1,4 @@
+import { updateText } from '../../public/js/translation'
 import { createPasswordInput } from "../PasswordInput"
 import { GameView } from '../views/GameView'
 import { OtherGamesView } from '../views/OtherGames'
@@ -83,7 +84,7 @@ function updateNav() {
 		const menu = document.createElement("div")
 		menu.className = "absolute right-0 mt-4 bg-zinc-900 border border-orange-500 rounded shadow-2xl hidden text-white z-50 min-w-48"
 		menu.innerHTML = `
-			<a href="/profile" id="profileLink" class="px-4 py-2 hover:bg-gray-700 flex items-center">
+			<a href="#" id="profileLink" class="px-4 py-2 hover:bg-gray-700 flex items-center">
 			<span class="mr-2">👤</span> Profile
 			</a>
 			<hr class="my-1 border-gray-600">
@@ -132,6 +133,10 @@ function updateNav() {
 				e.preventDefault()
 				await ProfileView()
 				menu.classList.add("hidden")
+				// Apply translations after navigation
+				setTimeout(() => {
+					updateText()
+				}, 10)
 			})
 		}
 

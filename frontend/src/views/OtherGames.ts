@@ -1,4 +1,6 @@
 // Correct the import path if the file exists elsewhere, for example:
+import { updateText } from '../../public/js/translation'
+import { GameView } from './GameView.ts'
 import { TetrisHistoryView } from './othergames/TetrisHistoryView.ts'
 import { TetrisMatchmakingView } from './othergames/TetrisMatchmakingView.ts'
 import { TetrisView } from './othergames/TetrisView'
@@ -12,6 +14,11 @@ const tabs = [
 export function OtherGamesView(push = true) {
 	const main = document.getElementById("mainContent")
 	if (!main) return
+
+	// Update URL if push is true
+	if (push) {
+		window.history.pushState({ page: "other-games" }, "", "/other-games")
+	}
 
 	let tabButtons = tabs.map(
 		(tab, idx) =>
@@ -55,12 +62,15 @@ export function OtherGamesView(push = true) {
 		})
 	})
 
+	// Add event listener for back to Pong button
 	if (backBtn) {
-		backBtn.addEventListener('click', () => {
-			window.location.href = "/"
+		backBtn.addEventListener('click', (e) => {
+			e.preventDefault()
+			GameView()
+			// Apply translations after navigation
+			setTimeout(() => {
+				updateText()
+			}, 10)
 		})
 	}
-
-
-	if (push) history.pushState({ page: "otherGames" }, "", "/other-games")
 }
