@@ -1,8 +1,14 @@
+import { updateText } from '../../public/js/translation'
 import { currentUser } from '../logic/auth'
 
 export function LeaderboardView(push = true) {
 	const main = document.getElementById("mainContent")
 	if (main) {
+		// Update URL if push is true
+		if (push) {
+			window.history.pushState({ page: "leaderboard" }, "", "/leaderboard")
+		}
+
 		if (!currentUser) {
 			main.innerHTML = `<p class="text-red-500">You must log in to view the leaderboard.</p>`
 			return
@@ -10,7 +16,10 @@ export function LeaderboardView(push = true) {
 
 		main.innerHTML = `
 			<h2 class="text-2xl font-bold mb-4 mt-6" data-translate="leaderboard_title">📊 LeaderBoard</h2>
-			<div data-translate="leaderboard_desc" id="leaderboardTable"></div>
+			<div id="leaderboardContainer">
+				<div data-translate="leaderboard_desc" class="mb-4 text-gray-300">The player leaderboard table will go here.</div>
+				<div id="leaderboardTable"></div>
+			</div>
 		`
 
 		// Fetch leaderboard data from server
@@ -44,11 +53,22 @@ export function LeaderboardView(push = true) {
 
 function renderLeaderboard(data: Array<{ username: string; score: number; rank?: number; updated_at: string }>) {
 	const container = document.getElementById("leaderboardTable")
+	const descElement = document.querySelector('[data-translate="leaderboard_desc"]') as HTMLElement
+
 	if (!data.length) {
 		if (container) {
 			container.innerHTML = `<p>No leaderboard data available yet.</p>`
 		}
+		// Show the description when no data
+		if (descElement) {
+			descElement.style.display = 'block'
+		}
 		return
+	}
+
+	// Hide the description when we have data
+	if (descElement) {
+		descElement.style.display = 'none'
 	}
 
 	let tableHTML = `
@@ -56,10 +76,10 @@ function renderLeaderboard(data: Array<{ username: string; score: number; rank?:
 			<thead>
 				<tr class="bg-gray-800 text-white">
 					<th class="border p-2">#</th>
-					<th class="border p-2">Player</th>
-					<th class="border p-2">Score</th>
-					<th class="border p-2">Rank</th>
-					<th class="border p-2">Updated</th>
+					<th class="border p-2" data-translate="leaderboard_player">Player</th>
+					<th class="border p-2" data-translate="leaderboard_score">Score</th>
+					<th class="border p-2" data-translate="leaderboard_rank">Rank</th>
+					<th class="border p-2" data-translate="leaderboard_updated">Updated</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -80,5 +100,10 @@ function renderLeaderboard(data: Array<{ username: string; score: number; rank?:
 	tableHTML += `</tbody></table>`
 	if (container) {
 		container.innerHTML = tableHTML
+
+		// Apply translations to the dynamically created table headers
+		setTimeout(() => {
+			updateText()
+		}, 10)
 	}
 }

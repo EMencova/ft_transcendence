@@ -28,14 +28,26 @@ export class ApiService {
 		const token = this.getAuthToken()
 
 		const defaultHeaders: HeadersInit = {
-			'Content-Type': 'application/json',
-			...(token && { 'Authorization': `Bearer ${token}` }),
+			...(token && { 'Authorization': `Bearer ${token}` })
+		}
+
+		// Only add Content-Type if not already provided in options.headers
+		const hasContentType = options.headers && Object.keys(options.headers).some(
+			key => key.toLowerCase() === 'content-type'
+		)
+
+		if (!hasContentType) {
+			defaultHeaders['Content-Type'] = 'application/json'
+		}
+
+		const finalHeaders: HeadersInit = {
+			...defaultHeaders,
 			...options.headers
 		}
 
 		const config: RequestInit = {
 			...options,
-			headers: defaultHeaders
+			headers: finalHeaders
 		}
 
 		try {
@@ -74,11 +86,32 @@ export class ApiService {
 		})
 	}
 
-	async delete<T = any>(endpoint: string): Promise<T> {
-		return this.request<T>(endpoint, { method: 'DELETE' })
-	}
+	async delete<T = any>(endpoint: string, options: { skipContentType?: boolean } = {}): Promise<T> {
+		if (options.skipContentType) {
+			// For DELETE without Content-Type, use fetch directly to avoid header issues
+			const url = `${this.baseUrl}${endpoint}`
+			const token = this.getAuthToken()
+			const headers: HeadersInit = {}
 
-	// File upload method
+			if (token) {
+				headers['Authorization'] = `Bearer ${token}`
+			}
+
+			const response = await fetch(url, {
+				method: 'DELETE',
+				headers
+			})
+
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}))
+				throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`)
+			}
+
+			return await response.json()
+		}
+
+		return this.request<T>(endpoint, { method: 'DELETE' })
+	}	// File upload method
 	async uploadFile<T = any>(endpoint: string, file: File, fieldName: string = 'file'): Promise<T> {
 		const formData = new FormData()
 		formData.append(fieldName, file)
