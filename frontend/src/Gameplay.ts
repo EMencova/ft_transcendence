@@ -7,17 +7,16 @@ export function Gameplay(): HTMLElement {
   section.className = "px-4 mb-12"
 
   section.innerHTML = `
-<div class="flex items-center space-x-2">
-  <span class="text-white text-lg" data-translate="player_label">👤 Player</span>
-</div>
-<!-- Language Flags -->
-<div id="langFlags" class="flex gap-2">
-  <img src="https://flagcdn.com/24x18/gb.png" alt="English" data-lang="en" class="lang-flag cursor-pointer border-2 border-white rounded-sm active">
-  <img src="https://flagcdn.com/24x18/es.png" alt="Español" data-lang="es" class="lang-flag cursor-pointer rounded-sm">
-  <img src="https://flagcdn.com/24x18/cz.png" alt="Česky" data-lang="cz" class="lang-flag cursor-pointer rounded-sm">
-</div>
+    <h2 class="text-2xl font-semibold mb-6" data-translate="try_it_out_title">🕹️ Try It Out</h2>
+    <div id="startMenu" class="max-w-md mx-auto bg-[#141414] p-6 rounded-lg shadow-md border border-gray-700">
+      <h3 class="text-xl font-bold mb-4 text-center text-orange-500" data-translate="start_game_title">Start Game</h3>
 
-<h2 class="text-2xl font-semibold mb-6" data-translate="try_it_out_title">🕹️ Try It Out</h2>
+      <label for="modeSelect" data-translate="game_mode_label">Game Mode:</label>
+      <select id="modeSelect" class="w-full p-2 pr-8 bg-zinc-800 rounded mb-4 text-white">
+        <option value="Pong1" data-translate="game_mode_1player">1 Player (vs AI)</option>
+        <option value="Pong2" data-translate="game_mode_2players">2 Players</option>
+        <option value="Pong4" data-translate="game_mode_4players">4 Players</option>
+      </select>
 
 <div id="startMenu" class="max-w-2xl mx-auto bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-8">
   <h3 class="text-2xl font-bold mb-6 text-center text-orange-500" data-translate="start_game_title">Start Game</h3>
@@ -87,6 +86,27 @@ export function Gameplay(): HTMLElement {
   // ✅ Init UI game
   requestAnimationFrame(() => {
     initializeGameUI()
+
+    // Add select dropdown arrow rotation logic
+    const selects = section.querySelectorAll('select')
+    selects.forEach(select => {
+      let isOpen = false
+
+      select.addEventListener('mousedown', () => {
+        isOpen = !isOpen
+        select.classList.toggle('open', isOpen)
+      })
+
+      select.addEventListener('blur', () => {
+        isOpen = false
+        select.classList.remove('open')
+      })
+
+      select.addEventListener('change', () => {
+        isOpen = false
+        select.classList.remove('open')
+      })
+    })
   })
 
   return section

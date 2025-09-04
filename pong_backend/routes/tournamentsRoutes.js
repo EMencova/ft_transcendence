@@ -35,7 +35,7 @@ async function tournamentsRoutes(fastify, options) {
   fastify.get("/", async (request, reply) => {
     try {
       const tournaments = await allQuery(
-        "SELECT * FROM tournaments ORDER BY start_date DESC",
+        "SELECT * FROM tournament ORDER BY start_date DESC",
         []
       );
       reply.send(tournaments);
@@ -51,7 +51,7 @@ async function tournamentsRoutes(fastify, options) {
     try {
       // Create tournament
       const result = await runQuery(
-        "INSERT INTO tournaments (name) VALUES (?)",
+        "INSERT INTO tournament (name) VALUES (?)",
         [name]
       );
       const tournamentId = result.lastID;
@@ -80,7 +80,7 @@ async function tournamentsRoutes(fastify, options) {
   fastify.get("/:id", async (request, reply) => {
     try {
       const tournament = await getQuery(
-        "SELECT * FROM tournaments WHERE id = ?",
+        "SELECT * FROM tournament WHERE id = ?",
         [request.params.id]
       );
 

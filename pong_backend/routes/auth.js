@@ -1,25 +1,35 @@
 const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const SALT_ROUNDS = 10;
 const pump = require('util').promisify(require('stream').pipeline);
+
+// Escape function to prevent XSS
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 async function authRoutes(fastify, options) {
   const db = fastify.sqliteDb;
 
   fastify.register(require('@fastify/multipart'));
-  
-  // Helper: wrap db.run with Promise
+
+  // Helpers to promisify db
   function runQuery(query, params) {
     return new Promise((resolve, reject) => {
-      db.run(query, params, function(err) {
+      db.run(query, params, function (err) {
         if (err) reject(err);
         else resolve(this);
       });
     });
   }
 
-  // Helper: wrap db.get with Promise
   function getQuery(query, params) {
     return new Promise((resolve, reject) => {
       db.get(query, params, (err, row) => {
@@ -30,23 +40,33 @@ async function authRoutes(fastify, options) {
   }
 
   fastify.post('/register', async (request, reply) => {
-
     if (request.isMultipart()) {
       const parts = request.parts();
-      let username, email, password, avatarFilename = 'avatar.png';
+      let username, email, password;
+      let avatarFilename = 'avatar.png';
 
       for await (const part of parts) {
         if (part.type === 'file' && part.fieldname === 'avatar') {
           console.log('Processing avatar upload:', part.filename);
+
           const uploadDir = path.join(__dirname, '../public/avatars');
           if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-          avatarFilename = `${Date.now()}_${part.filename}`;
+
+          // Extract and sanitize file extension
+          const ext = path.extname(part.filename || '').toLowerCase();
+          const validExt = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+          const safeExt = validExt.includes(ext) ? ext : '.png';
+
+          // Secure, random filename
+          avatarFilename = `${crypto.randomUUID()}${safeExt}`;
           const filePath = path.join(uploadDir, avatarFilename);
+
           try {
             await pump(part.file, fs.createWriteStream(filePath));
             console.log('Avatar saved in:', filePath);
           } catch (e) {
             console.error('Error saving avatar:', e);
+            return reply.status(500).send({ error: 'Avatar upload failed' });
           }
         } else if (part.type === 'field') {
           if (part.fieldname === 'username') username = part.value;
@@ -63,13 +83,19 @@ async function authRoutes(fastify, options) {
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
         const query = `INSERT INTO players (username, email, password, wins, losses, avatar)
                        VALUES (?, ?, ?, 0, 0, ?)`;
-        await new Promise((resolve, reject) => {
-          db.run(query, [username, email, hashedPassword, `/avatars/${avatarFilename}`], function(err) {
-            if (err) reject(err);
-            else resolve(this);
-          });
+
+        const result = await runQuery(query, [username, email, hashedPassword, `/avatars/${avatarFilename}`]);
+
+        // Escape username before sending response
+        const escapedUsername = escapeHtml(username);
+
+        // Include userId in the response
+        reply.send({ 
+          success: true, 
+          userId: result.lastID, 
+          username: escapedUsername, 
+          avatar: `/avatars/${avatarFilename}` 
         });
-        reply.send({ success: true, username, avatar: `/avatars/${avatarFilename}` });
       } catch (err) {
         if (err.message.includes('UNIQUE constraint failed')) {
           return reply.status(400).send({ error: 'Username or email already exists' });
@@ -77,22 +103,26 @@ async function authRoutes(fastify, options) {
         reply.status(500).send({ error: 'Registration failed' });
       }
     } else {
-      // fallback to JSON body parsing
+      // Fallback: JSON body
       const { username, email, password, avatar } = request.body;
+
       if (!username || !email || !password) {
         return reply.status(400).send({ error: 'Missing fields' });
       }
 
-    try {
-      // Hash password before saving
-      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+      try {
+        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+        const query = `INSERT INTO players (username, email, password, wins, losses, avatar)
+                       VALUES (?, ?, ?, 0, 0, ?)`;
 
-      const query = `INSERT INTO players (username, email, password, wins, losses, avatar)
-                     VALUES (?, ?, ?, 0, 0, ?)`;
-
-      await runQuery(query, [username, email, hashedPassword, avatar || 'avatar.png']);
-
-      reply.send({ success: true, username });
+        const result = await runQuery(query, [username, email, hashedPassword, avatar || 'avatar.png']);
+        const escapedUsername = escapeHtml(username);
+      reply.send({ 
+        success: true, 
+        userId: result.lastID, 
+        username: escapedUsername,
+        avatar: avatar || '/avatar.png'
+      });
     } catch (err) {
       console.error('Register error:', err.message);
       // Handle unique constraint violation (username/email taken)
@@ -118,13 +148,15 @@ async function authRoutes(fastify, options) {
         return reply.status(401).send({ error: 'Invalid credentials' });
       }
 
-      // Compare password hashes
       const passwordMatch = await bcrypt.compare(password, row.password);
       if (!passwordMatch) {
         return reply.status(401).send({ error: 'Invalid credentials' });
       }
 
-      reply.send({ success: true, userId: row.id, username: row.username, avatar: row.avatar });
+      // Escape username before sending response
+      const escapedUsername = escapeHtml(row.username);
+
+      reply.send({ success: true, userId: row.id, username: escapedUsername, avatar: row.avatar });
     } catch (err) {
       console.error('Login error:', err.message);
       reply.status(500).send({ error: 'Login failed' });
@@ -133,6 +165,8 @@ async function authRoutes(fastify, options) {
 }
 
 module.exports = authRoutes;
+
+
 
 
 

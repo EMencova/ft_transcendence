@@ -5,6 +5,14 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
   ],
+  build: {
+    rollupOptions: {
+      // Ensure all routes are handled by index.html in production
+      input: {
+        main: './index.html',
+      }
+    }
+  },
   // server: {
   //   port: 5173,
   //   proxy: {

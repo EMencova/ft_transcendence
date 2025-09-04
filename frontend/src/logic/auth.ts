@@ -1,18 +1,52 @@
+import { updateText } from '../../public/js/translation'
 import { createPasswordInput } from "../PasswordInput"
+import { GameView } from '../views/GameView'
+import { OtherGamesView } from '../views/OtherGames'
+import { ProfileView } from '../views/Profile'
 import { setupNavLinks } from "./router"
-export let currentUser: string | null = null
+
+export let currentUser: string | null = localStorage.getItem("currentUser")
+export let currentUserId: number | null = (() => {
+	const id = localStorage.getItem("currentUserId")
+	return id ? parseInt(id) : null
+})()
+export let currentAvatar: string | null = localStorage.getItem("currentAvatar")
+
+// Function to update currentUserId (needed for proper module exports)
+export function setCurrentUserId(id: number | null) {
+	currentUserId = id
+}
+
+// Function to update current user information
+export function updateCurrentUser(username: string) {
+	currentUser = username
+	localStorage.setItem("currentUser", username)
+	updateNav() // Refresh the navigation to show the new username
+}
+
+// Function to update current user avatar
+export function updateCurrentAvatar(avatarUrl: string) {
+	currentAvatar = avatarUrl
+	localStorage.setItem("currentAvatar", avatarUrl)
+	updateNav() // Refresh the navigation to show the new avatar
+}
 
 export function initializeAuth() {
 	const loginBtn = document.getElementById("loginBtn")!
 	const signupBtn = document.getElementById("signupBtn")!
 	const logoutBtn = document.getElementById("logoutBtn")!
-	//const userDisplay = document.getElementById("currentUser")!
 
 	loginBtn.addEventListener("click", () => showAuthForm("login"))
 	signupBtn.addEventListener("click", () => showAuthForm("signup"))
 	logoutBtn.addEventListener("click", () => {
 		currentUser = null
+		setCurrentUserId(null)
+		currentAvatar = null
+		localStorage.removeItem("currentUser")
+		localStorage.removeItem("currentUserId")
+		localStorage.removeItem("currentAvatar")
 		updateNav()
+		GameView(true)
 	})
 
 	updateNav()
@@ -29,9 +63,9 @@ function updateNav() {
 	const gameLink = document.getElementById("gameLink")!
 
 	userDisplay.innerHTML = ""
+	gameLink.style.display = "inline-block"
 
 	if (currentUser) {
-		gameLink.style.display = "inline-block"
 		tournamentLink.classList.remove("pointer-events-none", "opacity-50")
 		leaderboardLink.classList.remove("pointer-events-none", "opacity-50")
 		loginBtn.style.display = "none"
@@ -43,21 +77,20 @@ function updateNav() {
 		welcomeSpan.className = "mr-4"
 
 		const avatarImg = document.createElement("img")
-		avatarImg.src = (window as any).currentAvatar || "/avatar.png"
+		avatarImg.src = currentAvatar || "/avatar.png"
 		avatarImg.alt = "Avatar"
-		avatarImg.className = "w-10 h-10 rounded-full cursor-pointer border"
+		avatarImg.className = "w-10 h-10 rounded-full cursor-pointer border object-cover"
 
 		const menu = document.createElement("div")
-		menu.className = "absolute right-0 mt-2 bg-white border rounded shadow hidden text-black z-50"
+		menu.className = "absolute right-0 mt-4 bg-zinc-900 border border-orange-500 rounded shadow-2xl hidden text-white z-50 min-w-48"
 		menu.innerHTML = `
-			<a href="#" class="px-4 py-2 hover:bg-gray-100 flex items-center">
-  		<span class="mr-2">👤</span> <span data-translate="profile_button">Profile</span>
-		</a>
-		<hr class="my-1 border-gray-200">
-		<button id="dropdownLogout" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center">
-  		<span class="mr-2">🚪</span> <span data-translate="logout_button">Logout</span>
-		</button>
-
+			<a href="#" id="profileLink" class="px-4 py-2 hover:bg-gray-700 flex items-center">
+			<span class="mr-2">👤</span> Profile
+			</a>
+			<hr class="my-1 border-gray-600">
+			<button id="dropdownLogout" class="w-full text-left px-4 py-2 hover:bg-gray-700 flex items-center">
+				<span class="mr-2">🚪</span> Logout
+			</button>
 		`
 
 		const container = document.createElement("div")
@@ -84,8 +117,26 @@ function updateNav() {
 		if (logoutBtnInMenu) {
 			logoutBtnInMenu.addEventListener("click", () => {
 				currentUser = null
-					; (window as any).currentAvatar = null
+				setCurrentUserId(null)
+				currentAvatar = null
+				localStorage.removeItem("currentUser")
+				localStorage.removeItem("currentUserId")
+				localStorage.removeItem("currentAvatar")
 				updateNav()
+				GameView(true)
+			})
+		}
+
+		const profileLink = menu.querySelector("#profileLink")
+		if (profileLink) {
+			profileLink.addEventListener("click", async (e) => {
+				e.preventDefault()
+				await ProfileView()
+				menu.classList.add("hidden")
+				// Apply translations after navigation
+				setTimeout(() => {
+					updateText()
+				}, 10)
 			})
 		}
 
@@ -94,7 +145,6 @@ function updateNav() {
 		loginBtn.style.display = "inline-block"
 		signupBtn.style.display = "inline-block"
 		logoutBtn.style.display = "none"
-		gameLink.style.display = "none"
 
 		// Disable tournament and leaderboard links
 		tournamentLink.classList.add("pointer-events-none", "opacity-50")
@@ -104,42 +154,39 @@ function updateNav() {
 
 function showAuthForm(mode: "login" | "signup") {
 	const modal = document.createElement("div")
-	modal.className = "fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+	modal.className = "fixed inset-0 bg-[#242424] flex justify-center items-center z-50"
 
 	const formBox = document.createElement("div")
-	formBox.className = "bg-white rounded-lg p-6 max-w-sm w-full shadow-md text-black"
+	formBox.className = "bg-[#141414] rounded-lg p-6 max-w-sm w-full shadow-lg text-white border border-gray-700"
 
 	const isSignup = mode === "signup"
 
-	// Title and Form
 	const title = document.createElement("h2")
-	title.className = "text-xl font-bold mb-4"
+	title.className = "text-xl font-bold mb-4 text-white"
 	title.textContent = isSignup ? "Signup" : "Login"
 
 	const form = document.createElement("form")
 	form.id = "authForm"
 	form.className = "space-y-4"
 
-	// Inputs
 	const usernameInput = document.createElement("input")
 	usernameInput.id = "authUsername"
-	usernameInput.className = "w-full p-2 border rounded"
+	usernameInput.className = inputClassName
 	usernameInput.placeholder = "Username"
 	usernameInput.type = "text"
-
 	form.appendChild(usernameInput)
 
 	if (isSignup) {
 		const emailInput = document.createElement("input")
 		emailInput.id = "authEmail"
-		emailInput.className = "w-full p-2 border rounded"
+		emailInput.className = inputClassName
 		emailInput.placeholder = "Email"
 		emailInput.type = "email"
 		form.appendChild(emailInput)
 		// avatar
 		const avatarInput = document.createElement("input")
 		avatarInput.id = "authAvatar"
-		avatarInput.className = "w-full p-2 border rounded"
+		avatarInput.className = inputClassName
 		avatarInput.type = "file"
 		avatarInput.accept = "image/*"
 		form.appendChild(avatarInput)
@@ -148,12 +195,13 @@ function showAuthForm(mode: "login" | "signup") {
 	form.appendChild(createPasswordInput("authPassword", "Password"))
 
 	if (isSignup) {
-		form.appendChild(createPasswordInput("authConfirm", "Repeat Password"))
+		const confirmInput = createPasswordInput("authConfirm", "Repeat Password")
+		form.appendChild(confirmInput)
 	}
 
 	const errorText = document.createElement("p")
 	errorText.id = "authError"
-	errorText.className = "text-red-600 text-sm hidden"
+	errorText.className = "text-red-400 text-sm hidden"
 	form.appendChild(errorText)
 
 	const buttonsDiv = document.createElement("div")
@@ -161,26 +209,23 @@ function showAuthForm(mode: "login" | "signup") {
 
 	const submitBtn = document.createElement("button")
 	submitBtn.type = "submit"
-	submitBtn.className = "bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
+	submitBtn.className = "bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded font-medium"
 	submitBtn.textContent = isSignup ? "Signup" : "Login"
 
 	const cancelBtn = document.createElement("button")
 	cancelBtn.type = "button"
-	cancelBtn.id = "authCancel"
-	cancelBtn.className = "bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded"
+	cancelBtn.className = "bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
 	cancelBtn.textContent = "Cancel"
 
 	buttonsDiv.appendChild(submitBtn)
 	buttonsDiv.appendChild(cancelBtn)
 	form.appendChild(buttonsDiv)
 
-	// Mount elements
 	formBox.appendChild(title)
 	formBox.appendChild(form)
 	modal.appendChild(formBox)
 	document.body.appendChild(modal)
 
-	// Events
 	cancelBtn.addEventListener("click", () => modal.remove())
 
 	form.addEventListener("submit", async (e) => {
@@ -195,7 +240,6 @@ function showAuthForm(mode: "login" | "signup") {
 			? (document.getElementById("authConfirm") as HTMLInputElement).value.trim()
 			: ""
 
-		// Validations
 		if (!username || !password || (isSignup && (!email || !confirm))) {
 			showError("Please fill in all fields")
 			return
@@ -228,10 +272,10 @@ function showAuthForm(mode: "login" | "signup") {
 				})
 			} else {
 				res = await fetch(endpoint, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ username, password }),
-			})
+				})
 			}
 
 			const data = await res.json()
@@ -241,10 +285,20 @@ function showAuthForm(mode: "login" | "signup") {
 			}
 
 			currentUser = data.username
+			const userId = data.userId || data.id // Handle both possible field names
+			setCurrentUserId(userId)
+			localStorage.setItem("currentUser", data.username)
+			if (userId) {
+				localStorage.setItem("currentUserId", userId.toString())
+			}
 			let avatar = data.avatar || "/avatar.png";
-			(window as any).currentAvatar = avatar
+			currentAvatar = avatar
+			localStorage.setItem("currentAvatar", avatar)
 			updateNav()
 			modal.remove()
+			if (window.location.pathname === "/other-games") {
+				OtherGamesView(false)
+			}
 		} catch (err) {
 			console.error("Auth request failed:", err)
 			showError("Failed to connect to server")
@@ -256,7 +310,8 @@ function showAuthForm(mode: "login" | "signup") {
 	}
 }
 
-
 function validateEmail(email: string): boolean {
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
+
+const inputClassName = "w-full p-2 border border-gray-600 bg-zinc-800 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"
