@@ -354,16 +354,10 @@ async function createTournament() {
 
     if (!response.ok) throw new Error("Failed to create tournament")
 
-<<<<<<< HEAD
     const result = await response.json();
     alert(`Tournament created successfully! ID: ${result.tournamentId}`);
     // viewTournament(result.tournamentId);
     TournamentView();
-=======
-    const result = await response.json()
-    alert(`Tournament created successfully! ID: ${result.tournamentId}`)
-    viewTournament(result.tournamentId)
->>>>>>> main
   } catch (error) {
     console.error("Error creating tournament:", error)
     alert("Error creating tournament")
@@ -482,13 +476,8 @@ async function loadTournamentDetails(tournamentId: number) {
 
     bracketContainer.innerHTML = "Welcome to the Tournament Stage!"
 
-<<<<<<< HEAD
     // Group matches by round // could also use map instead of records
     const rounds: Record<number, any[]> = {};
-=======
-    // Group matches by round
-    const rounds: Record<number, any[]> = {}
->>>>>>> main
     matches.forEach((match: any) => {
       if (!rounds[match.round]) rounds[match.round] = []
       rounds[match.round].push(match)
@@ -641,7 +630,6 @@ function createMatchCard(match: any, players: any[]) {
       className:
         "mt-3 w-full py-1 bg-orange-500 text-white rounded hover:bg-orange-600",
       textContent: "Start Match",
-<<<<<<< HEAD
     });
     startBtn.id="cardStartBtn"
     startBtn.addEventListener("click", () =>
@@ -738,71 +726,6 @@ async function createPongGameDiv(match: any, players: any[]) {
 
   const bracketContainer = document.getElementById("tournament-bracket");
   if (!bracketContainer) return;
-=======
-    })
-    startBtn.addEventListener("click", () =>
-      startTournamentPongMatch(match, players)
-    )
-    matchCard.appendChild(startBtn)
-  } else if (match.status === "in_progress") {
-    const resultForm = createElement("div", { className: "mt-3" })
-    resultForm.innerHTML = `
-		<p class="text-sm text-gray-400 mb-2">Match in progress...</p>
-	`
-    const continueBtn = createElement("button", {
-      className: "w-full py-1 bg-blue-500 text-white rounded hover:bg-blue-600",
-      textContent: "Continue Match",
-    })
-    continueBtn.addEventListener("click", () => continueTournamentPongMatch(match, players))
-    resultForm.appendChild(continueBtn)
-    matchCard.appendChild(resultForm)
-  }
-  return matchCard
-}
-
-async function continueTournamentPongMatch(match: any, players: any[]) {
-  try {
-    const matchid = match.id
-    if (!matchid) {
-      alert("continueTournamentPongMatch: ID of this Match not found")
-      return
-    }
-    const response = await fetch(`/api/tournaments/matches/${matchid}/continue`, {
-      method: "POST",
-    })
-    if (!response.ok) throw new Error("continueTournamentPongMatch: Failed to continue match")
-    createPongGameDiv(match, players)
-  } catch (error) {
-    console.error("Error continuing match:", error)
-    alert("Error continuing match")
-  }
-};
-
-
-
-async function startTournamentPongMatch(match: any, players: any[]) {
-  try {
-    const matchid = match.id
-    if (!matchid) {
-      alert("Invalid match ID")
-      return
-    }
-    const respnse = await fetch(`/api/tournaments/matches/${matchid}/start`, {
-      method: "POST",
-    })
-    if (!respnse.ok) throw new Error("Failed to start match")
-
-    createPongGameDiv(match, players)
-  } catch (error) {
-    console.error("Error starting match:", error)
-    alert("Error starting match")
-  }
-}
-
-async function createPongGameDiv(match: any, players: any[]) {
-  const bracketContainer = document.getElementById("tournament-bracket")
-  if (!bracketContainer) return
->>>>>>> main
 
   // Check if a game container already exists and remove it
   const existingGameContainer = document.getElementById("pong-game-container")
