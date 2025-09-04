@@ -40,7 +40,7 @@ async function playersRoutes(fastify, options) {
   const db = fastify.sqliteDb;
 
   // Get all players
-  fastify.get('/api/players', async (request, reply) => {
+  fastify.get('/players', async (request, reply) => {
     return new Promise((resolve, reject) => {
       db.all('SELECT id, username, avatar, wins, losses FROM players', [], (err, rows) => {
         if (err) return reject(reply.status(500).send({ error: 'DB error' }));
@@ -50,7 +50,7 @@ async function playersRoutes(fastify, options) {
   });
 
   // Get a specific player
-  fastify.get('/api/players/:id', async (request, reply) => {
+  fastify.get('/players/:id', async (request, reply) => {
     const playerId = parseInt(request.params.id);
     
     return new Promise((resolve, reject) => {

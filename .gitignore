@@ -3,3 +3,7 @@
 /.env
 
 /game
+
+pong_backend/data/*.sqlite
+pong_backend/data/*.sqlite-wal
+pong_backend/data/*.sqlite-shm

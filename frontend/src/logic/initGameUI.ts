@@ -5,9 +5,11 @@ export function initializeGameUI() {
 	const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
 	const context = canvas?.getContext('2d')
 	const startMenu = document.getElementById('startMenu')
+	const gameContainer = document.getElementById('gameContainer') // ✅ Added gameContainer
 	const startBtn = document.getElementById('startBtn') as HTMLButtonElement
 	const modeSelect = document.getElementById('modeSelect') as HTMLSelectElement
 	const difficultySelect = document.getElementById('difficultySelect') as HTMLSelectElement
+	const winScoreSelect = document.getElementById('winScoreSelect') as HTMLSelectElement // ✅ Added winScore
 	const pauseBtn = document.getElementById('pauseBtn') as HTMLButtonElement
 	const resetBtn = document.getElementById('resetBtn') as HTMLButtonElement
 
@@ -21,15 +23,14 @@ export function initializeGameUI() {
 		startBtn.addEventListener('click', () => {
 			const gameType = modeSelect.value
 			const difficulty = difficultySelect.value
+			const winScore = winScoreSelect ? parseInt(winScoreSelect.value) : 5 // ✅ Get winScore
 
-			canvas!.classList.remove('hidden')
-			canvas!.classList.add('block')
+			// ✅ Hide start menu and show game container
 			startMenu!.classList.add('hidden')
-			pauseBtn!.style.display = 'block'
-			resetBtn!.style.display = 'block'
+			gameContainer!.classList.remove('hidden')
 
 			gameRunning = true
-			startGame(canvas, context, gameType, difficulty)
+			startGame(canvas, context, gameType, difficulty, winScore) // ✅ Pass winScore
 		})
 
 		pauseBtn.addEventListener('click', () => {
@@ -54,11 +55,8 @@ export function initializeGameUI() {
 			if (gameRunning) {
 				stopGame()
 				startMenu!.classList.remove('hidden')
-				pauseBtn!.style.display = 'none'
+				gameContainer!.classList.add('hidden') // ✅ Hide game container instead of individual elements
 				pauseBtn!.textContent = 'Pause'
-				resetBtn!.style.display = 'none'
-				canvas!.classList.remove('block')
-				canvas!.classList.add('hidden')
 
 				gameRunning = false
 				gamePaused = false
