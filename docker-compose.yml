@@ -1,10 +1,60 @@
+# networks:
+#   pong-network:
+#     name: pong-network
+#     driver: bridge
+
+# services:
+#   nginx:
+#     build:
+#       context: .
+#       dockerfile: ./nginx/dockerfile
+#     ports:
+#       - "443:443"
+#       - "80:80"
+#     depends_on:
+#       - app
+#     networks:
+#       - pong-network
+
+#   app:
+#     build:
+#       context: ./pong_backend
+#       dockerfile: dockerfile
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - NODE_ENV=production
+#     volumes:
+#       - ./pong_backend:/app
+#       - ./pong_backend/data:/app/data
+#       - ./frontend:/frontend
+#     networks:
+#       - pong-network
+
 networks:
   pong-network:
     name: pong-network
     driver: bridge
 
 services:
+  app:
+    container_name: app
+    build:
+      context: ./pong_backend
+      dockerfile: dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./pong_backend:/app
+      - node_modules_volume:/app/node_modules
+      - ./frontend:/frontend
+    networks:
+      - pong-network
+
   nginx:
+    container_name: nginx
     build:
       context: .
       dockerfile: ./nginx/dockerfile
@@ -16,17 +66,5 @@ services:
     networks:
       - pong-network
 
-  app:
-    build:
-      context: ./pong_backend
-      dockerfile: dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-    volumes:
-      - ./pong_backend:/app
-      - ./pong_backend/data:/app/data
-      - ./frontend:/frontend
-    networks:
-      - pong-network
+volumes:
+  node_modules_volume:
