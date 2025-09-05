@@ -6,15 +6,15 @@ export async function loadTranslations() {
   try {
     const response = await fetch('/js/translation.json');
     translations = await response.json();
-    console.log('✅ Translations loaded:', translations);
+    console.log('Translations loaded:', translations);
   } catch (error) {
-    console.error('❌ Failed to load translations:', error);
+    console.error('Failed to load translations:', error);
   }
 }
 
 // Set the current language and update the text on the page
 export function setLanguage(lang: string) {
-  console.log(`🌍 Changing language to: ${lang}`);
+  console.log(`Changing language to: ${lang}`);
   currentLang = lang;
   updateText();
 }
@@ -30,7 +30,7 @@ export function updateText() {
     if (translated) {
       el.textContent = translated;
     } else {
-      console.warn(`⚠️ Missing translation for [${key}] in [${currentLang}]`);
+      console.warn(`Missing translation for [${key}] in [${currentLang}]`);
     }
   });
 

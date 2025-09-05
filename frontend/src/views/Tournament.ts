@@ -12,9 +12,10 @@ export function TournamentView(push = true) {
   if (!main) return
 
   if (!currentUser) {
-    main.innerHTML = `<p class="text-red-500">You must be logged in to view tournaments.</p>`
+    main.innerHTML = `<p class="text-red-500" data-translate="must_be_logged_in">You must be logged in to view tournaments.</p>`
     return
-  }
+}
+
 
   main.innerHTML = ""
 
@@ -159,6 +160,10 @@ async function loadTournaments() {
     }
   }
 }
+
+
+
+
 
 function showCreateTournamentForm() {
   const main = document.getElementById("mainContent")

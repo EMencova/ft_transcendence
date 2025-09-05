@@ -1,3 +1,4 @@
+import { updateText } from "../public/js/translation"
 
 export function LoginRegister(onLoginSuccess: () => void): HTMLElement {
 	let mode: 'login' | 'register' = 'login'
@@ -13,12 +14,12 @@ export function LoginRegister(onLoginSuccess: () => void): HTMLElement {
   
 	const loginTab = document.createElement('button')
 	loginTab.type = 'button'
-	loginTab.innerText = 'Login'
+	loginTab.setAttribute('data-translate', 'login_tab')
 	loginTab.className = 'hover:text-orange-500 transition-colors'
   
 	const registerTab = document.createElement('button')
 	registerTab.type = 'button'
-	registerTab.innerText = 'Register'
+	registerTab.setAttribute('data-translate', 'register_tab')
 	registerTab.className = 'hover:text-orange-500 transition-colors'
   
 	modeSwitch.appendChild(loginTab)
@@ -26,39 +27,44 @@ export function LoginRegister(onLoginSuccess: () => void): HTMLElement {
   
 	const title = document.createElement('h2')
 	title.className = 'text-2xl font-bold text-center text-orange-500'
-	title.innerText = 'PONG LOGIN'
+	title.setAttribute('data-translate', 'login_title')
   
 	const usernameInput = document.createElement('input')
 	usernameInput.type = 'text'
 	usernameInput.placeholder = 'Username'
+	usernameInput.setAttribute('data-translate-placeholder', 'username_placeholder')
 	usernameInput.className = inputClassName
-
+  
 	const emailInput = document.createElement('input')
 	emailInput.type = 'email'
 	emailInput.placeholder = 'Email'
+	emailInput.setAttribute('data-translate-placeholder', 'email_placeholder')
 	emailInput.className = inputClassName
   
 	const passwordInput = document.createElement('input')
 	passwordInput.type = 'password'
 	passwordInput.placeholder = 'Password'
+	passwordInput.setAttribute('data-translate-placeholder', 'password_placeholder')
 	passwordInput.className = inputClassName
   
 	const button = document.createElement('button')
 	button.type = 'submit'
-	button.innerText = 'START'
+	button.setAttribute('data-translate', 'login_button')
 	button.className =
-		'bg-orange-600 border border-orange-500 text-white py-2 rounded hover:bg-orange-700 transition-colors font-medium'
+	  'bg-orange-600 border border-orange-500 text-white py-2 rounded hover:bg-orange-700 transition-colors font-medium'
   
 	// Mode switching
 	function updateMode(newMode: 'login' | 'register') {
 	  mode = newMode
-	  title.innerText = newMode === 'login' ? 'PONG LOGIN' : 'PONG REGISTER'
-	  button.innerText = newMode === 'login' ? 'LOGIN' : 'REGISTER'
+	  title.setAttribute('data-translate', newMode === 'login' ? 'login_title' : 'register_title')
+	  button.setAttribute('data-translate', newMode === 'login' ? 'login_button' : 'register_button')
   
-		loginTab.classList.toggle('text-orange-500', mode === 'login')
-		registerTab.classList.toggle('text-orange-500', mode === 'register')
+	  loginTab.classList.toggle('text-orange-500', mode === 'login')
+	  registerTab.classList.toggle('text-orange-500', mode === 'register')
   
 	  emailInput.style.display = mode === 'register' ? 'block' : 'none'
+  
+	  updateText() // <-- IMPORTANT: Update translations after mode change
 	}
   
 	loginTab.onclick = () => updateMode('login')
@@ -113,6 +119,8 @@ export function LoginRegister(onLoginSuccess: () => void): HTMLElement {
 	updateMode(mode)
   
 	return container
-}
-
-const inputClassName = "bg-gray-700 border border-gray-600 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"
+  }
+  
+  const inputClassName =
+	'bg-gray-700 border border-gray-600 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400'
+  
