@@ -1,3 +1,4 @@
+import { updateText } from "../../public/js/translation"
 import { saveTetrisScore } from "../views/othergames/TetrisHistoryView"
 import { handleTournamentGameOver, updateTournamentProgress } from "../views/othergames/TetrisTournamentView"
 import { currentUser } from "./auth"
@@ -519,10 +520,14 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
     if (startBtn) {
         startBtn.onclick = () => {
             if (!started) {
-                // Iniciar el juego
+                // Start the game
                 started = true
                 paused = false
-                startBtn.textContent = "Stop Game"
+    
+                // Use data-translate instead of hardcoded text
+                startBtn.setAttribute("data-translate", "stop_game")
+                updateText()
+    
                 if (pauseBtn) {
                     (pauseBtn as HTMLButtonElement).disabled = false
                     pauseBtn.classList.remove("opacity-50", "cursor-not-allowed")
@@ -531,45 +536,54 @@ export function initTetrisGame(config: TetrisGameConfig = {}) {
                     (resetBtn as HTMLButtonElement).disabled = false
                     resetBtn.classList.remove("opacity-50", "cursor-not-allowed")
                 }
-
+    
                 // Focus on canvas to ensure keyboard events work properly
                 canvas.focus()
                 canvas.tabIndex = 0 // Make canvas focusable
-
+    
                 lastTime = performance.now()
                 animationId = window.requestAnimationFrame(update)
             } else {
                 // Stop the game
                 started = false
                 paused = false
-                startBtn.textContent = "Start Game"
+    
+                // Use data-translate instead of hardcoded text
+                startBtn.setAttribute("data-translate", "start_game")
+                updateText()
+    
                 if (animationId) cancelAnimationFrame(animationId)
+    
                 // Clean board and score
-                for (let y = 0;y < BOARD_HEIGHT;y++) {
+                for (let y = 0; y < BOARD_HEIGHT; y++) {
                     board[y] = Array(BOARD_WIDTH).fill(0)
                 }
                 score = 0
                 level = 1
                 linesCleared = 0
                 updateScore()
-
+    
                 // Reset piece with new random type
                 const randomIndex = Math.floor(Math.random() * pieces.length)
                 piece.shape = pieces[randomIndex]
                 piece.typeIndex = randomIndex
                 piece.position = { x: 5, y: 0 }
+    
                 // Clean canvas
                 ctx.clearRect(0, 0, canvas.width, canvas.height)
+    
                 // Disable buttons
                 if (pauseBtn) {
                     (pauseBtn as HTMLButtonElement).disabled = true
                     pauseBtn.classList.add("opacity-50", "cursor-not-allowed")
-                    pauseBtn.textContent = "Pause"
+                    pauseBtn.setAttribute("data-translate", "pause")
                 }
                 if (resetBtn) {
                     (resetBtn as HTMLButtonElement).disabled = true
                     resetBtn.classList.add("opacity-50", "cursor-not-allowed")
                 }
+    
+                updateText() // Ensure pause button text is translated
             }
         }
     }

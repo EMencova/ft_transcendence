@@ -123,7 +123,8 @@
     "controls_1player_mode": "1 Player Mode:",
     "controls_p1_up": "W",
     "controls_p1_down": "S",
-    "controls_ai_player2": "AI controls Player 2"
+    "controls_ai_player2": "AI controls Player 2",
+    "stop_game": "Stop Game"
   },
   "es": {
     "profile_button": "Perfil",
@@ -259,7 +260,8 @@
     "controls_1player_mode": "Modo 1 Jugador:",
     "controls_p1_up": "W",
     "controls_p1_down": "S",
-    "controls_ai_player2": "La IA controla al Jugador 2"
+    "controls_ai_player2": "La IA controla al Jugador 2",
+    "stop_game": "Detener Juego"
   },
   "cz": {
     "profile_button": "Profil",
@@ -395,7 +397,8 @@
     "controls_1player_mode": "Režim 1 hráč:",
     "controls_p1_up": "W",
     "controls_p1_down": "S",
-    "controls_ai_player2": "AI ovládá hráče 2"
+    "controls_ai_player2": "AI ovládá hráče 2",
+    "stop_game": "Zastavit Hru"
   }
 }
 
