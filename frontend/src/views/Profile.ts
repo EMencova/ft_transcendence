@@ -302,9 +302,27 @@ function createProfileSettingsContent(settingsElement: HTMLElement, profileData:
     // Save button
     const saveButton = document.createElement("button")
     saveButton.type = "submit"
-    saveButton.className = "bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-6 rounded"
+    saveButton.className = "bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-6 rounded mr-4"
     saveButton.textContent = "Save Changes"
-    settingsForm.appendChild(saveButton)
+    
+    // Privacy Settings button
+    const privacyButton = document.createElement("button")
+    privacyButton.type = "button"
+    privacyButton.className = "bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded"
+    privacyButton.textContent = "Privacy Settings"
+    privacyButton.addEventListener("click", () => {
+        import('./PrivacyView').then(({ PrivacyView }) => {
+            PrivacyView();
+        });
+    });
+
+    // Button container
+    const buttonContainer = document.createElement("div")
+    buttonContainer.className = "flex space-x-4 mt-6"
+    buttonContainer.appendChild(saveButton)
+    buttonContainer.appendChild(privacyButton)
+    
+    settingsForm.appendChild(buttonContainer)
 
     // Form submission handler
     settingsForm.addEventListener("submit", async (e) => {

@@ -19,6 +19,7 @@ fastify.register(require('./routes/leaderboard'), { prefix: '/api' });
 fastify.register(require('./routes/tournament_registr'), { prefix: '/api' });
 fastify.register(require('./routes/userProfile'), { prefix: '/api' });
 fastify.register(require('./routes/tournamentsRoutes'), { prefix: '/api' });
+fastify.register(require('./routes/gdprRoutes'), { prefix: '/api' });
 const tetrisRoutes = require('./routes/tetrisRoutes');
 fastify.register(tetrisRoutes, { prefix: '/api' });
 fastify.register(matchmakingRoutes, { prefix: '/api/tetris-matchmaking' });

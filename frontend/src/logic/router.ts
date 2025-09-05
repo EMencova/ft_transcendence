@@ -3,6 +3,7 @@ import { GameView } from '../views/GameView'
 import { LeaderboardView } from '../views/Leaderboard'
 import { OtherGamesView } from '../views/OtherGames'
 import { ProfileView } from '../views/Profile'
+import { PrivacyView } from '../views/PrivacyView'
 import { TournamentView } from '../views/Tournament'
 import { cleanupActiveGame } from './TournamentGameLogic'
 
@@ -62,6 +63,7 @@ export function setupNavLinks() {
 			else if (path === "/leaderboard") LeaderboardView(false)
 			else if (path === "/other-games") OtherGamesView(false)
 			else if (path === "/profile") await ProfileView(false)
+			else if (path === "/privacy") await PrivacyView(false)
 			else GameView(false)
 			cleanupActiveGame()
 			applyTranslationsAfterNavigation()

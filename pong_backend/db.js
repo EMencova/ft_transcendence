@@ -208,7 +208,8 @@ function setupDb(fastify) {
         VALUES
         ('Eliska', 'eliska@eliska.com', 'eliska', '/avatar1.png', 5, 2),
         ('Verca', 'verca@verca.com', 'verca', '/avatar2.png', 3, 4),
-        ('Azaman', 'azaman@azaman.com', 'azaman', '/avatar3.png', 7, 1)
+        ('Azaman', 'azaman@azaman.com', 'azaman', '/avatar3.png', 7, 1),
+        ('AnonymousUser', 'anonymous@deleted.local', 'deleted', '/avatars/anonymous.png', 0, 0)
     `);
 
     // Tetris Matchmaking Queue table

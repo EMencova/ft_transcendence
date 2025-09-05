@@ -1,6 +1,7 @@
 import { App } from './App.ts'
 import { loadTranslations, setLanguage, setupLanguageSwitcher } from '../public/js/translation.ts'
 import { initializeGameUI } from './logic/initGameUI'
+import { GDPRHelpers } from './services/gdprService'
 import './style.css'
 
 const root = document.querySelector<HTMLDivElement>('#app')
@@ -15,6 +16,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   await loadTranslations()
   setupLanguageSwitcher()
   setLanguage('en')
+
+  // Initialize GDPR compliance
+  GDPRHelpers.initialize()
 })
 
 
