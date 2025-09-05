@@ -111,7 +111,19 @@
     "tetris_heading": "🕹️ Tetris",
     "play_tab": "Play",
     "history_tab": "History",
-    "matchmaking_tab": "Matchmaking"
+    "matchmaking_tab": "Matchmaking",
+
+    "win_score_label": "Win Score:",
+    "win_score_option_3": "First to 3",
+    "win_score_option_5": "First to 5",
+    "win_score_option_7": "First to 7",
+    "win_score_option_10": "First to 10",
+
+    "controls_title": "🎮 Controls",
+    "controls_1player_mode": "1 Player Mode:",
+    "controls_p1_up": "W",
+    "controls_p1_down": "S",
+    "controls_ai_player2": "AI controls Player 2"
   },
   "es": {
     "profile_button": "Perfil",
@@ -236,7 +248,18 @@
     "try_refresh": "Por favor intenta actualizar la página",
     "no_games_yet": "🎮 Aún no has jugado",
     "start_playing": "¡Comienza a jugar Tetris para construir tu historial!",
-    "best_label": "🏆 Mejor"
+    "best_label": "🏆 Mejor",
+
+    "win_score_label": "Puntuación para ganar:",
+    "win_score_option_3": "Primero a 3",
+    "win_score_option_5": "Primero a 5",
+    "win_score_option_7": "Primero a 7",
+    "win_score_option_10": "Primero a 10",
+    "controls_title": "🎮 Controles",
+    "controls_1player_mode": "Modo 1 Jugador:",
+    "controls_p1_up": "W",
+    "controls_p1_down": "S",
+    "controls_ai_player2": "La IA controla al Jugador 2"
   },
   "cz": {
     "profile_button": "Profil",
@@ -361,7 +384,18 @@
     "try_refresh": "Zkuste obnovit stránku",
     "no_games_yet": "🎮 Ještě žádné odehrané hry",
     "start_playing": "Začněte hrát Tetris a vytvořte si svou historii!",
-    "best_label": "🏆 Nejlepší"
+    "best_label": "🏆 Nejlepší",
+
+    "win_score_label": "Počet vítězných bodů:",
+    "win_score_option_3": "První k 3",
+    "win_score_option_5": "První k 5",
+    "win_score_option_7": "První k 7",
+    "win_score_option_10": "První k 10",
+    "controls_title": "🎮 Ovládání",
+    "controls_1player_mode": "Režim 1 hráč:",
+    "controls_p1_up": "W",
+    "controls_p1_down": "S",
+    "controls_ai_player2": "AI ovládá hráče 2"
   }
 }
 

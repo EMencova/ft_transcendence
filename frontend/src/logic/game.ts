@@ -548,11 +548,11 @@ calculateMove: (gameState) => {
       ctx.fillText(`${s.score2}`, (3 * canvas.width) / 4, 50)
     }
     
-    // Draw target score indicator
-    ctx.font = "16px Arial"
-    ctx.fillStyle = "rgba(255, 255, 255, 0.7)"
-    ctx.textAlign = "center"
-    ctx.fillText(`First to ${WIN_SCORE}`, canvas.width / 2, canvas.height - 20)
+    // Draw target score indicator - sorry but i am not translating this so lets keep it out
+   // ctx.font = "16px Arial"
+   // ctx.fillStyle = "rgba(255, 255, 255, 0.7)"
+    //ctx.textAlign = "center"
+   // ctx.fillText(`First to ${WIN_SCORE}`, canvas.width / 2, canvas.height - 20)
     
     // Show team controls in 4-player mode
     if (state.gameType === "Pong4") {

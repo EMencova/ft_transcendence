@@ -31,26 +31,39 @@ export function Gameplay(): HTMLElement {
           </div>
 
           <div>
-            <label for="winScoreSelect" class="block text-white font-semibold mb-2">Win Score:</label>
-            <select id="winScoreSelect" class="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg mb-4 text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500">
-              <option value="3">First to 3</option>
-              <option value="5" selected>First to 5</option>
-              <option value="7">First to 7</option>
-              <option value="10">First to 10</option>
+            <label for="winScoreSelect" class="block text-white font-semibold mb-2" data-translate="win_score_label">
+            Win Score:
+               </label>
+            <select
+               id="winScoreSelect"
+              class="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg mb-4 text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+             >
+            <option value="3" data-translate="win_score_option_3">First to 3</option>
+            <option value="5" selected data-translate="win_score_option_5">First to 5</option>
+            <option value="7" data-translate="win_score_option_7">First to 7</option>
+            <option value="10" data-translate="win_score_option_10">First to 10</option>
             </select>
-          </div>
+            </div>
+
 
           <button id="startBtn" class="w-full bg-orange-500 text-white font-semibold py-3 rounded-lg mb-4 hover:bg-orange-600 transition-colors duration-200" data-translate="start_game_button">Start Game</button>
         </div>
 
         <div id="controlsInfo" class="bg-gray-900 rounded-lg p-4 border border-gray-600">
-          <h4 class="text-orange-500 font-semibold mb-3">🎮 Controls</h4>
+        <h4 class="text-orange-500 font-semibold mb-3" data-translate="controls_title">🎮 Controls</h4>
           <div id="controlsDisplay" class="text-sm text-gray-300 space-y-2">
-            <div class="controls-1player">
-              <div class="font-medium text-white mb-1">1 Player Mode:</div>
-              <div>Player 1: <span class="bg-gray-700 px-2 py-1 rounded">W</span> / <span class="bg-gray-700 px-2 py-1 rounded">S</span></div>
-              <div class="text-gray-400">AI controls Player 2</div>
-            </div>
+          <div class="controls-1player">
+          <div class="font-medium text-white mb-1" data-translate="controls_1player_mode">1 Player Mode:</div>
+          <div>
+        Player 1: 
+        <span class="bg-gray-700 px-2 py-1 rounded" data-translate="controls_p1_up">W</span> / 
+        <span class="bg-gray-700 px-2 py-1 rounded" data-translate="controls_p1_down">S</span>
+           </div>
+            <div class="text-gray-400" data-translate="controls_ai_player2">AI controls Player 2</div>
+          </div>
+        </div>
+      </div>
+
           </div>
         </div>
       </div>
