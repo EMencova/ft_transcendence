@@ -1,3 +1,4 @@
+import { updateText } from "../../../public/js/translation"
 import { currentUser, currentUserId } from "../../logic/auth"
 import { initTetrisGame } from "../../logic/tetrisGame"
 import { tetrisMatchmakingService } from "../../services/tetrisMatchmakingService"
@@ -289,6 +290,11 @@ function initializeMatchmaking() {
 
 	// Set up automatic queue refresh
 	queueRefreshInterval = window.setInterval(loadQueue, 10000) // Refresh every 10 seconds
+
+	// Apply translations after content is loaded
+	setTimeout(() => {
+		updateText()
+	}, 10)
 }
 
 async function checkUserMatchmakingStatus() {

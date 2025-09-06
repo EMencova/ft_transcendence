@@ -1,3 +1,4 @@
+import { updateText } from "../../../public/js/translation"
 import { currentUser, currentUserId } from "../../logic/auth"
 import { apiService } from "../../services/apiService"
 
@@ -51,6 +52,11 @@ interface TetrisHistoryEntry {
     `
 
 	loadTetrisHistory()
+
+	// Apply translations after content is loaded
+	setTimeout(() => {
+		updateText()
+	}, 10)
 }
 
 async function loadTetrisHistory() {

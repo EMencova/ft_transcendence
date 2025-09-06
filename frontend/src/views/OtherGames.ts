@@ -58,6 +58,10 @@ export function OtherGamesView(push = true) {
 						TetrisMatchmakingView(gameContent)
 						break
 				}
+				// Apply translations after tab content changes
+				setTimeout(() => {
+					updateText()
+				}, 10)
 			}
 		})
 	})

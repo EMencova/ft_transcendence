@@ -1,5 +1,6 @@
 //added
 
+import { updateText } from "../../public/js/translation"
 import { currentUser } from "../logic/auth"
 import { cleanupActiveGame, initializePongGameUI, startPongGame } from "../logic/TournamentGameLogic"
 import { createElement } from "../utils/domUtils"
@@ -188,6 +189,7 @@ function showCreateTournamentForm() {
     className: "text-2xl font-bold mb-6",
     textContent: "Create New Tournament",
   })
+  title.setAttribute("data-translate", "create_new_tournament_title")
   container.appendChild(title)
 
   // Tournament Name
@@ -269,10 +271,21 @@ function showCreateTournamentForm() {
       "ml-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600",
     textContent: "Back",
   })
-  backBtn.addEventListener("click", () => TournamentView())
+  backBtn.addEventListener("click", () => {
+    TournamentView()
+    // Apply translations after going back
+    setTimeout(() => {
+      updateText()
+    }, 10)
+  })
   container.appendChild(backBtn)
 
   main.appendChild(container)
+
+  // Apply translations after the form is created
+  setTimeout(() => {
+    updateText()
+  }, 10)
 }
 
 async function loadPlayersForTournament() {

@@ -1,3 +1,4 @@
+import { updateText } from '../../public/js/translation'
 import { currentUser, currentUserId, updateCurrentAvatar } from '../logic/auth'
 import { createPasswordInput } from '../PasswordInput'
 import { userService } from '../services'
@@ -164,6 +165,11 @@ function createProfileContent(container: HTMLElement, profileData: any) {
                 if (tab.dataset.tab === "friends") {
                     await loadFriendsTab(contentToShow as HTMLElement, profileData.id)
                 }
+
+                // Apply translations after tab content is loaded
+                setTimeout(() => {
+                    updateText()
+                }, 10)
             }
         })
 
