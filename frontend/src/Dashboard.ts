@@ -51,10 +51,13 @@ function showDashboard(user: User) {
 
   const heading = document.createElement('h2')
   heading.textContent = `👋 Welcome ${user.username}`
+  heading.setAttribute('data-translate', 'welcome_user')
+  heading.setAttribute('data-username', user.username)
   dash.appendChild(heading)
 
   const paragraph = document.createElement('p')
   paragraph.textContent = 'Your recent matches:'
+  paragraph.setAttribute('data-translate', 'recent_matches')
   dash.appendChild(paragraph)
 
   const matchHistoryList = document.createElement('ul')
@@ -64,6 +67,7 @@ function showDashboard(user: User) {
   const logoutBtn = document.createElement('button')
   logoutBtn.textContent = 'Logout'
   logoutBtn.addEventListener('click', logout)
+  logoutBtn.setAttribute('data-translate', 'logout')
   dash.appendChild(logoutBtn)
 
   dash.style.display = 'block'

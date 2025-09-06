@@ -12,7 +12,7 @@ export function TournamentView(push = true) {
   if (!main) return
 
   if (!currentUser) {
-    main.innerHTML = `<p class="text-red-500">You must be logged in to view tournaments.</p>`
+    main.innerHTML = `<p class="text-red-500" data-translate="must_be_logged_in">You must be logged in to view tournaments.</p>`
     return
   }
 
@@ -27,6 +27,7 @@ export function TournamentView(push = true) {
     className: "text-2xl font-bold mb-6",
     textContent: "🏆 Tournaments",
   })
+  title.setAttribute("data-translate", "tournament_title")
   container.appendChild(title)
 
   // New Tournament Button
@@ -35,6 +36,7 @@ export function TournamentView(push = true) {
       "mb-6 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600",
     textContent: "Create New Tournament",
   })
+  newBtn.setAttribute("data-translate", "create_tournament_button")
   newBtn.addEventListener("click", showCreateTournamentForm)
   container.appendChild(newBtn)
 
@@ -61,7 +63,11 @@ async function loadTournaments() {
     if (!list) return
 
     if (tournaments.length === 0) {
-      list.innerHTML = "<p>No tournaments found.</p>"
+      const noTournamentsMsg = document.createElement("p")
+      noTournamentsMsg.textContent = "No tournaments found."
+      noTournamentsMsg.setAttribute("data-translate", "no_tournaments_found")
+      list.innerHTML = ""
+      list.appendChild(noTournamentsMsg)
       return
     }
 
@@ -73,16 +79,17 @@ async function loadTournaments() {
 
     // Table header
     const headerRow = createElement("tr");
-    ["ID", "Name", "Start Date", "Status", "Winner", "Actions"].forEach(
-      (text) => {
-        headerRow.appendChild(
-          createElement("th", {
-            className: "border p-2 text-left",
-            textContent: text,
-          })
-        )
-      }
-    )
+    const headerTexts = ["ID", "Name", "Start Date", "Status", "Winner", "Actions"]
+    const headerKeys = ["table_id", "table_name", "table_start_date", "table_status", "table_winner", "table_actions"]
+
+    headerTexts.forEach((text, index) => {
+      const th = createElement("th", {
+        className: "border p-2 text-left",
+        textContent: text,
+      })
+      th.setAttribute("data-translate", headerKeys[index])
+      headerRow.appendChild(th)
+    })
     thead.appendChild(headerRow)
     table.appendChild(thead)
 
@@ -142,6 +149,7 @@ async function loadTournaments() {
         className: "px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600",
         textContent: "View",
       })
+      viewBtn.setAttribute("data-translate", "view_button")
       viewBtn.addEventListener("click", () => viewTournament(tournament.id))
       actionsCell.appendChild(viewBtn)
       row.appendChild(actionsCell)
@@ -155,7 +163,12 @@ async function loadTournaments() {
     console.error("Error loading tournaments:", error)
     const list = document.getElementById("tournaments-list")
     if (list) {
-      list.innerHTML = '<p class="text-red-500">Error loading tournaments.</p>'
+      const errorMsg = document.createElement("p")
+      errorMsg.className = "text-red-500"
+      errorMsg.textContent = "Error loading tournaments."
+      errorMsg.setAttribute("data-translate", "error_loading_tournaments")
+      list.innerHTML = ""
+      list.appendChild(errorMsg)
     }
   }
 }

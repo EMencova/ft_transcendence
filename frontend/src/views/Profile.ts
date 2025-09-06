@@ -23,6 +23,7 @@ async function createProfileMainContent(): Promise<HTMLElement> {
         const notLoggedIn = document.createElement("div")
         notLoggedIn.className = "bg-red-800 border border-red-600 text-red-200 px-4 py-3 rounded"
         notLoggedIn.textContent = "You must be logged in to view your profile"
+        notLoggedIn.setAttribute("data-translate", "must_be_logged_in_profile")
         container.appendChild(notLoggedIn)
         return container
     }
@@ -32,7 +33,7 @@ async function createProfileMainContent(): Promise<HTMLElement> {
     loadingDiv.className = "text-center py-8"
     loadingDiv.innerHTML = `
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-        <p class="text-gray-300">Loading profile...</p>
+        <p class="text-gray-300" data-translate="loading_profile">Loading profile...</p>
     `
     container.appendChild(loadingDiv)
 
@@ -58,6 +59,7 @@ async function createProfileMainContent(): Promise<HTMLElement> {
         const errorDiv = document.createElement("div")
         errorDiv.className = "bg-red-800 border border-red-600 text-red-200 px-4 py-3 rounded"
         errorDiv.textContent = "Error loading profile data. Please try again."
+        errorDiv.setAttribute("data-translate", "error_loading_profile")
         container.appendChild(errorDiv)
     }
 
@@ -82,6 +84,7 @@ function createProfileContent(container: HTMLElement, profileData: any) {
     changeAvatarBtn.className = "absolute bottom-0 right-0 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-2 shadow-md"
     changeAvatarBtn.innerHTML = "📷"
     changeAvatarBtn.title = "Change avatar"
+    changeAvatarBtn.setAttribute("data-translate-title", "change_avatar")
 
     avatarContainer.appendChild(avatar)
     avatarContainer.appendChild(changeAvatarBtn)
@@ -98,9 +101,9 @@ function createProfileContent(container: HTMLElement, profileData: any) {
     const stats = document.createElement("div")
     stats.className = "text-sm text-gray-300"
     stats.innerHTML = `
-        <span>Wins: ${profileData.wins || 0}</span> | 
-        <span>Losses: ${profileData.losses || 0}</span> | 
-        <span>Rank: Rookie</span>
+        <span data-translate="wins">Wins</span>: ${profileData.wins || 0} | 
+        <span data-translate="losses">Losses</span>: ${profileData.losses || 0} | 
+        <span data-translate="rank">Rank</span>: <span data-translate="rank_rookie">Rookie</span>
     `
     userInfo.appendChild(stats)
 
@@ -123,6 +126,15 @@ function createProfileContent(container: HTMLElement, profileData: any) {
             ? "border-b-2 border-orange-500 py-4 px-1 text-orange-500 font-medium"
             : "py-4 px-1 text-gray-400 hover:text-orange-500"
         tab.dataset.tab = tabName.toLowerCase().replace(" ", "-")
+
+        // Add translation attributes
+        if (tabName === "Profile Settings") {
+            tab.setAttribute("data-translate", "profile_settings_tab")
+        } else if (tabName === "Game History") {
+            tab.setAttribute("data-translate", "game_history_tab")
+        } else if (tabName === "Friends") {
+            tab.setAttribute("data-translate", "friends_tab")
+        }
 
         tab.addEventListener("click", async () => {
             // Remove active class from all tabs
@@ -247,6 +259,7 @@ function createProfileSettingsContent(settingsElement: HTMLElement, profileData:
     const personalInfoTitle = document.createElement("h3")
     personalInfoTitle.textContent = "Change Personal Info"
     personalInfoTitle.className = "text-lg font-medium mb-4 text-white"
+    personalInfoTitle.setAttribute("data-translate", "change_personal_info")
     personalInfoSection.appendChild(personalInfoTitle)
 
     // Username field
@@ -268,12 +281,14 @@ function createProfileSettingsContent(settingsElement: HTMLElement, profileData:
     const passwordTitle = document.createElement("h3")
     passwordTitle.textContent = "Change Password"
     passwordTitle.className = "text-lg font-medium mb-4 text-white"
+    passwordTitle.setAttribute("data-translate", "change_password")
     passwordSection.appendChild(passwordTitle)
 
     // Current Password
     const currentPasswordLabel = document.createElement("label")
     currentPasswordLabel.textContent = "Current Password"
     currentPasswordLabel.className = "block text-sm font-medium text-gray-300 mb-1 text-left"
+    currentPasswordLabel.setAttribute("data-translate", "current_password")
     passwordSection.appendChild(currentPasswordLabel)
 
     const currentPasswordInput = createPasswordInput("current-password", "Enter your current password")
@@ -283,6 +298,7 @@ function createProfileSettingsContent(settingsElement: HTMLElement, profileData:
     const newPasswordLabel = document.createElement("label")
     newPasswordLabel.textContent = "New Password"
     newPasswordLabel.className = "block text-sm font-medium text-gray-300 mb-1 mt-4 text-left"
+    newPasswordLabel.setAttribute("data-translate", "new_password")
     passwordSection.appendChild(newPasswordLabel)
 
     const newPasswordInput = createPasswordInput("new-password", "Enter your new password")
@@ -292,6 +308,7 @@ function createProfileSettingsContent(settingsElement: HTMLElement, profileData:
     const confirmPasswordLabel = document.createElement("label")
     confirmPasswordLabel.textContent = "Confirm New Password"
     confirmPasswordLabel.className = "block text-sm font-medium text-gray-300 mb-1 mt-4 text-left"
+    confirmPasswordLabel.setAttribute("data-translate", "confirm_new_password")
     passwordSection.appendChild(confirmPasswordLabel)
 
     const confirmPasswordInput = createPasswordInput("confirm-password", "Confirm your new password")
@@ -304,6 +321,7 @@ function createProfileSettingsContent(settingsElement: HTMLElement, profileData:
     saveButton.type = "submit"
     saveButton.className = "bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-6 rounded"
     saveButton.textContent = "Save Changes"
+    saveButton.setAttribute("data-translate", "save_changes")
     settingsForm.appendChild(saveButton)
 
     // Form submission handler
@@ -404,12 +422,12 @@ async function loadGameHistory(gameHistoryElement: HTMLElement, userId: number) 
     gameHistoryElement.innerHTML = `
         <div class="bg-zinc-900 rounded-lg shadow-lg border border-gray-700">
             <div class="p-4 border-b border-gray-600">
-                <h3 class="font-medium text-white">Game History</h3>
+                <h3 class="font-medium text-white" data-translate="game_history">Game History</h3>
             </div>
             <div class="p-4">
                 <div class="text-center py-4 text-gray-300">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
-                    <p class="text-gray-300">Loading game history...</p>
+                    <p class="text-gray-300" data-translate="loading_game_history">Loading game history...</p>
                 </div>
             </div>
         </div>
@@ -421,11 +439,11 @@ async function loadGameHistory(gameHistoryElement: HTMLElement, userId: number) 
         gameHistoryElement.innerHTML = `
             <div class="bg-zinc-900 rounded-lg shadow-lg border border-gray-700">
                 <div class="p-4 border-b border-gray-600">
-                    <h3 class="font-medium text-white">Game History</h3>
+                    <h3 class="font-medium text-white" data-translate="game_history">Game History</h3>
                 </div>
                 <div class="p-4">
                     ${gameHistory.games.length === 0 ? `
-                        <div class="text-gray-400 text-center py-8">
+                        <div class="text-gray-400 text-center py-8" data-translate="no_games_played">
                             No games played yet. Start playing to see your history!
                         </div>
                     ` : `
@@ -434,7 +452,7 @@ async function loadGameHistory(gameHistoryElement: HTMLElement, userId: number) 
                                 <div class="border border-gray-600 bg-gray-700 rounded-lg p-4">
                                     <div class="flex justify-between items-center">
                                         <div>
-                                            <span class="font-semibold ${game.result === 'won' ? 'text-green-400' : 'text-red-400'}">
+                                            <span class="font-semibold ${game.result === 'won' ? 'text-green-400' : 'text-red-400'}" data-translate="${game.result === 'won' ? 'victory' : 'defeat'}">
                                                 ${game.result === 'won' ? 'Victory' : 'Defeat'}
                                             </span>
                                             <span class="text-gray-300 ml-2">vs ${game.opponent}</span>
@@ -444,7 +462,7 @@ async function loadGameHistory(gameHistoryElement: HTMLElement, userId: number) 
                                         </div>
                                     </div>
                                     <div class="mt-2 text-sm text-gray-300">
-                                        Score: ${game.score} | Duration: ${game.duration}
+                                        <span data-translate="score">Score</span>: ${game.score} | <span data-translate="duration">Duration</span>: ${game.duration}
                                     </div>
                                 </div>
                             `).join('')}
@@ -458,10 +476,10 @@ async function loadGameHistory(gameHistoryElement: HTMLElement, userId: number) 
         gameHistoryElement.innerHTML = `
             <div class="bg-zinc-900 rounded-lg shadow-lg border border-gray-700">
                 <div class="p-4 border-b border-gray-600">
-                    <h3 class="font-medium text-white">Game History</h3>
+                    <h3 class="font-medium text-white" data-translate="game_history">Game History</h3>
                 </div>
                 <div class="p-4">
-                    <div class="text-red-400 text-center py-8">
+                    <div class="text-red-400 text-center py-8" data-translate="error_loading_game_history">
                         Error loading game history. Please try again.
                     </div>
                 </div>

@@ -15,11 +15,13 @@ export function LoginRegister(onLoginSuccess: () => void): HTMLElement {
 	loginTab.type = 'button'
 	loginTab.innerText = 'Login'
 	loginTab.className = 'hover:text-orange-500 transition-colors'
+	loginTab.setAttribute('data-translate', 'login_tab')
   
 	const registerTab = document.createElement('button')
 	registerTab.type = 'button'
 	registerTab.innerText = 'Register'
 	registerTab.className = 'hover:text-orange-500 transition-colors'
+	registerTab.setAttribute('data-translate', 'register_tab')
   
 	modeSwitch.appendChild(loginTab)
 	modeSwitch.appendChild(registerTab)
@@ -27,33 +29,40 @@ export function LoginRegister(onLoginSuccess: () => void): HTMLElement {
 	const title = document.createElement('h2')
 	title.className = 'text-2xl font-bold text-center text-orange-500'
 	title.innerText = 'PONG LOGIN'
+	title.setAttribute('data-translate', 'pong_login')
   
 	const usernameInput = document.createElement('input')
 	usernameInput.type = 'text'
 	usernameInput.placeholder = 'Username'
 	usernameInput.className = inputClassName
+	usernameInput.setAttribute('data-translate-placeholder', 'username_placeholder')
 
 	const emailInput = document.createElement('input')
 	emailInput.type = 'email'
 	emailInput.placeholder = 'Email'
 	emailInput.className = inputClassName
+	emailInput.setAttribute('data-translate-placeholder', 'email_placeholder')
   
 	const passwordInput = document.createElement('input')
 	passwordInput.type = 'password'
 	passwordInput.placeholder = 'Password'
 	passwordInput.className = inputClassName
+	passwordInput.setAttribute('data-translate-placeholder', 'password_placeholder')
   
 	const button = document.createElement('button')
 	button.type = 'submit'
 	button.innerText = 'START'
 	button.className =
 		'bg-orange-600 border border-orange-500 text-white py-2 rounded hover:bg-orange-700 transition-colors font-medium'
+	button.setAttribute('data-translate', 'start_button')
   
 	// Mode switching
 	function updateMode(newMode: 'login' | 'register') {
 	  mode = newMode
 	  title.innerText = newMode === 'login' ? 'PONG LOGIN' : 'PONG REGISTER'
+		title.setAttribute('data-translate', newMode === 'login' ? 'pong_login' : 'pong_register')
 	  button.innerText = newMode === 'login' ? 'LOGIN' : 'REGISTER'
+		button.setAttribute('data-translate', newMode === 'login' ? 'start_button' : 'register_button')
   
 		loginTab.classList.toggle('text-orange-500', mode === 'login')
 		registerTab.classList.toggle('text-orange-500', mode === 'register')
