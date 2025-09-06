@@ -14,23 +14,23 @@ interface TournamentMode {
 const TOURNAMENT_MODES: TournamentMode[] = [
 	{
 		id: 'sprint',
-		name: '🏃 Sprint Mode',
-		description: 'First to clear 40 lines wins',
-		duration: '1-3 min',
+		name: 'sprint_mode',
+		description: 'sprint_description',
+		duration: 'sprint_duration',
 		winCondition: 'lines_cleared >= 40'
 	},
 	{
 		id: 'ultra',
-		name: '⚡ Ultra Mode',
-		description: 'Highest score in 2 minutes',
-		duration: '2 min',
+		name: 'ultra_mode',
+		description: 'ultra_description',
+		duration: 'ultra_duration',
 		winCondition: 'time_limit'
 	},
 	{
 		id: 'survival',
-		name: '💀 Survival Mode',
-		description: 'Last player standing',
-		duration: 'Until Game Over',
+		name: 'survival_mode',
+		description: 'survival_description',
+		duration: 'survival_duration',
 		winCondition: 'last_standing'
 	}
 ]
@@ -39,8 +39,8 @@ export function TetrisMatchmakingView(container: HTMLElement) {
 	if (!currentUser) {
 		container.innerHTML = `
             <div class="text-center py-8">
-                <p class="text-gray-400 text-lg">🔒 Please log in to use matchmaking</p>
-                <p class="text-gray-500 text-sm mt-2">Find opponents and compete in fair matches.</p>
+                <p class="text-gray-400 text-lg" data-translate="please_login_matchmaking">🔒 Please log in to use matchmaking</p>
+                <p class="text-gray-500 text-sm mt-2" data-translate="find_opponents_compete">Find opponents and compete in fair matches.</p>
             </div>
         `
 		return
@@ -48,40 +48,40 @@ export function TetrisMatchmakingView(container: HTMLElement) {
 
 	container.innerHTML = `
         <div class="max-w-6xl mx-auto p-6">
-            <h3 class="text-xl font-bold mb-6 text-white">⚔️ Tetris Matchmaking</h3>
+            <h3 class="text-xl font-bold mb-6 text-white" data-translate="tetris_matchmaking_title">⚔️ Tetris Matchmaking</h3>
             
             <!-- Tournament Mode Selection -->
             <div class="bg-[#1a1a1a] rounded-lg p-6 shadow-md border border-gray-700 mb-6">
-                <h4 class="text-orange-400 font-semibold mb-4">🎮 Select Tournament Mode</h4>
+                <h4 class="text-orange-400 font-semibold mb-4" data-translate="select_tournament_mode">🎮 Select Tournament Mode</h4>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     ${TOURNAMENT_MODES.map(mode => `
                         <div class="mode-card bg-zinc-800 p-4 rounded-lg border border-gray-600 cursor-pointer hover:border-orange-400 transition-colors" data-mode="${mode.id}">
-                            <h5 class="text-white font-semibold mb-2">${mode.name}</h5>
-                            <p class="text-gray-300 text-sm mb-2">${mode.description}</p>
+                            <h5 class="text-white font-semibold mb-2" data-translate="${mode.name}">🏃 Sprint Mode</h5>
+                            <p class="text-gray-300 text-sm mb-2" data-translate="${mode.description}">First to clear 40 lines wins</p>
                             <div class="flex justify-between text-xs text-gray-400">
-                                <span>⏱️ ${mode.duration}</span>
-                                <span class="text-orange-300">🏆 Win Condition</span>
+                                <span data-translate="${mode.duration}">⏱️ 1-3 min</span>
+                                <span class="text-orange-300" data-translate="win_condition">🏆 Win Condition</span>
                             </div>
                             <p class="text-xs text-gray-400 mt-1">${mode.winCondition.replace('_', ' ').replace('>=', '≥')}</p>
                         </div>
                     `).join('')}
                 </div>
                 <div id="selectedMode" class="mt-4 p-3 bg-orange-600 rounded text-white text-center hidden">
-                    <span id="selectedModeText">Sprint Mode Selected</span>
+                    <span id="selectedModeText" data-translate="sprint_mode">Sprint Mode Selected</span>
                 </div>
             </div>
             
             <!-- Pending Matches Section -->
             <div id="pendingMatchesSection" class="bg-[#1a1a1a] rounded-lg p-6 shadow-md border border-orange-700 mb-6 hidden">
-                <h4 class="text-orange-400 font-semibold mb-4 flex items-center">
+                <h4 class="text-orange-400 font-semibold mb-4 flex items-center" data-translate="pending_matches">
                     🔔 Pending Matches
                 </h4>
-                <p class="text-gray-300 mb-4">Matches waiting for action</p>
+                <p class="text-gray-300 mb-4" data-translate="matches_waiting_action">Matches waiting for action</p>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Waiting for You -->
                     <div class="bg-orange-900/10 border border-orange-500/30 rounded-lg p-4">
-                        <h5 class="text-orange-400 font-semibold mb-3 flex items-center">
+                        <h5 class="text-orange-400 font-semibold mb-3 flex items-center" data-translate="your_turn">
                             🎮 Your Turn
                         </h5>
                         <div id="waitingForYouList" class="space-y-3">
@@ -91,7 +91,7 @@ export function TetrisMatchmakingView(container: HTMLElement) {
                     
                     <!-- Waiting for Opponent -->
                     <div class="bg-blue-900/10 border border-blue-500/30 rounded-lg p-4">
-                        <h5 class="text-blue-400 font-semibold mb-3 flex items-center">
+                        <h5 class="text-blue-400 font-semibold mb-3 flex items-center" data-translate="waiting_for_opponent">
                             ⏳ Waiting for Opponent
                         </h5>
                         <div id="waitingForOpponentList" class="space-y-3">
@@ -103,23 +103,23 @@ export function TetrisMatchmakingView(container: HTMLElement) {
             
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-[#1a1a1a] rounded-lg p-6 shadow-md border border-gray-700">
-                    <h4 class="text-orange-400 font-semibold mb-4 flex items-center">
+                    <h4 class="text-orange-400 font-semibold mb-4 flex items-center" data-translate="create_match">
                         ➕ Create Match
                     </h4>
-                    <p class="text-gray-300 mb-4">Create a new match and wait for an opponent</p>
+                    <p class="text-gray-300 mb-4" data-translate="create_new_match_wait">Create a new match and wait for an opponent</p>
                     
                     <div id="createMatchStatus" class="mb-4">
                         <div class="flex items-center justify-between bg-zinc-700 p-3 rounded">
-                            <span class="text-white">Your Skill Level:</span>
+                            <span class="text-white" data-translate="your_skill_level">Your Skill Level:</span>
                             <span id="playerSkillLevel" class="text-orange-400 font-bold">-</span>
                         </div>
                     </div>
                     
                     <div id="matchmakingButtons" class="space-y-3">
-                        <button id="createMatchBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                        <button id="createMatchBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded font-semibold disabled:opacity-50 disabled:cursor-not-allowed" data-translate="create_match_btn">
                             🎮 Create Match
                         </button>
-                        <button id="cancelMatchBtn" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded font-semibold hidden">
+                        <button id="cancelMatchBtn" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded font-semibold hidden" data-translate="remove_match_btn">
                             🗑️ Remove Match
                         </button>
                     </div>
@@ -127,27 +127,27 @@ export function TetrisMatchmakingView(container: HTMLElement) {
                     <div id="matchmakingStatus" class="mt-4 p-3 bg-green-900/30 border border-green-500/30 rounded hidden">
                         <div class="flex items-center justify-center space-x-2">
                             <span class="text-green-400">✅</span>
-                            <p id="statusMessage" class="text-green-300 font-medium">Match created successfully!</p>
+                            <p id="statusMessage" class="text-green-300 font-medium" data-translate="match_created_successfully">Match created successfully!</p>
                         </div>
-                        <p class="text-green-200 text-sm text-center mt-1">Other players can now join your match</p>
+                        <p class="text-green-200 text-sm text-center mt-1" data-translate="other_players_can_join">Other players can now join your match</p>
                     </div>
                 </div>
 
                 <!-- Available Matches Section -->
                 <div class="bg-[#1a1a1a] rounded-lg p-6 shadow-md border border-gray-700">
-                    <h4 class="text-orange-400 font-semibold mb-4 flex items-center">
+                    <h4 class="text-orange-400 font-semibold mb-4 flex items-center" data-translate="available_matches">
                         🎯 Available Matches
                     </h4>
-                    <p class="text-gray-300 mb-4">Join an existing match created by other players</p>
+                    <p class="text-gray-300 mb-4" data-translate="join_existing_match">Join an existing match created by other players</p>
                     
                     <div id="queueList" class="space-y-2 max-h-60 overflow-y-auto">
                         <div class="text-center py-4">
                             <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
-                            <p class="text-gray-400 mt-2 text-sm">Loading available matches...</p>
+                            <p class="text-gray-400 mt-2 text-sm" data-translate="loading_available_matches">Loading available matches...</p>
                         </div>
                     </div>
                     
-                    <button id="refreshQueueBtn" class="w-full mt-4 bg-zinc-700 hover:bg-zinc-600 text-white py-2 rounded">
+                    <button id="refreshQueueBtn" class="w-full mt-4 bg-zinc-700 hover:bg-zinc-600 text-white py-2 rounded" data-translate="refresh_matches">
                         🔄 Refresh Matches
                     </button>
                 </div>
@@ -155,13 +155,13 @@ export function TetrisMatchmakingView(container: HTMLElement) {
 
             <!-- Match History Section -->
             <div class="bg-[#1a1a1a] rounded-lg p-6 shadow-md border border-gray-700 mt-6">
-                <h4 class="text-orange-400 font-semibold mb-4 flex items-center">
+                <h4 class="text-orange-400 font-semibold mb-4 flex items-center" data-translate="recent_matches_history">
                     📜 Recent Matches
                 </h4>
                 <div id="recentMatches" class="space-y-2">
                     <div class="text-center py-4">
-                        <p class="text-gray-400">No recent matches</p>
-                        <p class="text-gray-500 text-sm mt-1">Play some matches to see your history here</p>
+                        <p class="text-gray-400" data-translate="no_recent_matches">No recent matches</p>
+                        <p class="text-gray-500 text-sm mt-1" data-translate="play_matches_see_history">Play some matches to see your history here</p>
                     </div>
                 </div>
             </div>
@@ -169,20 +169,20 @@ export function TetrisMatchmakingView(container: HTMLElement) {
             <!-- Join Match Options Modal -->
             <div id="joinMatchModal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center hidden z-50">
                 <div class="bg-[#1a1a1a] rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
-                    <h3 class="text-xl font-bold text-white mb-4">🎮 Join Match</h3>
+                    <h3 class="text-xl font-bold text-white mb-4" data-translate="join_match">🎮 Join Match</h3>
                     <div id="matchDetails" class="mb-6">
-                        <p class="text-gray-300 mb-4">Choose how you want to play this match:</p>
+                        <p class="text-gray-300 mb-4" data-translate="choose_how_to_play">Choose how you want to play this match:</p>
                         <div class="bg-zinc-800 p-4 rounded border border-gray-600 mb-4">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-gray-400">Opponent:</span>
+                                <span class="text-gray-400" data-translate="opponent">Opponent:</span>
                                 <span id="modalOpponentName" class="text-white font-semibold">-</span>
                             </div>
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-gray-400">Mode:</span>
+                                <span class="text-gray-400" data-translate="mode">Mode:</span>
                                 <span id="modalMatchMode" class="text-orange-400">-</span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <span class="text-gray-400">Skill Level:</span>
+                                <span class="text-gray-400" data-translate="skill_level">Skill Level:</span>
                                 <span id="modalOpponentSkill" class="text-green-400">-</span>
                             </div>
                         </div>
@@ -193,9 +193,9 @@ export function TetrisMatchmakingView(container: HTMLElement) {
                                 <div class="flex items-center space-x-3">
                                     <span class="text-2xl">⚡</span>
                                     <div>
-                                        <h4 class="text-green-400 font-semibold">Play Now (Both Present)</h4>
-                                        <p class="text-gray-300 text-sm">Play simultaneously if both players are available</p>
-                                        <p class="text-green-200 text-xs mt-1">⚠️ Opponent must confirm with password</p>
+                                        <h4 class="text-green-400 font-semibold" data-translate="play_now_both_present">Play Now (Both Present)</h4>
+                                        <p class="text-gray-300 text-sm" data-translate="play_simultaneously">Play simultaneously if both players are available</p>
+                                        <p class="text-green-200 text-xs mt-1" data-translate="opponent_must_confirm">⚠️ Opponent must confirm with password</p>
                                     </div>
                                 </div>
                             </div>
@@ -204,16 +204,16 @@ export function TetrisMatchmakingView(container: HTMLElement) {
                                 <div class="flex items-center space-x-3">
                                     <span class="text-2xl">⏰</span>
                                     <div>
-                                        <h4 class="text-blue-400 font-semibold">Play Later (Turn-based)</h4>
-                                        <p class="text-gray-300 text-sm">Take turns playing when convenient</p>
-                                        <p class="text-blue-200 text-xs mt-1">✅ No need for opponent to be online</p>
+                                        <h4 class="text-blue-400 font-semibold" data-translate="play_later_turn_based">Play Later (Turn-based)</h4>
+                                        <p class="text-gray-300 text-sm" data-translate="take_turns_convenient">Take turns playing when convenient</p>
+                                        <p class="text-blue-200 text-xs mt-1" data-translate="no_need_opponent_online">✅ No need for opponent to be online</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="flex space-x-3">
-                        <button id="cancelJoinBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold">
+                        <button id="cancelJoinBtn" class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold" data-translate="cancel_btn">
                             ❌ Cancel
                         </button>
                     </div>
@@ -223,20 +223,20 @@ export function TetrisMatchmakingView(container: HTMLElement) {
             <!-- Opponent Password Confirmation Modal -->
             <div id="passwordConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center hidden z-50">
                 <div class="bg-[#1a1a1a] rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
-                    <h3 class="text-xl font-bold text-white mb-4">🔐 Opponent Confirmation</h3>
+                    <h3 class="text-xl font-bold text-white mb-4" data-translate="opponent_confirmation">🔐 Opponent Confirmation</h3>
                     <div class="mb-6">
-                        <p class="text-gray-300 mb-4">To play simultaneously, <span id="confirmOpponentName" class="text-orange-400 font-semibold">opponent</span> must confirm they are present:</p>
+                        <p class="text-gray-300 mb-4"><span data-translate="to_play_simultaneously">To play simultaneously,</span> <span id="confirmOpponentName" class="text-orange-400 font-semibold">opponent</span> <span data-translate="must_confirm_present">must confirm they are present:</span></p>
                         <div class="bg-zinc-800 p-4 rounded border border-gray-600">
-                            <label class="block text-gray-400 text-sm mb-2">Opponent's Password:</label>
-                            <input type="password" id="opponentPasswordInput" class="w-full bg-zinc-700 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none" placeholder="Enter opponent's password">
-                            <p class="text-gray-500 text-xs mt-2">⚠️ This confirms both players are present</p>
+                            <label class="block text-gray-400 text-sm mb-2" data-translate="opponent_password">Opponent's Password:</label>
+                            <input type="password" id="opponentPasswordInput" class="w-full bg-zinc-700 border border-gray-600 rounded px-3 py-2 text-white placeholder-gray-400 focus:border-orange-400 focus:outline-none" data-translate-placeholder="enter_opponent_password" placeholder="Enter opponent's password">
+                            <p class="text-gray-500 text-xs mt-2" data-translate="confirms_both_present">⚠️ This confirms both players are present</p>
                         </div>
                     </div>
                     <div class="flex space-x-3">
-                        <button id="confirmPasswordBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold">
+                        <button id="confirmPasswordBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold" data-translate="confirm_play_now">
                             ✅ Confirm & Play Now
                         </button>
-                        <button id="cancelPasswordBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold">
+                        <button id="cancelPasswordBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold" data-translate="cancel_btn">
                             ❌ Cancel
                         </button>
                     </div>
@@ -380,7 +380,9 @@ function initializeModeSelection() {
 	// Initially disable create match button until mode is selected
 	if (createMatchBtn) {
 		createMatchBtn.disabled = true
-		createMatchBtn.textContent = '🎮 Select a mode first'
+		createMatchBtn.setAttribute('data-translate', 'select_mode_first')
+		// Apply translation immediately
+		setTimeout(() => { updateText() }, 10)
 	}
 
 	modeCards.forEach(card => {
@@ -401,13 +403,18 @@ function initializeModeSelection() {
 
 			if (selectedMode && selectedModeDiv && selectedModeText) {
 				selectedModeDiv.classList.remove('hidden')
-				selectedModeText.textContent = `${selectedMode.name} Selected - ${selectedMode.description}`
+				// Update the data-translate attribute and apply translation
+				selectedModeText.setAttribute('data-translate', selectedMode.name)
+				// Apply the translation immediately
+				setTimeout(() => { updateText() }, 10)
 			}
 
 			// Enable create match button
 			if (createMatchBtn) {
 				createMatchBtn.disabled = false
-				createMatchBtn.textContent = '🎮 Create Match'
+				createMatchBtn.setAttribute('data-translate', 'create_match_btn')
+				// Apply translation immediately
+				setTimeout(() => { updateText() }, 10)
 			}
 		})
 	})
@@ -565,12 +572,29 @@ function showMatchFoundNotification(data: any) {
 }
 
 function getModeDisplayName(mode: string): string {
+	// Use translation keys for display names
 	const modes: { [key: string]: string } = {
+		'sprint': 'sprint_mode',
+		'ultra': 'ultra_mode',
+		'survival': 'survival_mode'
+	}
+
+	const translationKey = modes[mode]
+	if (translationKey) {
+		// Get the translation from the DOM or fallback to the key
+		const translationElement = document.querySelector(`[data-translate="${translationKey}"]`)
+		if (translationElement) {
+			return translationElement.textContent || translationKey
+		}
+	}
+
+	// Fallback to original mode names if translation is not available
+	const fallbackModes: { [key: string]: string } = {
 		'sprint': '🏃 Sprint',
 		'ultra': '⚡ Ultra',
 		'survival': '💀 Survival'
 	}
-	return modes[mode] || mode
+	return fallbackModes[mode] || mode
 }
 
 async function loadPlayerSkillLevel() {
@@ -606,10 +630,12 @@ async function loadQueue() {
 		if (queue.length === 0) {
 			queueList.innerHTML = `
                 <div class="text-center py-4 text-gray-400">
-                    <p>🎮 No matches available</p>
-                    <p class="text-sm mt-1">Create a match to get started!</p>
+                    <p data-translate="no_matches_available">🎮 No matches available</p>
+                    <p class="text-sm mt-1" data-translate="create_match_get_started">Create a match to get started!</p>
                 </div>
             `
+			// Apply translations to the newly created content
+			setTimeout(() => { updateText() }, 10)
 			return
 		}
 
@@ -640,16 +666,19 @@ async function loadQueue() {
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="${isOwnMatch ? 'text-gray-400' : 'text-orange-400'} font-semibold">Level ${player.skillLevel}</p>
-                        <p class="text-gray-400 text-xs">Waiting ${waitTimeStr}</p>
+                        <p class="${isOwnMatch ? 'text-gray-400' : 'text-orange-400'} font-semibold"><span data-translate="level">Level</span> ${player.skillLevel}</p>
+                        <p class="text-gray-400 text-xs"><span data-translate="waiting">Waiting</span> ${waitTimeStr}</p>
                         ${isOwnMatch
-					? '<p class="text-gray-500 text-xs">Your match</p>'
-					: '<p class="text-green-400 text-xs font-medium">👆 Click to Join</p>'
+				? '<p class="text-gray-500 text-xs" data-translate="your_match">Your match</p>'
+				: '<p class="text-green-400 text-xs font-medium" data-translate="click_to_join">👆 Click to Join</p>'
                         }
                     </div>
                 </div>
             `
 		}).join('')
+
+		// Apply translations to the newly created content
+		setTimeout(() => { updateText() }, 10)
 
 		// Add click listeners to match cards (only for other players' matches)
 		document.querySelectorAll('.match-card').forEach(card => {
@@ -673,10 +702,12 @@ async function loadQueue() {
 		console.error('Failed to load queue:', error)
 		queueList.innerHTML = `
             <div class="text-center py-4 text-red-400">
-                <p>❌ Failed to load matches</p>
-                <p class="text-sm text-gray-500 mt-1">Please try refreshing</p>
+                <p data-translate="failed_load_matches">❌ Failed to load matches</p>
+                <p class="text-sm text-gray-500 mt-1" data-translate="try_refreshing">Please try refreshing</p>
             </div>
         `
+		// Apply translations to the newly created content
+		setTimeout(() => { updateText() }, 10)
 	}
 }
 
@@ -691,10 +722,12 @@ async function loadRecentMatches() {
 		if (completedMatches.length === 0) {
 			recentMatches.innerHTML = `
 				<div class="text-center py-4">
-					<p class="text-gray-400">No recent matches</p>
-					<p class="text-gray-500 text-sm mt-1">Play some matches to see your history here</p>
+					<p class="text-gray-400" data-translate="no_recent_matches">No recent matches</p>
+					<p class="text-gray-500 text-sm mt-1" data-translate="play_matches_see_history">Play some matches to see your history here</p>
 				</div>
 			`
+			// Apply translations to the newly created content
+			setTimeout(() => { updateText() }, 10)
 			return
 		}
 
@@ -709,29 +742,34 @@ async function loadRecentMatches() {
 					<div class="flex-1">
 						<div class="flex items-center gap-2">
 							<span class="text-lg">${resultIcon}</span>
-							<p class="text-white font-medium">vs ${match.opponent}</p>
-							<span class="text-xs text-gray-400">${playTypeIcon} ${match.playType === 'turn_based' ? 'Turn-based' : 'Simultaneous'}</span>
+							<p class="text-white font-medium"><span data-translate="vs">vs</span> ${match.opponent}</p>
+							<span class="text-xs text-gray-400">${playTypeIcon} <span data-translate="${match.playType === 'turn_based' ? 'turn_based' : 'simultaneous'}">${match.playType === 'turn_based' ? 'Turn-based' : 'Simultaneous'}</span></span>
 						</div>
 						<p class="text-gray-400 text-sm">${matchDate.toLocaleDateString()} at ${matchDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
 						<p class="text-gray-500 text-xs">${getModeDisplayName(match.mode)}</p>
 					</div>
 					<div class="text-right">
-						<p class="text-${resultColor}-400 font-semibold capitalize">${match.result === 'won' ? 'Victory' : match.result === 'lost' ? 'Defeat' : 'Tie'}</p>
+						<p class="text-${resultColor}-400 font-semibold capitalize"><span data-translate="${match.result === 'won' ? 'match_victory' : match.result === 'lost' ? 'match_defeat' : 'tie'}">${match.result === 'won' ? 'Victory' : match.result === 'lost' ? 'Defeat' : 'Tie'}</span></p>
 						<p class="text-white text-sm">${match.userScore} - ${match.opponentScore}</p>
-						<p class="text-gray-400 text-xs">${match.userLines} lines cleared</p>
+						<p class="text-gray-400 text-xs">${match.userLines} <span data-translate="lines">lines</span> cleared</p>
 					</div>
 				</div>
 			`
 		}).join('')
 
+		// Apply translations to the newly created content
+		setTimeout(() => { updateText() }, 10)
+
 	} catch (error) {
 		console.error('Failed to load recent matches:', error)
 		recentMatches.innerHTML = `
 			<div class="text-center py-4 text-red-400">
-				<p>❌ Failed to load recent matches</p>
-				<p class="text-sm text-gray-500 mt-1">Please try refreshing</p>
+				<p data-translate="failed_load_matches">❌ Failed to load recent matches</p>
+				<p class="text-sm text-gray-500 mt-1" data-translate="try_refreshing">Please try refreshing</p>
 			</div>
 		`
+		// Apply translations to the newly created content
+		setTimeout(() => { updateText() }, 10)
 	}
 }
 
@@ -761,8 +799,8 @@ async function loadPendingMatches() {
 		if (waitingForYou.length === 0) {
 			waitingForYouList.innerHTML = `
 				<div class="text-center py-6 text-orange-300">
-					<p class="text-sm">🎯 No matches waiting</p>
-					<p class="text-xs text-gray-400 mt-1">All caught up!</p>
+					<p class="text-sm" data-translate="no_matches_waiting">🎯 No matches waiting</p>
+					<p class="text-xs text-gray-400 mt-1" data-translate="all_caught_up">All caught up!</p>
 				</div>
 			`
 		} else {
@@ -771,18 +809,18 @@ async function loadPendingMatches() {
 					 data-match-id="${match.id}">
 					<div class="flex justify-between items-start">
 						<div>
-							<h6 class="text-white font-semibold text-sm">vs ${match.opponent}</h6>
+							<h6 class="text-white font-semibold text-sm"><span data-translate="vs">vs</span> ${match.opponent}</h6>
 							<p class="text-gray-400 text-xs">${getModeDisplayName(match.mode)}</p>
-							<p class="text-orange-400 text-xs font-medium mt-1">🎮 Your turn!</p>
+							<p class="text-orange-400 text-xs font-medium mt-1" data-translate="your_turn_exclamation">🎮 Your turn!</p>
 						</div>
 						<div class="text-right text-xs">
-							<p class="text-gray-300">Target to beat:</p>
-							<p class="text-orange-400 font-bold">${match.opponentScore} pts</p>
-							<p class="text-gray-400">${match.opponentLines} lines</p>
+							<p class="text-gray-300" data-translate="target_to_beat">Target to beat:</p>
+							<p class="text-orange-400 font-bold">${match.opponentScore} <span data-translate="pts">pts</span></p>
+							<p class="text-gray-400">${match.opponentLines} <span data-translate="lines">lines</span></p>
 							<p class="text-gray-500 mt-1">${new Date(match.created).toLocaleTimeString()}</p>
 						</div>
 					</div>
-					<p class="text-orange-300 text-xs mt-2 text-center">👆 Click to play</p>
+					<p class="text-orange-300 text-xs mt-2 text-center" data-translate="click_to_play">👆 Click to play</p>
 				</div>
 			`).join('')
 
@@ -801,8 +839,8 @@ async function loadPendingMatches() {
 		if (waitingForOpponent.length === 0) {
 			waitingForOpponentList.innerHTML = `
 				<div class="text-center py-6 text-blue-300">
-					<p class="text-sm">⏳ No pending results</p>
-					<p class="text-xs text-gray-400 mt-1">Start some matches!</p>
+					<p class="text-sm" data-translate="no_pending_results">⏳ No pending results</p>
+					<p class="text-xs text-gray-400 mt-1" data-translate="start_some_matches">Start some matches!</p>
 				</div>
 			`
 		} else {
@@ -810,20 +848,23 @@ async function loadPendingMatches() {
 				<div class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
 					<div class="flex justify-between items-start">
 						<div>
-							<h6 class="text-white font-semibold text-sm">vs ${match.opponent}</h6>
+							<h6 class="text-white font-semibold text-sm"><span data-translate="vs">vs</span> ${match.opponent}</h6>
 							<p class="text-gray-400 text-xs">${getModeDisplayName(match.mode)}</p>
-							<p class="text-blue-400 text-xs font-medium mt-1">⏳ Waiting for opponent</p>
+							<p class="text-blue-400 text-xs font-medium mt-1" data-translate="waiting_for_opponent_lower">⏳ Waiting for opponent</p>
 						</div>
 						<div class="text-right text-xs">
-							<p class="text-gray-300">Your result:</p>
-							<p class="text-blue-400 font-bold">${match.yourScore} pts</p>
-							<p class="text-gray-400">${match.yourLines} lines</p>
+							<p class="text-gray-300" data-translate="your_result">Your result:</p>
+							<p class="text-blue-400 font-bold">${match.yourScore} <span data-translate="pts">pts</span></p>
+							<p class="text-gray-400">${match.yourLines} <span data-translate="lines">lines</span></p>
 							<p class="text-gray-500 mt-1">${new Date(match.created).toLocaleTimeString()}</p>
 						</div>
 					</div>
 				</div>
 			`).join('')
 		}
+
+		// Apply translations to the newly created content
+		setTimeout(() => { updateText() }, 10)
 
 	} catch (error) {
 		console.error('Failed to load pending matches:', error)
