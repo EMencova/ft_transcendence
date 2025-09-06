@@ -21,6 +21,7 @@ export function createNav(): HTMLElement {
 	gameLink.href = "#"
 	gameLink.textContent = "🎮 Game"
 	gameLink.className = linkClass
+	gameLink.setAttribute("data-translate", "game")
 
 	// Add OtherGames link
 	const otherGamesLink = document.createElement("a")
@@ -28,6 +29,7 @@ export function createNav(): HTMLElement {
 	otherGamesLink.href = "#"
 	otherGamesLink.textContent = "🕹️ Other Games"
 	otherGamesLink.className = linkClass
+	otherGamesLink.setAttribute("data-translate", "other_games")
 
 	// Add Game, Tournament and LeaderBoard links
 	const tournamentLink = document.createElement("a")
@@ -35,29 +37,34 @@ export function createNav(): HTMLElement {
 	tournamentLink.href = "#"
 	tournamentLink.textContent = "🏆 Tournament"
 	tournamentLink.className = linkClass
+	tournamentLink.setAttribute("data-translate", "tournament")
 
 	const leaderboardLink = document.createElement("a")
 	leaderboardLink.id = "leaderboardLink"
 	leaderboardLink.href = "#"
 	leaderboardLink.textContent = "📊 LeaderBoard"
 	leaderboardLink.className = linkClass
+	leaderboardLink.setAttribute("data-translate", "leaderboard")
 
 
 	const loginBtn = document.createElement("button")
 	loginBtn.id = "loginBtn"
 	loginBtn.textContent = "Login"
 	loginBtn.className = buttonClass
+	loginBtn.setAttribute("data-translate", "login")
 
 	const signupBtn = document.createElement("button")
 	signupBtn.id = "signupBtn"
 	signupBtn.textContent = "Signup"
 	signupBtn.className = buttonClass
+	signupBtn.setAttribute("data-translate", "register")
 
 	const logoutBtn = document.createElement("button")
 	logoutBtn.id = "logoutBtn"
 	logoutBtn.textContent = "Logout"
 	logoutBtn.style.display = "none"
 	logoutBtn.className = buttonClass
+	logoutBtn.setAttribute("data-translate", "logout")
 
 	// Language Flags
 	const langFlags = document.createElement("div")

@@ -56,6 +56,13 @@ export function getCurrentLanguage(): string {
   return currentLang
 }
 
+// Apply translations with a delay to ensure DOM is ready
+export function applyTranslationsAfterDOMChange() {
+  setTimeout(() => {
+    updateText()
+  }, 10)
+}
+
 // Set up the language switcher buttons
 export function setupLanguageSwitcher() {
   const flags = document.querySelectorAll('.lang-flag');

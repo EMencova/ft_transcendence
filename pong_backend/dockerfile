@@ -5,10 +5,22 @@ WORKDIR /app
 # Install SQLite support
 RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev
 
+# Create a user with the same UID as the host user to avoid permission issues
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
 COPY package*.json ./
 RUN npm install
 
 COPY . .
+
+# Ensure the data directory and public/avatars directory exist and have proper permissions
+RUN mkdir -p /app/data /app/public/avatars && \
+    chown -R appuser:appuser /app && \
+    chmod -R 755 /app && \
+    chmod -R 777 /app/data /app/public
+
+# Switch to non-root user
+USER appuser
 
 EXPOSE 3000
 

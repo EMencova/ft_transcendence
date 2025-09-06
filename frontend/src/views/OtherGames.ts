@@ -6,9 +6,9 @@ import { TetrisMatchmakingView } from './othergames/TetrisMatchmakingView.ts'
 import { TetrisView } from './othergames/TetrisView'
 
 const tabs = [
-	{ id: "play", name: "Play" },
-	{ id: "history", name: "History" },
-	{ id: "matchmaking", name: "Matchmaking" },
+	{ id: "play", name: "Play", translateKey: "play_tab" },
+	{ id: "history", name: "History", translateKey: "history_tab" },
+	{ id: "matchmaking", name: "Matchmaking", translateKey: "matchmaking_tab" },
 ]
 
 export function OtherGamesView(push = true) {
@@ -22,13 +22,13 @@ export function OtherGamesView(push = true) {
 
 	let tabButtons = tabs.map(
 		(tab, idx) =>
-			`<button class="tab-btn px-4 py-2 ${idx === 0 ? 'bg-orange-500 text-white' : 'bg-zinc-800 text-gray-300'} rounded" data-tab="${tab.id}">${tab.name}</button>`
+			`<button class="tab-btn px-4 py-2 ${idx === 0 ? 'bg-orange-500 text-white' : 'bg-zinc-800 text-gray-300'} rounded" data-tab="${tab.id}" data-translate="${tab.translateKey}">${tab.name}</button>`
 	).join(" ")
 
-	tabButtons += `<button id="backToPongBtn" class="px-4 py-2 bg-zinc-700 text-white rounded ml-4 hover:bg-orange-600">Back to Pong</button>`
+	tabButtons += `<button id="backToPongBtn" class="px-4 py-2 bg-zinc-700 text-white rounded ml-4 hover:bg-orange-600" data-translate="back_to_pong">Back to Pong</button>`
 
 	main.innerHTML = `
-        <h2 class="text-2xl font-bold mb-4 mt-6">🕹️ Tetris</h2>
+        <h2 class="text-2xl font-bold mb-4 mt-6" data-translate="tetris_heading">🕹️ Tetris</h2>
         <div class="ml-6 mb-4 flex gap-2">${tabButtons}</div>
         <div id="gameContent"></div>
     `
@@ -58,6 +58,10 @@ export function OtherGamesView(push = true) {
 						TetrisMatchmakingView(gameContent)
 						break
 				}
+				// Apply translations after tab content changes
+				setTimeout(() => {
+					updateText()
+				}, 10)
 			}
 		})
 	})

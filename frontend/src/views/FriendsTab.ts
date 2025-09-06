@@ -9,12 +9,12 @@ export async function loadFriendsTab(friendsElement: HTMLElement, userId: number
 	friendsElement.innerHTML = `
         <div class="bg-zinc-900 rounded-lg shadow-lg border border-gray-700">
             <div class="p-4 border-b border-gray-600">
-                <h3 class="font-medium text-white">Friends</h3>
+                <h3 class="font-medium text-white" data-translate="friends">Friends</h3>
             </div>
             <div class="p-4">
                 <div class="text-center py-4 text-gray-300">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
-                    <p class="text-gray-300">Loading friends...</p>
+                    <p class="text-gray-300" data-translate="loading_friends">Loading friends...</p>
                 </div>
             </div>
         </div>
@@ -49,10 +49,10 @@ export async function loadFriendsTab(friendsElement: HTMLElement, userId: number
 		friendsElement.innerHTML = `
             <div class="bg-zinc-900 rounded-lg shadow-lg border border-gray-700">
                 <div class="p-4 border-b border-gray-600">
-                    <h3 class="font-medium text-white">Friends</h3>
+                    <h3 class="font-medium text-white" data-translate="friends">Friends</h3>
                 </div>
                 <div class="p-4">
-                    <div class="text-red-400 text-center py-8">
+                    <div class="text-red-400 text-center py-8" data-translate="error_loading_friends">
                         Error loading friends. Please try again.
                     </div>
                 </div>
@@ -102,8 +102,8 @@ function createFriendsInterface(friends: any[], requests: any[], sentRequests: a
             <!-- Header with search -->
             <div class="p-4 border-b border-gray-600">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-medium text-white">Friends</h3>
-                    <span class="text-sm text-gray-400">${friends.length} friends</span>
+                    <h3 class="font-medium text-white" data-translate="friends">Friends</h3>
+                    <span class="text-sm text-gray-400" data-translate="friends_count" data-count="${friends.length}">${friends.length} friends</span>
                 </div>
                 
                 <!-- Search for new friends -->
@@ -111,6 +111,7 @@ function createFriendsInterface(friends: any[], requests: any[], sentRequests: a
                     <input 
                         type="text" 
                         id="friendSearch" 
+                        data-translate-placeholder="search_players"
                         placeholder="Search for players to add as friends..."
                         class="w-full p-2 pr-10 border border-gray-600 bg-zinc-800 text-white rounded focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 placeholder-gray-400"
                     >
@@ -118,6 +119,7 @@ function createFriendsInterface(friends: any[], requests: any[], sentRequests: a
                         id="clearSearchBtn" 
                         type="button" 
                         class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 hidden"
+                        data-translate-title="clear_search"
                         title="Clear search"
                     >
                         ✕
@@ -128,16 +130,16 @@ function createFriendsInterface(friends: any[], requests: any[], sentRequests: a
                 <!-- Friend Tabs -->
                 <div class="mt-4 border-b border-gray-600">
                     <nav class="flex space-x-8" aria-label="Friend tabs">
-                        <button class="friend-tab border-b-2 border-orange-500 py-2 px-1 text-orange-500 font-medium text-sm" data-tab="friends">
+                        <button class="friend-tab border-b-2 border-orange-500 py-2 px-1 text-orange-500 font-medium text-sm" data-tab="friends" data-translate="friends_tab">
                             Friends (${friends.length})
                         </button>
-                        <button class="friend-tab py-2 px-1 text-gray-400 hover:text-orange-500 text-sm" data-tab="requests">
+                        <button class="friend-tab py-2 px-1 text-gray-400 hover:text-orange-500 text-sm" data-tab="requests" data-translate="pending_tab">
                             Pending (${requests.length})
                         </button>
-                        <button class="friend-tab py-2 px-1 text-gray-400 hover:text-orange-500 text-sm" data-tab="sent">
+                        <button class="friend-tab py-2 px-1 text-gray-400 hover:text-orange-500 text-sm" data-tab="sent" data-translate="sent_tab">
                             Sent (${sentRequests.length})
                         </button>
-                        <button class="friend-tab py-2 px-1 text-gray-400 hover:text-orange-500 text-sm" data-tab="history">
+                        <button class="friend-tab py-2 px-1 text-gray-400 hover:text-orange-500 text-sm" data-tab="history" data-translate="history_tab">
                             History (${history.length})
                         </button>
                     </nav>
@@ -149,7 +151,7 @@ function createFriendsInterface(friends: any[], requests: any[], sentRequests: a
             <div class="tab-content" data-tab-content="friends">
                 <div class="p-4">
                     ${friends.length === 0 ? `
-                        <div class="text-gray-400 text-center py-8">
+                        <div class="text-gray-400 text-center py-8" data-translate="no_friends_yet">
                             No friends yet. Search for players above to send friend requests!
                         </div>
                     ` : `
@@ -161,15 +163,15 @@ function createFriendsInterface(friends: any[], requests: any[], sentRequests: a
                                         <div>
                                             <div class="font-medium text-white">${friend.username}</div>
                                             <div class="text-sm text-gray-400">
-                                                Wins: ${friend.wins || 0} • Losses: ${friend.losses || 0}
+                                                <span data-translate="wins">Wins</span>: ${friend.wins || 0} • <span data-translate="losses">Losses</span>: ${friend.losses || 0}
                                             </div>
                                         </div>
                                     </div>
                                     <div class="flex space-x-2">
-                                        <button class="challenge-friend bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-sm" data-friend-id="${friend.id}">
+                                        <button class="challenge-friend bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-sm" data-friend-id="${friend.id}" data-translate="challenge">
                                             Challenge
                                         </button>
-                                        <button class="remove-friend bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm" data-friend-id="${friend.id}">
+                                        <button class="remove-friend bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm" data-friend-id="${friend.id}" data-translate="remove">
                                             Remove
                                         </button>
                                     </div>
@@ -184,7 +186,7 @@ function createFriendsInterface(friends: any[], requests: any[], sentRequests: a
             <div class="tab-content hidden" data-tab-content="requests">
                 <div class="p-4">
                     ${requests.length === 0 ? `
-                        <div class="text-gray-400 text-center py-8">
+                        <div class="text-gray-400 text-center py-8" data-translate="no_pending_requests">
                             No pending friend requests.
                         </div>
                     ` : `
@@ -195,14 +197,14 @@ function createFriendsInterface(friends: any[], requests: any[], sentRequests: a
                                         <img src="${request.avatar || '/avatar.png'}" alt="${request.username}" class="w-10 h-10 rounded-full object-cover">
                                         <div>
                                             <div class="font-medium text-white">${request.username}</div>
-                                            <div class="text-sm text-gray-300">Wants to be your friend</div>
+                                            <div class="text-sm text-gray-300" data-translate="wants_to_be_friend">Wants to be your friend</div>
                                         </div>
                                     </div>
                                     <div class="flex space-x-2">
-                                        <button class="accept-request bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm" data-friend-id="${request.id}">
+                                        <button class="accept-request bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm" data-friend-id="${request.id}" data-translate="accept">
                                             Accept
                                         </button>
-                                        <button class="decline-request bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm" data-friend-id="${request.id}">
+                                        <button class="decline-request bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm" data-friend-id="${request.id}" data-translate="decline">
                                             Decline
                                         </button>
                                     </div>
@@ -217,7 +219,7 @@ function createFriendsInterface(friends: any[], requests: any[], sentRequests: a
             <div class="tab-content hidden" data-tab-content="sent">
                 <div class="p-4">
                     ${sentRequests.length === 0 ? `
-                        <div class="text-gray-400 text-center py-8">
+                        <div class="text-gray-400 text-center py-8" data-translate="no_sent_requests">
                             No sent friend requests.
                         </div>
                     ` : `
@@ -228,11 +230,11 @@ function createFriendsInterface(friends: any[], requests: any[], sentRequests: a
                                         <img src="${request.avatar || '/avatar.png'}" alt="${request.username}" class="w-10 h-10 rounded-full object-cover">
                                         <div>
                                             <div class="font-medium text-white">${request.username}</div>
-                                            <div class="text-sm text-gray-300">Pending response</div>
+                                            <div class="text-sm text-gray-300" data-translate="pending_response">Pending response</div>
                                         </div>
                                     </div>
                                     <div class="flex space-x-2">
-                                        <button class="cancel-request bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm" data-friend-id="${request.id}">
+                                        <button class="cancel-request bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm" data-friend-id="${request.id}" data-translate="cancel">
                                             Cancel
                                         </button>
                                     </div>
@@ -247,7 +249,7 @@ function createFriendsInterface(friends: any[], requests: any[], sentRequests: a
             <div class="tab-content hidden" data-tab-content="history">
                 <div class="p-4">
                     ${history.length === 0 ? `
-                        <div class="text-gray-400 text-center py-8">
+                        <div class="text-gray-400 text-center py-8" data-translate="no_request_history">
                             No request history.
                         </div>
                     ` : `

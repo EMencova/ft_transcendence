@@ -10,7 +10,7 @@ export function LeaderboardView(push = true) {
 		}
 
 		if (!currentUser) {
-			main.innerHTML = `<p class="text-red-500">You must log in to view the leaderboard.</p>`
+			main.innerHTML = `<p class="text-red-500" data-translate="must_be_logged_in_leaderboard">You must log in to view the leaderboard.</p>`
 			return
 		}
 
@@ -36,14 +36,14 @@ export function LeaderboardView(push = true) {
 				} else {
 					const leaderboardTable = document.getElementById("leaderboardTable")
 					if (leaderboardTable) {
-						leaderboardTable.innerHTML = `<p class="text-red-500">Unexpected leaderboard data format.</p>`
+						leaderboardTable.innerHTML = `<p class="text-red-500" data-translate="unexpected_leaderboard_format">Unexpected leaderboard data format.</p>`
 					}
 				}
 			})
 			.catch(err => {
 				const leaderboardTable = document.getElementById("leaderboardTable")
 				if (leaderboardTable) {
-					leaderboardTable.innerHTML = `<p class="text-red-500">Error loading leaderboard: ${err}</p>`
+					leaderboardTable.innerHTML = `<p class="text-red-500" data-translate="error_loading_leaderboard">Error loading leaderboard: ${err}</p>`
 				}
 			})
 
@@ -57,7 +57,7 @@ function renderLeaderboard(data: Array<{ username: string; score: number; rank?:
 
 	if (!data.length) {
 		if (container) {
-			container.innerHTML = `<p>No leaderboard data available yet.</p>`
+			container.innerHTML = `<p data-translate="no_leaderboard_data">No leaderboard data available yet.</p>`
 		}
 		// Show the description when no data
 		if (descElement) {

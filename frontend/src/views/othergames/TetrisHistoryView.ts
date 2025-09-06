@@ -1,3 +1,4 @@
+import { updateText } from "../../../public/js/translation"
 import { currentUser, currentUserId } from "../../logic/auth"
 import { apiService } from "../../services/apiService"
 
@@ -11,8 +12,8 @@ interface TetrisHistoryEntry {
 	if (!currentUser) {
 		container.innerHTML = `
             <div class="text-center py-8">
-                <p class="text-gray-400 text-lg">🔒 Please log in to view your game history</p>
-                <p class="text-gray-500 text-sm mt-2">Your Tetris scores and statistics will be saved when you're logged in.</p>
+                <p class="text-gray-400 text-lg" data-translate="please_log_in">🔒 Please log in to view your game history</p>
+                <p class="text-gray-500 text-sm mt-2" data-translate="login_to_save_history">Your Tetris scores and statistics will be saved when you're logged in.</p>
             </div>
         `
 		return
@@ -20,37 +21,42 @@ interface TetrisHistoryEntry {
 
 	container.innerHTML = `
         <div class="container mx-auto px-4 py-8">
-            <h1 class="text-3xl font-bold text-white text-center mb-8">Tetris History</h1>
+            <h1 class="text-3xl font-bold text-white text-center mb-8" data-translate="tetris_history_title">Tetris History</h1>
             
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-[#1a1a1a] border border-gray-700 rounded-lg p-6 text-center">
-                    <h3 class="text-sm font-medium text-gray-400 mb-2">Total Games</h3>
+                    <h3 class="text-sm font-medium text-gray-400 mb-2" data-translate="total_games">Total Games</h3>
                     <p id="totalGames" class="text-2xl font-bold text-white">0</p>
                 </div>
                 <div class="bg-[#1a1a1a] border border-gray-700 rounded-lg p-6 text-center">
-                    <h3 class="text-sm font-medium text-gray-400 mb-2">Best Score</h3>
+                    <h3 class="text-sm font-medium text-gray-400 mb-2" data-translate="best_score">Best Score</h3>
                     <p id="bestScore" class="text-2xl font-bold text-white">0</p>
                 </div>
                 <div class="bg-[#1a1a1a] border border-gray-700 rounded-lg p-6 text-center">
-                    <h3 class="text-sm font-medium text-gray-400 mb-2">Best Level</h3>
+                    <h3 class="text-sm font-medium text-gray-400 mb-2" data-translate="best_level">Best Level</h3>
                     <p id="bestLevel" class="text-2xl font-bold text-white">0</p>
                 </div>
                 <div class="bg-[#1a1a1a] border border-gray-700 rounded-lg p-6 text-center">
-                    <h3 class="text-sm font-medium text-gray-400 mb-2">Total Lines</h3>
+                    <h3 class="text-sm font-medium text-gray-400 mb-2" data-translate="total_lines">Total Lines</h3>
                     <p id="totalLines" class="text-2xl font-bold text-white">0</p>
                 </div>
             </div>
 
             <div class="bg-[#1a1a1a] border border-gray-700 rounded-lg p-6">
-                <h2 class="text-xl font-bold text-white mb-4">Recent Games</h2>
+                <h2 class="text-xl font-bold text-white mb-4" data-translate="recent_games">Recent Games</h2>
                 <div id="historyList" class="space-y-3">
-                    <p class="text-gray-400 text-center py-8">Loading history...</p>
+                    <p class="text-gray-400 text-center py-8" data-translate="loading_history">Loading history...</p>
                 </div>
             </div>
         </div>
     `
 
 	loadTetrisHistory()
+
+	// Apply translations after content is loaded
+	setTimeout(() => {
+		updateText()
+	}, 10)
 }
 
 async function loadTetrisHistory() {
@@ -70,8 +76,8 @@ async function loadTetrisHistory() {
 		if (historyList) {
 			historyList.innerHTML = `
                 <div class="text-center py-4 text-red-400">
-                    <p>❌ Failed to load game history</p>
-                    <p class="text-sm text-gray-500 mt-1">Please try refreshing the page</p>
+                    <p data-translate="history_load_failed">❌ Failed to load game history</p>
+                    <p class="text-sm text-gray-500 mt-1" data-translate="try_refresh">Please try refreshing the page</p>
                 </div>
             `
 		}
@@ -102,8 +108,8 @@ function displayHistoryStats(history: TetrisHistoryEntry[]) {
 	if (history.length === 0) {
 		historyList.innerHTML = `
             <div class="text-center py-8 text-gray-400">
-                <p class="text-lg">🎮 No games played yet</p>
-                <p class="text-sm mt-2">Start playing Tetris to build your history!</p>
+                <p class="text-lg" data-translate="no_games_yet">🎮 No games played yet</p>
+                <p class="text-sm mt-2" data-translate="start_playing">Start playing Tetris to build your history!</p>
             </div>
         `
 		return
@@ -126,7 +132,7 @@ function displayHistoryStats(history: TetrisHistoryEntry[]) {
                         <p class="text-gray-400 text-sm">${date}</p>
                     </div>
                 </div>
-                ${isNewRecord ? '<span class="text-orange-400 text-sm font-semibold">🏆 Best</span>' : ''}
+                ${isNewRecord ? '<span class="text-orange-400 text-sm font-semibold" data-translate="best_label">🏆 Best</span>' : ''}
             </div>
         `
 	}).join('')
